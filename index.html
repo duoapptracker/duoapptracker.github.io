@@ -11,6 +11,15 @@
 <meta property="og:url" content="https://duoapptracker.github.io/">
 <meta property="og:description" content="Which apps support iPhone Duo? A daily-updated, independent tracker across ten App Store markets.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://duoapptracker.github.io/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://duoapptracker.github.io/og-image.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2f7bff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 <style>
@@ -427,6 +436,10 @@ body.duo-lock{overflow:hidden}
   .duo-tile .lab{align-self:end;font-size:var(--cds-font-size-caption)}
   .duo-tile .sub{align-self:start}
 }
+
+.duo-top h1{display:flex;align-items:center;gap:12px}
+.duo-logo{width:40px;height:40px;border-radius:10px;flex:none}
+@media (max-width:560px){.duo-logo{width:30px;height:30px;border-radius:8px}.duo-top h1{font-size:1.5rem;gap:10px}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -437,7 +450,7 @@ body.duo-lock{overflow:hidden}
 <div class="duo">
   <header id="top" class="duo-top">
     <div>
-      <h1>iPhone Duo App Tracker</h1>
+      <h1><img class="duo-logo" src="icon.svg" alt="" width="40" height="40">iPhone Duo App Tracker</h1>
       <p class="duo-tagline" id="takeaway" data-draw="tagline" aria-live="off">—</p>
     </div>
     <div class="duo-topright">
