@@ -11,7 +11,7 @@
 <meta property="og:description" content="Which apps support iPhone Duo? A daily-updated, independent tracker for the App Store in India.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 <style>
 :root{--color-fg:#16181d;--color-fg-muted:#5c6370;--color-bg:#ffffff;--color-panel:#f4f5f8;--color-border-line:#dfe2e8;
 --cds-text-secondary:#5c6370;--cds-chart-muted:#aab0bc;--cds-chart-grid:#e6e8ee;--cds-chart-axis:#c9cdd6;--cds-chart-reference:#8b92a0;
@@ -143,6 +143,57 @@ body{padding-top:36px}
 .duo-day{margin-top:28px}
 .duo-day b{font-family:var(--font-anthropic-serif)}
 @media (max-width:560px){.duo-tile{padding:14px}.duo-tile .num{font-size:1.6rem}.duo-card{padding:16px}}
+
+/* app tiles */
+.duo-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px;column-gap:14px}
+.duo-day{border-bottom:0;padding-bottom:0;margin:30px 0 0}
+.duo-day:first-child{margin-top:0}
+.duo-app{grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px;border:1px solid var(--color-border-line);border-radius:18px;background:var(--color-panel)}
+.duo-app .open{grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:start}
+.duo-app img,.duo-app .noicon{width:56px;height:56px;border-radius:13px}
+.duo-app .main{gap:3px}
+.duo-app .name{font-size:1rem}
+.duo-app .desc{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:2.6em;line-height:1.3}
+.duo-app .facts{margin-top:2px}
+.duo-get{padding:7px 18px}
+.duo-src{grid-column:1 / -1;display:flex;align-items:center;gap:8px;min-width:0;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);border-top:1px solid var(--color-border-line);padding-top:12px}
+.duo-src i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--color-ok)}
+.duo-src.rep i{background:var(--color-warn)}
+.duo-src span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-info{margin:0;padding:18px 20px;border-radius:18px}
+.duo-info a{color:inherit}
+.duo-more{margin-top:8px}
+
+/* glass theme */
+:root{--color-bg:#f2f4fa;--color-fg:#14161c;--color-fg-muted:#565d6c;--glass:rgba(255,255,255,.58);--glass-2:rgba(255,255,255,.78);--glass-line:rgba(255,255,255,.85);--glass-edge:rgba(20,30,60,.08);--glass-shadow:0 10px 34px rgba(40,52,100,.13);--glass-hi:inset 0 1px 0 rgba(255,255,255,.9);
+--color-panel:var(--glass);--color-border-line:var(--glass-edge);--color-ok:#12a36d;--color-warn:#d9861a;
+--font-anthropic-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Inter,"Segoe UI",Roboto,sans-serif;--font-anthropic-serif:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Inter,"Segoe UI",Roboto,sans-serif;
+--bgfx:radial-gradient(60vmax 60vmax at 8% -12%,rgba(120,170,255,.55),transparent 62%),radial-gradient(52vmax 52vmax at 104% 4%,rgba(255,150,200,.42),transparent 60%),radial-gradient(64vmax 64vmax at 46% 112%,rgba(130,235,200,.45),transparent 62%)}
+@media (prefers-color-scheme: dark){:root{--color-bg:#0a0c14;--color-fg:#f1f3f9;--color-fg-muted:#a3aabb;--glass:rgba(255,255,255,.075);--glass-2:rgba(255,255,255,.13);--glass-line:rgba(255,255,255,.16);--glass-edge:rgba(255,255,255,.1);--glass-shadow:0 12px 40px rgba(0,0,0,.42);--glass-hi:inset 0 1px 0 rgba(255,255,255,.16);--color-ok:#3fcf9a;--color-warn:#f0b24e;
+--bgfx:radial-gradient(60vmax 60vmax at 8% -12%,rgba(60,110,255,.42),transparent 62%),radial-gradient(52vmax 52vmax at 104% 4%,rgba(170,80,230,.32),transparent 60%),radial-gradient(64vmax 64vmax at 46% 112%,rgba(20,170,130,.28),transparent 62%)}}
+html{background:var(--color-bg)}
+body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+.duo h1{font-weight:700;letter-spacing:-.025em}
+.duo h2,.duo-day b{font-family:var(--font-anthropic-serif);font-weight:650;letter-spacing:-.01em}
+.duo-tile .num{font-weight:700;letter-spacing:-.02em}
+.duo-tile,.duo-toolbar,.duo-card,.duo-info,.duo-pill{background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow),var(--glass-hi);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%)}
+.duo-tile,.duo-card,.duo-toolbar{border-radius:22px;padding:20px}
+.duo-tile:nth-child(1){background:linear-gradient(135deg,color-mix(in srgb,var(--c1) 30%,transparent),var(--glass) 70%);border-color:var(--glass-line)}
+.duo-tile:nth-child(2){background:linear-gradient(135deg,color-mix(in srgb,var(--c3) 30%,transparent),var(--glass) 70%);border-color:var(--glass-line)}
+.duo-tile:nth-child(3){background:linear-gradient(135deg,color-mix(in srgb,var(--c4) 30%,transparent),var(--glass) 70%);border-color:var(--glass-line)}
+.duo-app{background:var(--glass);border:1px solid var(--glass-line);box-shadow:0 4px 18px rgba(20,30,70,.07),var(--glass-hi);transition:transform .15s ease,box-shadow .15s ease}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){.duo-app:hover{transform:translateY(-2px);box-shadow:var(--glass-shadow),var(--glass-hi)}}
+.duo-src{border-top-color:var(--glass-edge)}
+.duo-toolbar .duo-search,.duo-toolbar .duo-chip,.duo-toolbar .duo-seg,.duo-toolbar .dash-select,.duo-more{background:var(--glass-2);background-color:var(--glass-2);border:1px solid var(--glass-line);box-shadow:var(--glass-hi)}
+.duo-toolbar .duo-chip[aria-pressed=true],.duo-seg button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg);border-color:transparent;box-shadow:none}
+.duo-get{background:var(--glass-2);color:var(--c1);font-weight:700;border:1px solid var(--glass-line);box-shadow:var(--glass-hi)}
+.duo-daychip button{background:var(--c1);color:#fff}
+.duo-cal .c{background:var(--glass-2)}
+.duo-cal .c.off{background:transparent}
+.duo-cal .c.zero{background:var(--glass)}
+.duo-foot{gap:20px}
+.duo{gap:28px}
+@media (max-width:560px){.duo-tile,.duo-card,.duo-toolbar{padding:16px;border-radius:18px}.duo{gap:20px}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -214,7 +265,7 @@ body{padding-top:36px}
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
-        <li>Many big apps never mention iPhone Duo in their update notes. Those named as optimised by Apple or by MacRumors are added and marked "Reported", with the date of the report in place of the date support was added.</li>
+        <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
         <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
         <li>Apple's "Made for iPhone Duo" badge and the SDK version an app was built with are not in the public data, so they are not shown.</li>
@@ -503,7 +554,7 @@ dash.draw('rows', (box) => {
     const note = mk('p');
     if (r.source === 'reported') note.append(mk('span', 'lab', 'Reported, not from update notes: '), r.note);
     else note.append(mk('span', 'lab', 'What the update says: '), '“' + r.note + '”');
-    if (r.source !== 'reported' && r.report) p.append(mk('p', '', 'Also: ' + r.report + '.'));
+    if (r.source !== 'reported' && r.report) p.append(mk('p', '', 'Also reported: ' + r.report + '.'));
     p.append(note);
     const dl = mk('dl');
     const pair = (k, val) => { const d = mk('div'); d.append(mk('dt', '', k), val instanceof Node ? val : mk('dd', '', val)); dl.append(d); };
@@ -516,6 +567,19 @@ dash.draw('rows', (box) => {
     upd.append(mark(mk('span', '', day(r.updated, fmtLong)), 'updated', r.id), ' · version ', mark(mk('span', '', r.version), 'version', r.id));
     pair('Latest update', upd);
     pair('India rating', (+r.ratings || 0) ? '★ ' + fmtStar(+r.rating || 0) + ' from ' + fmtNum(+r.ratings) + ' ratings' : 'No ratings yet');
+    const how = mk('dd');
+    const link = (text, href) => { const a = mk('a', '', text); a.href = href; a.target = '_blank'; a.rel = 'noopener'; return a; };
+    if (r.source === 'reported') {
+      const u = String(r.report_url || '');
+      how.append(u.startsWith('https://') ? link((r.report_by || 'Press report') + ' report', u) : (r.report_by || 'Press report'));
+    } else {
+      const u = String(r.url || '');
+      how.append('The app\'s own update notes');
+      if (u.startsWith('https://apps.apple.com/')) how.append(' (', link('version history', u), ')');
+      const ru = String(r.report_url || '');
+      if (r.report_by) how.append(', and ', ru.startsWith('https://') ? link(r.report_by, ru) : r.report_by);
+    }
+    pair('Confirmed by', how);
     if (r.min_ios) pair('Needs iOS', r.min_ios + ' or later');
     pair('Category', r.category + (r.price ? ' · ' + r.price : ''));
     if (marketsOf(r).length) pair('In the top charts of', marketsOf(r).map((m) => MARKETS[m] || m.toUpperCase()).join(', '));
@@ -542,7 +606,7 @@ dash.draw('rows', (box) => {
     const art = String(r.art || '');
     const src = /^https:\/\/is\d-ssl\.mzstatic\.com\//.test(art) ? art.replace(/\/[^\/]+$/, '/120x120bb.jpg') : String(r.icon || '');
     let pic;
-    if (src.startsWith('https://') || src.startsWith('data:image/')) { pic = mk('img'); pic.src = src; pic.alt = ''; pic.loading = 'lazy'; pic.width = 48; pic.height = 48; }
+    if (src.startsWith('https://') || src.startsWith('data:image/')) { pic = mk('img'); pic.src = src; pic.alt = ''; pic.loading = 'lazy'; pic.width = 56; pic.height = 56; }
     else pic = mk('span', 'noicon');
     const main = mk('span', 'main');
     main.append(mk('span', 'name', r.app), mk('span', 'desc', r.desc || r.developer));
@@ -550,7 +614,6 @@ dash.draw('rows', (box) => {
     const n = +r.ratings || 0;
     if (n) facts.append('★ ', mark(mk('span', '', fmtStar(+r.rating || 0)), 'rating', r.id), ' · ');
     facts.append(r.category + (view.sort === 'upd' ? ' · Updated ' + day(r.updated) : view.sort !== 'new' ? ' · Duo ' + day(r.duo_date) : ''));
-    if (r.source === 'reported') facts.append(' · Reported');
     main.append(facts);
     open.append(pic, main);
     card.append(open);
@@ -561,6 +624,9 @@ dash.draw('rows', (box) => {
       a.setAttribute('aria-label', 'Get ' + r.app + ' on the App Store');
       card.append(a);
     }
+    const how = mk('div', 'duo-src' + (r.source === 'reported' ? ' rep' : ''));
+    how.append(mk('i'), mk('span', '', r.source === 'reported' ? 'Reported by ' + (r.report_by || 'the press') : 'Confirmed in its update notes' + (r.duo_version ? ' · version ' + r.duo_version : '')));
+    card.append(how);
     box.append(card);
     if (isOpen) box.append(info(r));
   }

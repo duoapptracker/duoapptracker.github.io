@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Refresh of the iPhone Duo apps board, in one file. Works in time slices so it can be run again and again.
-Usage: python3 duo_cloud.py PREVIOUS_board_rows.json NEW_board_rows.json [--slice SECONDS] [--hist-minutes MINUTES] [--site]
+Usage: python3 duo_cloud.py PREVIOUS_board_rows.json NEW_board_rows.json [--slice SECONDS] [--hist-minutes MINUTES] [--site] [--reported FILE]
+--reported FILE: a JSON list of apps newly reported as optimised: [{"id": App Store id, "date": "YYYY-MM-DD", "source": site name, "text": one sentence, "url": "https://..."}]
 Each run works for at most --slice seconds (default 480), saves its progress in duo_state.json beside the output,
 and prints CONTINUE (run the same command again) or DONE with a summary (the output file is written).
 What it does: reads the App Store charts of nine markets (India, US, UK, UAE, Singapore, Australia, Canada, Germany,
@@ -20,44 +21,47 @@ EARLIEST = '2026-09-01'   # iPhone Duo was announced in September 2026; a versio
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
 # Apps reported as optimised by Apple or the press. Many big apps never mention iPhone Duo in their update
-# notes, so the notes scan cannot find them. {App Store id: (date reported, source)}
-_A = 'Highlighted by Apple on 22 Oct 2026 as optimised, or soon to be, for iPhone Duo (reported by MacRumors)'
-_M = 'Named as optimised for iPhone Duo by MacRumors on 6 Nov 2026'
-_AM = 'Highlighted by Apple on 22 Oct 2026 and named as optimised for iPhone Duo by MacRumors on 6 Nov 2026'
+# notes, so the notes scan cannot find them. {App Store id: {date reported, source name, sentence, web address}}.
+# More are added every day from a file given with --reported and are remembered in the data file.
+_U1 = 'https://www.macrumors.com/2026/10/22/apple-highlights-iphone-duo-apps/'
+_U2 = 'https://www.macrumors.com/2026/11/06/apple-says-100k-apps-optimized-for-iphone-duo/'
+_A = ('Apple, via MacRumors', 'Highlighted by Apple on 22 Oct 2026 as optimised, or soon to be, for iPhone Duo', _U1)
+_M = ('MacRumors', 'Named as optimised for iPhone Duo by MacRumors on 6 Nov 2026', _U2)
+_AM = ('Apple, via MacRumors', 'Highlighted by Apple on 22 Oct 2026 and named as optimised for iPhone Duo by MacRumors on 6 Nov 2026', _U1)
 REPORTED = {
-    '363590051': ('2026-10-22', _AM),   # Netflix
-    '545519333': ('2026-10-22', _AM),   # Amazon Prime Video
-    '546505307': ('2026-10-22', _AM),   # Zoom Workplace
-    '389801252': ('2026-10-22', _AM),   # Instagram
-    '922744883': ('2026-10-22', _AM),   # SmartGym
-    '1358823008': ('2026-10-22', _AM),  # Flighty
-    '718043190': ('2026-10-22', _AM),   # Fantastical
-    '586447913': ('2026-10-22', _AM),   # Microsoft Word
-    '618783545': ('2026-10-22', _A),    # Slack
-    '529379082': ('2026-10-22', _A),    # Lyft
-    '951937596': ('2026-10-22', _A),    # Microsoft Outlook
-    '904237743': ('2026-10-22', _A),    # Things 3
-    '1016366447': ('2026-10-22', _A),   # Bear
-    '6480045936': ('2026-10-22', _A),   # Notewise
-    '489689106': ('2026-10-22', _A),    # PGA Tour
-    '6738967378': ('2026-10-22', _A),   # Edits
-    '1098342019': ('2026-10-22', _A),   # Sneaky Sasquatch
-    '6746784702': ('2026-10-22', _A),   # Retrocade
-    '911422904': ('2026-10-22', _A),    # NYT Cooking
-    '296581815': ('2026-10-22', _A),    # OpenTable
-    '284910350': ('2026-10-22', _A),    # Yelp
-    '382698565': ('2026-10-22', _A),    # American Airlines
-    '449945214': ('2026-10-22', _A),    # United Airlines
-    '586683407': ('2026-11-06', _M),    # Microsoft Excel
-    '586449534': ('2026-11-06', _M),    # Microsoft PowerPoint
-    '410395246': ('2026-11-06', _M),    # Microsoft OneNote
-    '477128284': ('2026-11-06', _M),    # Etsy
-    '1444383602': ('2026-11-06', _M),   # Goodnotes
-    '885697368': ('2026-11-06', _M),    # Halide Mark III
-    '484672289': ('2026-11-06', _M),    # NBA
-    '465092669': ('2026-11-06', _M),    # NHL
-    '310633997': ('2026-11-06', _M),    # WhatsApp Messenger
-    '544007664': ('2026-11-06', _M),    # YouTube
+    '363590051': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Netflix
+    '545519333': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Amazon Prime Video
+    '546505307': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Zoom Workplace
+    '389801252': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Instagram
+    '922744883': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # SmartGym
+    '1358823008': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),  # Flighty
+    '718043190': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Fantastical
+    '586447913': dict(date='2026-10-22', source=_AM[0], text=_AM[1], url=_AM[2]),   # Microsoft Word
+    '618783545': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # Slack
+    '529379082': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # Lyft
+    '951937596': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # Microsoft Outlook
+    '904237743': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # Things 3
+    '1016366447': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),   # Bear
+    '6480045936': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),   # Notewise
+    '489689106': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # PGA Tour
+    '6738967378': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),   # Edits
+    '1098342019': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),   # Sneaky Sasquatch
+    '6746784702': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),   # Retrocade
+    '911422904': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # NYT Cooking
+    '296581815': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # OpenTable
+    '284910350': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # Yelp
+    '382698565': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # American Airlines
+    '449945214': dict(date='2026-10-22', source=_A[0], text=_A[1], url=_A[2]),    # United Airlines
+    '586683407': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # Microsoft Excel
+    '586449534': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # Microsoft PowerPoint
+    '410395246': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # Microsoft OneNote
+    '477128284': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # Etsy
+    '1444383602': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),   # Goodnotes
+    '885697368': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # Halide Mark III
+    '484672289': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # NBA
+    '465092669': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # NHL
+    '310633997': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # WhatsApp Messenger
+    '544007664': dict(date='2026-11-06', source=_M[0], text=_M[1], url=_M[2]),    # YouTube
 }
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15'
 
@@ -147,8 +151,19 @@ def main():
               'rows': {str(r['id']): r for r in (prev['rows'] if isinstance(prev, dict) else prev)},
               'checked': prev.get('checked', {}) if isinstance(prev, dict) else {}, 'cand': {}, 'queue': None, 'qpos': 0,
               'hist_spent': 0, 'new': [], 'changed': 0, 'pages_read': 0, 'mk': {}}
+        # reported apps: built-in list, then what earlier runs remembered, then today's additions
+        rp = dict(REPORTED); rp.update(prev.get('reported', {}) if isinstance(prev, dict) else {})
+        if '--reported' in args:
+            add = json.load(open(args[args.index('--reported') + 1]))
+            for e in (add if isinstance(add, list) else []):
+                i, d = str(e.get('id', '')), str(e.get('date', ''))
+                ok = i.isdigit() and re.fullmatch(r'\d{4}-\d\d-\d\d', d) and EARLIEST <= d <= today and str(e.get('url', '')).startswith('https://') and e.get('source') and e.get('text')
+                if ok and i not in rp:
+                    rp[i] = {'date': d, 'source': str(e['source'])[:60], 'text': str(e['text'])[:240], 'url': str(e['url'])[:300]}
+        st['reported'] = rp
         st['before'] = len(st['rows'])
     rows, checked, cand = st['rows'], st['checked'], st['cand']
+    reported = st.setdefault('reported', dict(REPORTED))
     page_path = os.path.join(os.path.dirname(state_path), 'duo_progress.html')
     saved = [time.time()]
     def tick():
@@ -176,7 +191,7 @@ def main():
             if c == 'in': st['india_ids'] = len(set(st['ids']))
         if st['india_ids'] < 3000:
             sys.exit(f"STOP: only {st['india_ids']} apps read from the India charts; Apple feeds unreachable or changed. Nothing written.")
-        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(REPORTED)))
+        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported)))
         st['stage'] = 'lookup'
 
     if st['stage'] == 'lookup':
@@ -198,11 +213,12 @@ def main():
                     if r.get('version') != latest['version']: st['changed'] += 1
                     r.update(latest)
                     if not SITE and not r.get('icon'): r['icon'] = icon(a.get('artworkUrl100', ''))
-                    if tid in REPORTED: r['report'] = REPORTED[tid][1]
-                elif tid in REPORTED:
+                    if tid in reported: r.update(report=reported[tid]['text'], report_by=reported[tid]['source'], report_url=reported[tid].get('url', ''))
+                elif tid in reported:
                     # reported as optimised, though its update notes never say so
-                    when, src = REPORTED[tid]
-                    rows[tid] = dict(latest, id=tid, duo_date=when, duo_version='', note=src, report=src, source='reported', first_seen=today, hist_ok=True)
+                    k = reported[tid]
+                    rows[tid] = dict(latest, id=tid, duo_date=k['date'], duo_version='', note=k['text'], report=k['text'], report_by=k['source'],
+                                     report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=True)
                     if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
                     st['new'].append(tid)
                 elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
@@ -262,13 +278,13 @@ def main():
         with open(out_path, 'w') as f:   # one app per line keeps daily changes small in version control
             f.write('{"updated": %s,\n"rows": [\n' % json.dumps(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%MZ')))
             f.write(',\n'.join(json.dumps(r, ensure_ascii=False, sort_keys=True) for r in out))
-            f.write('\n],\n"checked": %s}\n' % json.dumps(keep, sort_keys=True))
+            f.write('\n],\n"reported": %s,\n"checked": %s}\n' % (json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps(keep, sort_keys=True)))
     else:
-        json.dump({'rows': out, 'meta': meta, 'checked': keep}, open(out_path, 'w'), ensure_ascii=False)
+        json.dump({'rows': out, 'meta': meta, 'checked': keep, 'reported': reported}, open(out_path, 'w'), ensure_ascii=False)
     st['stage'] = 'write'; show(st, page_path, done=True)
     os.remove(state_path) if os.path.exists(state_path) else None
     print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
-          'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
+          'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
           'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
 
 if __name__ == '__main__':
