@@ -7,8 +7,9 @@ and prints CONTINUE (run the same command again) or DONE with a summary (the out
 What it does: reads the App Store charts of ten markets (India, US, UK, UAE, Singapore, Australia, Canada, Germany,
 Japan, China; overall and 24 categories everywhere, plus 19 game types in India, the US and the UK), notes which markets'
 charts each app is in,
-keeps the apps available on the India store, and for each one not yet on the board reads its version history
-to find the first version whose notes mention iPhone Duo. Apps are never removed from the board.
+and for each app not yet on the board reads its version history to find the first version whose notes mention
+iPhone Duo. Apps not sold in India are looked up on their home market's store. For every app on the board it
+also records, market by market, whether the app is on that store and its rating there. Apps are never removed from the board.
 Reads only Apple's public feeds and store pages; writes only the output file and duo_state.json."""
 import json, re, subprocess, datetime, os, sys, time, base64
 from concurrent.futures import ThreadPoolExecutor
@@ -88,7 +89,7 @@ def snippet(text):
 
 def icon(art):
     if not art: return ''
-    b = curl(art.rsplit('/', 1)[0] + '/64x64bb.jpg', binary=True)
+    b = curl(art.rsplit('/', 1)[0] + '/48x48bb.jpg', binary=True)
     return 'data:image/jpeg;base64,' + base64.b64encode(b).decode() if b[:2] == b'\xff\xd8' else ''
 
 def history(url):
@@ -111,11 +112,11 @@ def show(st, path, done=False):
     if not done and time.time() - show.last < 3: return
     show.last = time.time()
     esc = lambda t: str(t).replace('&', '&amp;').replace('<', '&lt;')
-    order = ['charts', 'lookup', 'history', 'write']
+    order = {'charts': 0, 'lookup': 1, 'lookup2': 1, 'history': 2, 'mstats': 3, 'write': 3}
     parts = [('Read the charts', 'charts', st['feed'], len(FEEDS), 'charts'),
              ('Look up each app on the India store', 'lookup', min(st['batch'] * 100, len(st['ids'])), len(st['ids']), 'apps'),
              ('Read version histories', 'history', st['qpos'], len(st['queue'] or []), 'apps')]
-    now = 3 if done else order.index(st['stage'])
+    now = 3 if done else order.get(st['stage'], 3)
     bars = ''
     for i, (label, key, n, total, unit) in enumerate(parts):
         pct = 100 if i < now else (0 if i > now or not total else 100 * n / total)
@@ -194,40 +195,63 @@ def main():
         st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported)))
         st['stage'] = 'lookup'
 
+    def take(a, cc):
+        """Use one App Store answer. cc is the store it came from: 'in', or the app's home market when it is not sold in India."""
+        tid = str(a['trackId']); notes = a.get('releaseNotes') or ''
+        latest = {'app': a['trackName'], 'developer': a.get('artistName', ''), 'category': a.get('primaryGenreName', ''),
+                  'version': a.get('version', ''), 'updated': a.get('currentVersionReleaseDate', '')[:10], 'price': a.get('formattedPrice', ''),
+                  'rating': round(a.get('averageUserRating', 0), 1), 'ratings': a.get('userRatingCount', 0),
+                  'url': a.get('trackViewUrl', '').split('?')[0], 'art': a.get('artworkUrl100', ''), 'desc': one_line(a.get('description', '')),
+                  'min_ios': a.get('minimumOsVersion', ''), 'home': cc}
+        latest['markets'] = ','.join(st['mk'].get(tid, [])) or rows.get(tid, {}).get('markets', '')
+        if tid in rows:
+            r = rows[tid]
+            if r.get('version') != latest['version']: st['changed'] += 1
+            r.update(latest)
+            if not SITE and not r.get('icon'): r['icon'] = icon(a.get('artworkUrl100', ''))
+            if tid in reported: r.update(report=reported[tid]['text'], report_by=reported[tid]['source'], report_url=reported[tid].get('url', ''))
+        elif tid in reported:
+            # reported as optimised, though its update notes never say so
+            k = reported[tid]
+            rows[tid] = dict(latest, id=tid, duo_date=k['date'], duo_version='', note=k['text'], report=k['text'], report_by=k['source'],
+                             report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=True)
+            if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
+            st['new'].append(tid)
+        elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
+            # not on the board, recent enough, and this version's history has not been read yet
+            cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')
+
     if st['stage'] == 'lookup':
         ids = st['ids']
+        got = st.setdefault('got', [])
         while st['batch'] * 100 < len(ids):
             if left() < 30: pause()
             k = st['batch'] * 100
             d = get('https://itunes.apple.com/lookup?country=in&id=' + ','.join(ids[k:k + 100]))
             for a in (d or {}).get('results', []):
-                st['seen'] += 1
-                tid = str(a['trackId']); notes = a.get('releaseNotes') or ''
-                latest = {'app': a['trackName'], 'developer': a.get('artistName', ''), 'category': a.get('primaryGenreName', ''),
-                          'version': a.get('version', ''), 'updated': a.get('currentVersionReleaseDate', '')[:10], 'price': a.get('formattedPrice', ''),
-                          'rating': round(a.get('averageUserRating', 0), 1), 'ratings': a.get('userRatingCount', 0),
-                          'url': a.get('trackViewUrl', '').split('?')[0], 'art': a.get('artworkUrl100', ''), 'desc': one_line(a.get('description', '')), 'min_ios': a.get('minimumOsVersion', '')}
-                latest['markets'] = ','.join(st['mk'].get(tid, [])) or rows.get(tid, {}).get('markets', '')
-                if tid in rows:
-                    r = rows[tid]
-                    if r.get('version') != latest['version']: st['changed'] += 1
-                    r.update(latest)
-                    if not SITE and not r.get('icon'): r['icon'] = icon(a.get('artworkUrl100', ''))
-                    if tid in reported: r.update(report=reported[tid]['text'], report_by=reported[tid]['source'], report_url=reported[tid].get('url', ''))
-                elif tid in reported:
-                    # reported as optimised, though its update notes never say so
-                    k = reported[tid]
-                    rows[tid] = dict(latest, id=tid, duo_date=k['date'], duo_version='', note=k['text'], report=k['text'], report_by=k['source'],
-                                     report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=True)
-                    if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
-                    st['new'].append(tid)
-                elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
-                    # not on the board, recent enough, and this version's history has not been read yet
-                    cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')
+                st['seen'] += 1; got.append(str(a['trackId'])); take(a, 'in')
             st['batch'] += 1; tick()
-        # apps that are not sold in India return nothing, so compare with the India chart size only
         if st['seen'] < 0.8 * st['india_ids']:
             sys.exit(f"STOP: Apple answered for only {st['seen']} apps. Nothing written.")
+        # apps not sold in India: ask the store of the first market whose charts list them
+        have = set(got); todo = {}
+        for i in ids:
+            if i not in have:
+                cc = (st['mk'].get(i) or [rows.get(i, {}).get('home') or ''])[0]
+                if cc and cc != 'in': todo.setdefault(cc, []).append(i)
+        st['abroad'] = [[cc, v[k:k + 100]] for cc, v in todo.items() for k in range(0, len(v), 100)]
+        st['apos'] = 0; st['got'] = []
+        st['stage'] = 'lookup2'
+
+    if st['stage'] == 'lookup2':
+        while st['apos'] < len(st['abroad']):
+            if left() < 30: pause()
+            cc, chunk = st['abroad'][st['apos']]
+            d = get(f'https://itunes.apple.com/lookup?country={cc}&id=' + ','.join(chunk))
+            for a in (d or {}).get('results', []):
+                st['seen'] += 1; take(a, cc)
+            st['apos'] += 1; tick()
+        st['abroad'] = []
         # read first: board apps still waiting for a history check, then apps whose current notes mention Duo, then the most rated
         st['queue'] = [t for t, r in rows.items() if r.get('hist_ok') is False] + \
                       sorted(cand, key=lambda t: (not cand[t]['now'], -cand[t]['ratings']))
@@ -265,13 +289,37 @@ def main():
                     elif c['now']: add(tid, c, c['version'], c['updated'], c['now'], bool(h))
             st['qpos'] += len(chunk); st['hist_spent'] += time.time() - t1; tick()
             if got < len(chunk) / 2: time.sleep(20)   # Apple is slowing us down; pages not read stay for the next run
+        st['stage'] = 'mstats'
+
+    if st['stage'] == 'mstats':
+        # for each market: is the app on that store, and what is its rating there?  mk = {market: [rating, number of ratings]}
+        if 'mjobs' not in st:
+            idl = list(rows)
+            st['mjobs'] = [[cc, idl[k:k + 100]] for cc in MARKETS for k in range(0, len(idl), 100)]
+            st['mpos'] = 0; st['mnew'] = {}
+        while st['mpos'] < len(st['mjobs']):
+            if left() < 30: pause()
+            cc, chunk = st['mjobs'][st['mpos']]
+            d = get(f'https://itunes.apple.com/lookup?country={cc}&id=' + ','.join(chunk))
+            if d is not None:
+                st['mnew'].setdefault(cc, {}).update({i: None for i in chunk})   # asked: absent unless answered
+                for a in d.get('results', []):
+                    st['mnew'][cc][str(a['trackId'])] = [round(a.get('averageUserRating', 0), 1), a.get('userRatingCount', 0)]
+            st['mpos'] += 1; tick()
+        for cc, ans in st['mnew'].items():
+            for i, v in ans.items():
+                if i in rows:
+                    m = rows[i].setdefault('mk', {})
+                    if v is None: m.pop(cc, None)
+                    else: m[cc] = v
+        st['mjobs'] = []; st['mnew'] = {}
         st['stage'] = 'write'
 
     out = sorted(rows.values(), key=lambda r: (r['duo_date'], r['ratings']), reverse=True)
     assert len(out) >= st['before']
     pool = set(st['ids'])
     meta = [{'label': 'duo_cloud.py', 'value': open(os.path.abspath(__file__)).read(), 'type': 'code', 'lang': 'python'},
-            {'label': 'Input', 'value': 'App Store top free, top paid and top grossing charts of ' + ', '.join(MARKETS.values()) + ' (overall and 24 categories; plus 19 game types in India, the US and the UK), limited to apps on the India store, plus every app already on the board; read from Apple public feeds and store pages'}]
+            {'label': 'Input', 'value': 'App Store top free, top paid and top grossing charts of ' + ', '.join(MARKETS.values()) + ' (overall and 24 categories; plus 19 game types in India, the US and the UK), plus every app already on the board; read from Apple public feeds and store pages'}]
     keep = {k: v for k, v in checked.items() if k in pool and k not in rows}
     if SITE:
         for r in out: r.pop('icon', None)

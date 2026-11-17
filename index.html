@@ -215,8 +215,10 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-popgrid button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .duo-popgrid button i{font-style:normal;color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
 .duo-popgrid button:hover,.duo-popgrid button:focus-visible{background:var(--color-panel);outline:none}
-.duo-popgrid button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
-.duo-popgrid button[aria-pressed=true] i{color:inherit;opacity:.75}
+.duo-popgrid button::before{content:"";flex:none;width:14px;height:14px;border-radius:4px;border:1.5px solid var(--color-fg-muted);box-sizing:border-box}
+.duo-popgrid button[aria-pressed=true]::before{background:var(--color-fg);border-color:var(--color-fg);box-shadow:inset 0 0 0 2.5px var(--pop-bg,transparent)}
+.duo-popgrid button span{flex:1}
+.duo-popgrid button[aria-pressed=true]{font-weight:600}
 @media (max-width:700px){.duo-popgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.duo-toolbar .duo-filters .duo-search{max-width:none;flex-basis:100%}.duo-pop{flex:1 1 150px}.duo-pop summary{overflow:hidden;text-overflow:ellipsis}}
 :root{--pop:#ffffff}
 @media (prefers-color-scheme: dark){:root{--pop:#171a25}}
@@ -250,16 +252,21 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     <div class="duo-filters">
       <input class="duo-search" id="duo-q" type="search" placeholder="Search apps" aria-label="Search for an app or developer">
       <select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market" aria-label="Market"></select>
-      <details class="duo-pop" id="duo-catpop"><summary aria-label="Category"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details>
+      <div class="duo-seg" role="group" aria-label="Sort">
+        <button type="button" data-sort="new" aria-pressed="true">New</button>
+        <button type="button" data-sort="rated" aria-pressed="false">Popular</button>
+        <button type="button" data-sort="stars" aria-pressed="false">Top rated</button>
+        <button type="button" data-sort="upd" aria-pressed="false">Updated</button>
+      </div>
+      <details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details>
       <div class="duo-seg" role="group" aria-label="When Duo support was added">
         <button type="button" data-when="all" aria-pressed="true">All dates</button>
         <button type="button" data-when="week" aria-pressed="false">Last 7 days</button>
         <button type="button" data-when="latest" aria-pressed="false">Latest day</button>
       </div>
-      <select class="dash-select duo-sortsel" id="duo-sort" aria-label="Sort"><option value="new">Newest Duo support first</option><option value="upd">Recently updated</option><option value="stars">Best rated in India</option><option value="rated">Most popular in India</option><option value="az">A to Z</option></select>
     </div>
     </div>
-    <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store in India.</p><div class="duo-daychip" data-draw="daychip"></div></div>
+    <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div></div>
     <div class="duo-list" data-draw="rows" data-source="apps">—</div>
   </section>
 
@@ -282,10 +289,10 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
       <h2>How this list is made</h2>
       <ul class="duo-notes">
         <li>A script reads Apple's public App Store charts for ten markets: India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany, Japan and China.</li>
-        <li>It keeps the apps that are available on the India store and reads each app's version history for update notes that mention iPhone Duo or its folding screen.</li>
+        <li>It reads each app's version history for update notes that mention iPhone Duo or its folding screen.</li>
         <li>"Duo support added" is the release date of the earliest version whose notes mention iPhone Duo. "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo.</li>
-        <li>"Popular in" filters by the markets whose top charts list the app right now.</li>
-        <li>Ratings, prices and links are from the App Store in India. "Needs iOS" is the oldest iOS version the app runs on.</li>
+        <li>Choosing a market shows every listed app that is on that market's App Store, with that market's rating and store link. "Popular" sorts by the number of ratings there, and "Top rated" by the rating.</li>
+        <li>With no market chosen, ratings and links are from the App Store in India (or the app's home market if it is not sold in India). "Needs iOS" is the oldest iOS version the app runs on.</li>
       </ul>
     </div>
     <div class="duo-card">
@@ -375,13 +382,18 @@ dash.calc('by_day', {
 });
 const MARKETS = {in: 'India', us: 'United States', gb: 'United Kingdom', ae: 'UAE', sg: 'Singapore', au: 'Australia', ca: 'Canada', de: 'Germany', jp: 'Japan', cn: 'China'};
 const marketsOf = (r) => String(r.markets || '').split(',').filter(Boolean);
+// mk = {market: [rating, number of ratings]} for every store the app is on
+const mkOf = (r) => { let m = r.mk; if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } } return m && typeof m === 'object' ? m : {}; };
 dash.calc('by_market', {
   inputs: ['apps'],
   title: 'Apps per market',
-  description: 'Number of apps on the board that are in the top charts of each market. An app in several markets is counted in each.',
+  description: 'Number of apps on the board that are available on each market\'s App Store. An app sold in several markets is counted in each.',
   fn: (apps) => {
     const count = new Map();
-    for (const r of apps) for (const m of String(r.markets || '').split(',').filter(Boolean)) count.set(m, (count.get(m) || 0) + 1);
+    for (const r of apps) {
+      let m = r.mk; if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } }
+      for (const cc of Object.keys(m && typeof m === 'object' ? m : {})) count.set(cc, (count.get(cc) || 0) + 1);
+    }
     return [...count].map(([market, n]) => ({market, apps: n})).sort((a, b) => (b.market === 'in') - (a.market === 'in') || b.apps - a.apps);
   },
 });
@@ -488,7 +500,7 @@ dash.draw('catmap', (el) => {
     b.style.left = leaf.x0 + 'px'; b.style.top = leaf.y0 + 'px'; b.style.width = tw + 'px'; b.style.height = th + 'px';
     // colour follows the category: the eight biggest get their own, the rest share a quiet one
     b.style.background = i < Math.min(8, dash.colors.length) ? tint(dash.colors[i], 46) : tint('var(--cds-chart-muted)', 40);
-    b.setAttribute('aria-pressed', String(view.cat === r.category));
+    b.setAttribute('aria-pressed', String(view.cats.includes(r.category)));
     b.setAttribute('aria-label', `${r.category}: ${r.apps} apps. Show only these apps.`);
     if (tw >= 46 && th >= 40) { const n = document.createElement('span'); n.className = 'n'; n.textContent = r.category; b.append(n); }
     if (tw >= 30 && th >= 22) { const k = document.createElement('span'); k.className = 'k'; k.textContent = fmtNum(r.apps); b.append(k); }
@@ -500,42 +512,43 @@ dash.draw('catmap', (el) => {
     b.onpointerenter = show; b.onfocus = show;
     b.onpointerleave = () => { tip.hidden = true; }; b.onblur = () => { tip.hidden = true; };
     b.onclick = () => {
-      view.cat = view.cat === r.category ? '' : r.category; view.limit = 90;
-      dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); toList();
+      toggleCat(r.category); catsChanged(); toList();
     };
     el.append(b);
   });
   el.append(tip);
 });
 
-const view = {q: '', cat: '', mkt: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
+const view = {q: '', cats: [], mkt: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
+// rating and number of ratings for the chosen market, or the app's home store when no market is chosen
+const stat = (r) => { const m = mkOf(r)[view.mkt || r.home || 'in']; return m ? [+m[0] || 0, +m[1] || 0] : [+r.rating || 0, +r.ratings || 0]; };
+const storeUrl = (r) => { const u = String(r.url || ''); return view.mkt ? u.replace(/^https:\/\/apps\.apple\.com\/[a-z]{2}\//, 'https://apps.apple.com/' + view.mkt + '/') : u; };
 dash.draw('mktchips', (sel) => {
   const rows = okRows('by_market') || [];
-  sel.replaceChildren(new Option('All markets', ''), ...rows.map((r) => new Option(`Popular in ${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
+  const s = sum();
+  sel.replaceChildren(new Option('All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
   sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
-dash.draw('catlabel', (el) => { el.textContent = view.cat || 'All categories'; });
+const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
+const catsChanged = () => { dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); };
+dash.draw('catlabel', (el) => { el.textContent = !view.cats.length ? 'All categories' : view.cats.length === 1 ? view.cats[0] : view.cats.length + ' categories'; });
 dash.draw('catchips', (box) => {
   const rows = okRows('by_cat') || [];
   const s = sum();
   box.replaceChildren();
-  const item = (label, value, n) => {
+  const item = (label, on, n, act) => {
     const b = document.createElement('button');
-    b.type = 'button'; b.setAttribute('aria-pressed', String(view.cat === value));
+    b.type = 'button'; b.setAttribute('aria-pressed', String(on));
     const name = document.createElement('span'); name.textContent = label;
     const count = document.createElement('i'); count.textContent = fmtNum(n);
     b.append(name, count);
-    b.onclick = () => {
-      view.cat = value; view.limit = 90;
-      for (const d of document.querySelectorAll('#duo-catpop')) d.open = false;
-      dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
-    };
+    b.onclick = () => { act(); catsChanged(); };
     box.append(b);
   };
-  item('All categories', '', s ? s.total : d3.sum(rows, (r) => r.apps));
-  for (const r of rows) item(r.category, r.category, r.apps);
+  item('All categories', !view.cats.length, s ? s.total : d3.sum(rows, (r) => r.apps), () => { view.cats = []; view.limit = 90; });
+  for (const r of rows) item(r.category, view.cats.includes(r.category), r.apps, () => toggleCat(r.category));
 });
 const visible = () => {
   const rows = okRows('apps');
@@ -543,17 +556,16 @@ const visible = () => {
   const s = sum();
   const q = view.q.trim().toLowerCase();
   const from = !s || view.when === 'all' ? '' : view.when === 'latest' ? s.latest_day : s.week_from;
-  const out = rows.filter((r) => (!view.cat || r.category === view.cat)
+  const out = rows.filter((r) => (!view.cats.length || view.cats.includes(r.category))
     && (!view.day || r.duo_date === view.day)
-    && (!view.mkt || marketsOf(r).includes(view.mkt))
+    && (!view.mkt || !!mkOf(r)[view.mkt])
     && (!from || String(r.duo_date) >= from)
     && (!q || String(r.app).toLowerCase().includes(q) || String(r.developer).toLowerCase().includes(q)));
-  const byNew = (a, b) => String(b.duo_date).localeCompare(String(a.duo_date)) || (+b.ratings || 0) - (+a.ratings || 0);
-  if (view.sort === 'stars') out.sort((a, b) => (+b.rating || 0) - (+a.rating || 0) || (+b.ratings || 0) - (+a.ratings || 0));
-  else if (view.sort === 'upd') out.sort((a, b) => String(b.updated).localeCompare(String(a.updated)) || (+b.ratings || 0) - (+a.ratings || 0));
-  else if (view.sort === 'rated') out.sort((a, b) => (+b.ratings || 0) - (+a.ratings || 0));
-  else if (view.sort === 'az') out.sort((a, b) => String(a.app).localeCompare(String(b.app)));
-  else out.sort(byNew);
+  const n = (r) => stat(r)[1], st = (r) => stat(r)[0];
+  if (view.sort === 'stars') out.sort((a, b) => (n(b) >= 20) - (n(a) >= 20) || st(b) - st(a) || n(b) - n(a));   // apps with very few ratings go last
+  else if (view.sort === 'upd') out.sort((a, b) => String(b.updated).localeCompare(String(a.updated)) || n(b) - n(a));
+  else if (view.sort === 'rated') out.sort((a, b) => n(b) - n(a));
+  else out.sort((a, b) => String(b.duo_date).localeCompare(String(a.duo_date)) || n(b) - n(a));
   return out;
 };
 dash.draw('shown', (el) => { const v = visible(); el.textContent = v ? fmtNum(v.length) : '—'; });
@@ -587,7 +599,8 @@ dash.draw('rows', (box) => {
     const upd = mk('dd');
     upd.append(mark(mk('span', '', day(r.updated, fmtLong)), 'updated', r.id), ' · version ', mark(mk('span', '', r.version), 'version', r.id));
     pair('Latest update', upd);
-    pair('India rating', (+r.ratings || 0) ? '★ ' + fmtStar(+r.rating || 0) + ' from ' + fmtNum(+r.ratings) + ' ratings' : 'No ratings yet');
+    const [sr, sn] = stat(r);
+    pair('Rating in ' + (MARKETS[view.mkt || r.home || 'in'] || 'its store'), sn ? '★ ' + fmtStar(sr) + ' from ' + fmtNum(sn) + ' ratings' : 'No ratings yet');
     const how = mk('dd');
     const link = (text, href) => { const a = mk('a', '', text); a.href = href; a.target = '_blank'; a.rel = 'noopener'; return a; };
     if (r.source === 'reported') {
@@ -603,7 +616,8 @@ dash.draw('rows', (box) => {
     pair('Confirmed by', how);
     if (r.min_ios) pair('Needs iOS', r.min_ios + ' or later');
     pair('Category', r.category + (r.price ? ' · ' + r.price : ''));
-    if (marketsOf(r).length) pair('In the top charts of', marketsOf(r).map((m) => MARKETS[m] || m.toUpperCase()).join(', '));
+    const avail = Object.keys(mkOf(r));
+    if (avail.length) pair('Available in', avail.length === Object.keys(MARKETS).length ? 'All ' + avail.length + ' markets tracked' : avail.map((m) => MARKETS[m] || m.toUpperCase()).join(', '));
     p.append(dl);
     return p;
   };
@@ -632,13 +646,13 @@ dash.draw('rows', (box) => {
     const main = mk('span', 'main');
     main.append(mk('span', 'name', r.app), mk('span', 'desc', r.desc || r.developer));
     const facts = mk('span', 'facts');
-    const n = +r.ratings || 0;
-    if (n) facts.append('★ ', mark(mk('span', '', fmtStar(+r.rating || 0)), 'rating', r.id), ' · ');
+    const [sr, n] = stat(r);
+    if (n) facts.append('★ ', mk('span', '', fmtStar(sr)), ' · ');
     facts.append(r.category + (view.sort === 'upd' ? ' · Updated ' + day(r.updated) : view.sort !== 'new' ? ' · Duo ' + day(r.duo_date) : ''));
     main.append(facts);
     open.append(pic, main);
     card.append(open);
-    const url = String(r.url || '');
+    const url = storeUrl(r);
     if (url.startsWith('https://apps.apple.com/')) {
       const a = mk('a', 'duo-get', 'Get');
       a.href = url; a.target = '_blank'; a.rel = 'noopener';
@@ -661,8 +675,13 @@ dash.draw('rows', (box) => {
 for (const inp of document.querySelectorAll('#duo-q')) {
   inp.addEventListener('input', () => { view.q = inp.value; view.limit = 90; redraw(); });
 }
-for (const sel of document.querySelectorAll('#duo-sort')) {
-  sel.addEventListener('change', () => { view.sort = sel.value; view.limit = 90; dash.draw('rows'); });
+const sorts = document.querySelectorAll('.duo-seg button[data-sort]');
+for (const b of sorts) {
+  b.addEventListener('click', () => {
+    view.sort = b.getAttribute('data-sort'); view.limit = 90;
+    for (const o of sorts) o.setAttribute('aria-pressed', String(o === b));
+    dash.draw('rows');
+  });
 }
 document.addEventListener('click', (ev) => { for (const d of document.querySelectorAll('details.duo-pop[open]')) if (!d.contains(ev.target)) d.open = false; });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') for (const d of document.querySelectorAll('details.duo-pop[open]')) d.open = false; });
