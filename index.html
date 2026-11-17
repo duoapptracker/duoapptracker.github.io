@@ -340,15 +340,6 @@ body.duo-lock{overflow:hidden}
 .duo-top h1{font-size:2.1rem}
 .duo-tagline{margin:8px 0 0;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;min-height:1.5em;line-height:1.5}
 .duo-topright{justify-content:flex-end;align-items:center}
-.duo-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:var(--glass);border:1px solid var(--glass-line);border-radius:22px;box-shadow:var(--glass-shadow),var(--glass-hi);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);overflow:hidden}
-.duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){background:none;border:0;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;padding:16px 26px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:16px;row-gap:0}
-.duo-tile+.duo-tile{border-left:1px solid var(--glass-edge)}
-.duo-tile .num{grid-row:1 / span 2;font-size:2.2rem;line-height:1}
-.duo-tile .lab{font-size:var(--cds-font-size-caption);font-weight:600;align-self:end}
-.duo-tile .sub{align-self:start}
-.duo-tile:nth-child(1) .num{color:var(--c1)}
-.duo-tile:nth-child(2) .num{color:var(--c3)}
-.duo-tile:nth-child(3) .num{color:var(--c4)}
 .duo-sidebox{padding:2px 16px 16px}
 .duo-sidebox .duo-fgrid{gap:12px}
 .duo-f{gap:5px}
@@ -366,10 +357,30 @@ body.duo-lock{overflow:hidden}
   .duo-tagline{white-space:normal;min-height:3em}
 }
 @media (max-width:700px){
-  .duo-tiles{grid-template-columns:1fr}
-  .duo-tile+.duo-tile{border-left:0;border-top:1px solid var(--glass-edge)}
-  .duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){padding:12px 18px}
-  .duo-tile .num{font-size:1.8rem;min-width:3.2ch}
+}
+
+/* tagline, collapsed filter bar */
+.duo-tagline{display:flex;flex-direction:column;gap:4px;white-space:normal;overflow:visible;margin:8px 0 0;min-height:0}
+.duo-tagline .tg-h{font-size:1.3rem;font-weight:650;letter-spacing:-.01em}
+.duo-tagline .tg-s{font-size:var(--cds-font-size-body);color:var(--color-fg-muted)}
+.duo-tagline .tg-s b{color:var(--color-fg);font-weight:700}
+.duo-layout{display:block}
+.duo-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
+.duo-bar>.duo-searchrow{flex:1 1 320px;min-width:0;height:56px;box-sizing:border-box;display:flex;align-items:center;padding:0 8px}
+.duo-sidebox{position:static;flex:0 0 auto;padding:0;border-radius:22px}
+.duo-sidebox[open]{flex:1 1 100%}
+.duo-sidebox>summary,.duo-sidebox>summary{height:56px;box-sizing:border-box;padding:0 20px;display:flex;align-items:center;gap:12px;cursor:pointer;pointer-events:auto;font-size:var(--cds-font-size-body)}
+.duo-sidebox>summary::after{content:"";width:7px;height:7px;border-right:2px solid var(--color-fg-muted);border-bottom:2px solid var(--color-fg-muted);transform:rotate(45deg);margin:-3px 0 0 6px}
+.duo-sidebox[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
+.duo-sidebox[open]>summary{border-bottom:1px solid var(--glass-edge)}
+.duo-sidebox>summary .duo-resetbtn{margin-left:auto;display:none}
+.duo-sidebox[open]>summary .duo-resetbtn{display:inline}
+.duo-badge:empty{display:none}
+.duo-badge{background:var(--c1);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:2px 8px;line-height:1.4}
+.duo-sidebox .duo-fgrid{grid-template-columns:repeat(5,minmax(0,1fr));padding:16px 20px 4px;gap:14px}
+.duo-guidebtn{display:inline-block;width:auto;margin:10px 20px 18px;padding:8px 16px}
+@media (max-width:900px){
+  .duo-sidebox .duo-fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
@@ -424,21 +435,21 @@ body.duo-lock{overflow:hidden}
   </section>
 
   <section class="duo-layout" id="apps">
-    <aside class="duo-side" aria-label="Filters">
-      <details class="duo-sidebox" id="duo-sidebox">
-        <summary><span>Filters</span><button type="button" class="duo-resetbtn" id="duo-reset">Reset all</button></summary>
-        <div class="duo-fgrid">
-          <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
-          <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
-          <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
-          <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
-          <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
-        </div>
-        <button type="button" class="duo-guidebtn" id="duo-reopen">Open the welcome guide</button>
-      </details>
-    </aside>
     <div class="duo-main">
-      <div class="duo-toolbar duo-searchrow"><input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer"></div>
+      <div class="duo-bar">
+        <div class="duo-toolbar duo-searchrow"><input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer"></div>
+        <details class="duo-sidebox" id="duo-sidebox">
+          <summary><span>Filters</span><span class="duo-badge" data-draw="filtercount"></span><button type="button" class="duo-resetbtn" id="duo-reset">Reset all</button></summary>
+          <div class="duo-fgrid">
+            <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
+            <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
+            <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
+            <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
+            <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+          </div>
+          <button type="button" class="duo-guidebtn" id="duo-reopen">Open the welcome guide</button>
+        </details>
+      </div>
       <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div></div>
       <div class="duo-list" data-draw="rows" data-source="apps">—</div>
     </div>
@@ -734,42 +745,20 @@ dash.draw('confchips', (sel) => {
 // the sentence under the title follows the chosen market
 const scope = () => { const rows = okRows('apps'); return rows ? (view.mkt ? rows.filter((r) => !!mkOf(r)[view.mkt]) : rows) : null; };
 
-// the line under the title: facts about the current market, rotating with a few friendly lines
-let tagI = 0;
-const short = (t) => { const n = String(t).split(/\s[-–—|]\s|:\s|\s\(/)[0].trim() || String(t); return n.length > 24 ? n.slice(0, 22).trim() + '…' : n; };
-const tagMsgs = () => {
-  const v = scope(), s = sum();
-  if (!v || !s) return null;
-  const b = (t) => ['b', t];
-  const where = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets';
-  const week = v.filter((r) => String(r.duo_date) >= s.week_from).length;
-  const newest = [...v].filter((r) => (+stat(r)[1] || 0) > 0).sort((a, c) => String(c.duo_date).localeCompare(String(a.duo_date)) || stat(c)[1] - stat(a)[1]).slice(0, 3);
-  const big = [...v].sort((a, c) => stat(c)[1] - stat(a)[1]).slice(0, 3);
-  const msgs = [[b(fmtNum(v.length)), ' apps ' + where + ' are ready for iPhone Duo. ', b(fmtNum(week)), ' joined this week.']];
-  if (newest.length === 3) msgs.push(['Just landed: ', b(short(newest[0].app)), ', ', b(short(newest[1].app)), ' and ', b(short(newest[2].app)), '.']);
-  msgs.push(['Is your favourite app ready? Search it, or tap ', b('Remind me'), ' and we will tell you.']);
-  if (big.length === 3) msgs.push(['Big names on board: ', b(short(big[0].app)), ', ', b(short(big[1].app)), ' and ', b(short(big[2].app)), '.']);
-  msgs.push(['Tested on a real iPhone Duo. ', b('Confirmed'), ' by update notes, Apple and the press.']);
-  msgs.push(['Checked ', b('three times a day'), ', so new apps show up fast.']);
-  return msgs;
-};
+// the lines under the title: a clear headline, then the numbers for the chosen market
 dash.draw('tagline', (el) => {
-  const msgs = tagMsgs();
-  if (!msgs) { el.textContent = '—'; return; }
-  const m = msgs[tagI % msgs.length];
-  el.replaceChildren(...m.map((p) => { if (typeof p === 'string') return document.createTextNode(p); const e = document.createElement('b'); e.textContent = p[1]; return e; }));
+  const v = scope(), t = sum();
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const head = mk('span', 'tg-h', 'Is your favourite app ready for iPhone Duo?');
+  const facts = mk('span', 'tg-s');
+  if (v && t) {
+    const week = v.filter((r) => String(r.duo_date) >= t.week_from).length;
+    const where = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets';
+    const b = (x) => mk('b', '', x);
+    facts.append(b(fmtNum(v.length)), ' apps ' + where + ' are ready. ', b(fmtNum(week)), ' joined this week.');
+  } else facts.textContent = 'Loading the list…';
+  el.replaceChildren(head, facts);
 });
-{
-  const el = document.querySelector('[data-draw="tagline"]');
-  const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let hold = false;
-  if (el) { el.addEventListener('pointerenter', () => { hold = true; }); el.addEventListener('pointerleave', () => { hold = false; }); }
-  if (el && !still) setInterval(() => {
-    if (hold || document.hidden) return;
-    el.classList.add('out');
-    setTimeout(() => { tagI += 1; dash.draw('tagline'); el.classList.remove('out'); }, 300);
-  }, 5600);
-}
 
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
 const catsChanged = () => { dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); };
@@ -1031,18 +1020,22 @@ const applyChoices = (c) => {
   for (const i of document.querySelectorAll('#duo-q')) i.value = view.q;
   const ss = document.getElementById('duo-sort'); if (ss) ss.value = view.sort;
   dash.draw('mktchips'); dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
-  dash.draw('tagline');
+  dash.draw('tagline'); dash.draw('filtercount');
 };
+dash.draw('filtercount', (el) => {
+  const n = (view.mkt ? 1 : 0) + (view.cats.length ? 1 : 0) + (view.conf ? 1 : 0) + (view.when !== 'all' ? 1 : 0) + (view.sort !== 'new' ? 1 : 0);
+  el.textContent = n ? String(n) : '';
+});
 const resetFilters = () => {
   view.conf = ''; view.when = 'all'; view.day = '';
   const w = document.getElementById('duo-when'); if (w) w.value = 'all';
   applyChoices({mkt: '', sort: 'new', cats: [], q: ''});
-  dash.draw('confchips'); dash.draw('calendar'); dash.draw('daychip');
+  dash.draw('confchips'); dash.draw('calendar'); dash.draw('daychip'); dash.draw('filtercount');
 };
 {
   const rb = document.getElementById('duo-reset'), box = document.getElementById('duo-sidebox');
   if (rb) rb.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); resetFilters(); });
-  if (box && window.matchMedia) { const mq = matchMedia('(min-width: 901px)'); const sync = () => { if (mq.matches) box.open = true; }; sync(); mq.addEventListener('change', sync); }
+  if (box) for (const ev of ['change', 'click']) box.addEventListener(ev, () => setTimeout(() => dash.draw('filtercount'), 60));
 }
 const closeWelcome = (save, apply) => {
   if (apply) applyChoices(wsel);
