@@ -408,6 +408,13 @@ body.duo-lock{overflow:hidden}
 .duo-credit-links{display:flex;gap:18px}
 .duo-credit a{color:var(--c1);font-weight:600;text-decoration:none}
 .duo-credit a:hover{text-decoration:underline}
+/* the Suggest / Remind pop-ups must sit above the search card and tiles */
+.duo-top{z-index:60}
+.duo-bar{z-index:10}
+.duo-topright{position:relative}
+.duo-topright>details.duo-pop{position:static}
+.duo-remindbox{right:0;left:auto;top:calc(100% + 12px)}
+@media (max-width:900px){.duo-topright{position:static}.duo-top{position:relative}.duo-remindbox{left:0;right:auto;top:calc(100% + 8px)}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
