@@ -298,6 +298,41 @@ body.duo-lock{overflow:hidden}
 .duo-toolbar>.duo-search{width:100%;max-width:none}
 @media (max-width:900px){.duo-fgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:560px){.duo-fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* tagline, filter sidebar, equal control sizes */
+.duo{max-width:1320px}
+.duo-tagline{margin:10px 0 0;font-size:1.2rem;line-height:1.4;max-width:62ch;min-height:1.4em;transition:opacity .28s ease}
+.duo-tagline.out{opacity:0}
+.duo-tagline b{color:var(--c1);font-weight:700}
+.duo-layout{display:grid;grid-template-columns:272px minmax(0,1fr);gap:24px;align-items:start}
+.duo-side{position:sticky;top:16px;z-index:20;min-width:0}
+.duo-sidebox{background:var(--glass);border:1px solid var(--glass-line);border-radius:22px;box-shadow:var(--glass-shadow),var(--glass-hi);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);padding:4px 18px 18px}
+.duo-sidebox>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;font-weight:650;font-size:var(--cds-font-size-heading);cursor:default}
+.duo-sidebox>summary::-webkit-details-marker{display:none}
+.duo-resetbtn{font:inherit;font-size:var(--cds-font-size-caption);font-weight:600;color:var(--c1);background:none;border:0;cursor:pointer;padding:4px 0;pointer-events:auto}
+.duo-sidebox .duo-fgrid{display:grid;grid-template-columns:1fr;gap:14px;position:static}
+.duo-f.duo-cat{position:relative}
+.duo-sidebox .duo-popgrid{left:0;top:calc(100% + 6px);width:min(560px,calc(100vw - 32px));grid-template-columns:repeat(2,minmax(0,1fr))}
+.duo-f .dash-select,.duo-f .duo-pop summary{height:44px;box-sizing:border-box;width:100%;display:flex;align-items:center;padding:0 38px 0 14px;border-radius:12px;font-size:var(--cds-font-size-caption);line-height:1.2}
+.duo-f .dash-select{-webkit-appearance:none;appearance:none;display:block;line-height:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238b93a7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.duo-f .duo-pop summary{margin:0}
+.duo-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.duo-searchrow{padding:10px}
+.duo-searchrow .duo-search{width:100%;max-width:none;background:transparent;border:0;box-shadow:none;padding:10px 14px;font-size:1rem}
+.duo-layout .duo-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
+@media (min-width:901px){.duo-sidebox>summary{pointer-events:none}}
+@media (max-width:900px){
+  .duo-layout{grid-template-columns:1fr}
+  .duo-side{position:static}
+  .duo-sidebox>summary{cursor:pointer}
+  .duo-sidebox>summary::after{content:"";width:7px;height:7px;border-right:2px solid var(--color-fg-muted);border-bottom:2px solid var(--color-fg-muted);transform:rotate(45deg);margin-left:auto;margin-right:4px}
+  .duo-sidebox[open]>summary::after{transform:rotate(-135deg)}
+  .duo-resetbtn{margin-left:auto;line-height:1}
+  .duo-sidebox .duo-fgrid{grid-template-columns:repeat(2,minmax(0,1fr));position:relative}
+  .duo-f.duo-cat{position:static}
+  .duo-sidebox .duo-popgrid{left:0;top:calc(100% + 6px)}
+}
+@media (prefers-reduced-motion:reduce){.duo-tagline{transition:none}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -309,7 +344,7 @@ body.duo-lock{overflow:hidden}
   <header id="top" class="duo-top">
     <div>
       <h1>iPhone Duo App Tracker</h1>
-      <p class="duo-lede" id="takeaway"><b data-draw="l_total" data-source="apps">—</b> apps <span data-draw="l_where">—</span> are optimised for iPhone Duo. <b data-draw="l_week" data-source="apps">—</b> added support in the last 7 days.</p>
+      <p class="duo-tagline" id="takeaway" data-draw="tagline" aria-live="off">—</p>
       <button type="button" class="duo-linkbtn" id="duo-reopen">Choose your market and interests</button>
     </div>
     <div class="duo-topright">
@@ -351,19 +386,24 @@ body.duo-lock{overflow:hidden}
     <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total" data-source="summary" data-field="total" data-row="0">—</span><span class="lab">apps found in all</span><span class="sub"><span data-draw="n_cats" data-source="summary" data-field="categories" data-row="0">—</span> categories</span></div>
   </section>
 
-  <section class="duo-find" id="apps">
-    <div class="duo-toolbar">
-    <input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer">
-    <div class="duo-fgrid">
-      <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
-      <div class="duo-f"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
-      <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
-      <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
-      <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+  <section class="duo-layout" id="apps">
+    <aside class="duo-side" aria-label="Filters">
+      <details class="duo-sidebox" id="duo-sidebox">
+        <summary><span>Filters</span><button type="button" class="duo-resetbtn" id="duo-reset">Reset all</button></summary>
+        <div class="duo-fgrid">
+          <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
+          <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
+          <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
+          <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
+          <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+        </div>
+      </details>
+    </aside>
+    <div class="duo-main">
+      <div class="duo-toolbar duo-searchrow"><input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer"></div>
+      <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div></div>
+      <div class="duo-list" data-draw="rows" data-source="apps">—</div>
     </div>
-  </div>
-    <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div></div>
-    <div class="duo-list" data-draw="rows" data-source="apps">—</div>
   </section>
 
   <section class="duo-two" id="trends">
@@ -626,7 +666,7 @@ dash.draw('mktchips', (sel) => {
   const s = sum();
   sel.replaceChildren(new Option('All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
-  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('l_total'); dash.draw('l_where'); dash.draw('l_week'); };
+  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('tagline'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
 // how an app was confirmed: its own update notes, Apple, the press, a forum or social post, the site owner, or a visitor
@@ -655,9 +695,43 @@ dash.draw('confchips', (sel) => {
 
 // the sentence under the title follows the chosen market
 const scope = () => { const rows = okRows('apps'); return rows ? (view.mkt ? rows.filter((r) => !!mkOf(r)[view.mkt]) : rows) : null; };
-dash.draw('l_total', (el) => { const v = scope(); el.textContent = v ? fmtNum(v.length) : '—'; });
-dash.draw('l_where', (el) => { el.textContent = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets'; });
-dash.draw('l_week', (el) => { const v = scope(), s = sum(); el.textContent = v && s ? fmtNum(v.filter((r) => String(r.duo_date) >= s.week_from).length) : '—'; });
+
+// the line under the title: facts about the current market, rotating with a few friendly lines
+let tagI = 0;
+const short = (t) => (t.length > 26 ? t.slice(0, 24).trim() + '…' : t);
+const tagMsgs = () => {
+  const v = scope(), s = sum();
+  if (!v || !s) return null;
+  const b = (t) => ['b', t];
+  const where = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets';
+  const week = v.filter((r) => String(r.duo_date) >= s.week_from).length;
+  const newest = [...v].filter((r) => (+stat(r)[1] || 0) > 0).sort((a, c) => String(c.duo_date).localeCompare(String(a.duo_date)) || stat(c)[1] - stat(a)[1]).slice(0, 3);
+  const big = [...v].sort((a, c) => stat(c)[1] - stat(a)[1]).slice(0, 3);
+  const msgs = [[b(fmtNum(v.length)), ' apps ' + where + ' are ready for iPhone Duo. ', b(fmtNum(week)), ' joined this week.']];
+  if (newest.length === 3) msgs.push(['Just landed: ', b(short(newest[0].app)), ', ', b(short(newest[1].app)), ' and ', b(short(newest[2].app)), '.']);
+  msgs.push(['Is your favourite app ready? Search it, or tap ', b('Remind me'), ' and we will tell you.']);
+  if (big.length === 3) msgs.push(['Big names on board: ', b(short(big[0].app)), ', ', b(short(big[1].app)), ' and ', b(short(big[2].app)), '.']);
+  msgs.push(['Tested on a real iPhone Duo. ', b('Confirmed'), ' by update notes, Apple and the press.']);
+  msgs.push(['Checked ', b('three times a day'), ', so new apps show up fast.']);
+  return msgs;
+};
+dash.draw('tagline', (el) => {
+  const msgs = tagMsgs();
+  if (!msgs) { el.textContent = '—'; return; }
+  const m = msgs[tagI % msgs.length];
+  el.replaceChildren(...m.map((p) => { if (typeof p === 'string') return document.createTextNode(p); const e = document.createElement('b'); e.textContent = p[1]; return e; }));
+});
+{
+  const el = document.querySelector('[data-draw="tagline"]');
+  const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let hold = false;
+  if (el) { el.addEventListener('pointerenter', () => { hold = true; }); el.addEventListener('pointerleave', () => { hold = false; }); }
+  if (el && !still) setInterval(() => {
+    if (hold || document.hidden) return;
+    el.classList.add('out');
+    setTimeout(() => { tagI += 1; dash.draw('tagline'); el.classList.remove('out'); }, 300);
+  }, 5600);
+}
 
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
 const catsChanged = () => { dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); };
@@ -919,8 +993,19 @@ const applyChoices = (c) => {
   for (const i of document.querySelectorAll('#duo-q')) i.value = view.q;
   const ss = document.getElementById('duo-sort'); if (ss) ss.value = view.sort;
   dash.draw('mktchips'); dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
-  dash.draw('l_total'); dash.draw('l_where'); dash.draw('l_week');
+  dash.draw('tagline');
 };
+const resetFilters = () => {
+  view.conf = ''; view.when = 'all'; view.day = '';
+  const w = document.getElementById('duo-when'); if (w) w.value = 'all';
+  applyChoices({mkt: '', sort: 'new', cats: [], q: ''});
+  dash.draw('confchips'); dash.draw('calendar'); dash.draw('daychip');
+};
+{
+  const rb = document.getElementById('duo-reset'), box = document.getElementById('duo-sidebox');
+  if (rb) rb.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); resetFilters(); });
+  if (box && window.matchMedia) { const mq = matchMedia('(min-width: 901px)'); const sync = () => { if (mq.matches) box.open = true; }; sync(); mq.addEventListener('change', sync); }
+}
 const closeWelcome = (save, apply) => {
   if (apply) applyChoices(wsel);
   if (save) savePrefs({mkt: wsel.mkt, sort: wsel.sort, cats: wsel.cats});
