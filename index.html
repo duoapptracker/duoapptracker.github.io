@@ -1141,7 +1141,7 @@ document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && wstate
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;
-  el.textContent = d && !isNaN(d) ? d.toLocaleString(undefined, {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}) : '—';
+  el.textContent = d && !isNaN(d) ? d.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST' : '—';
 });
 dash.start();
 </script>
