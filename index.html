@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>iPhone Duo App Tracker: apps optimised for iPhone Duo in India</title>
+<link rel="canonical" href="https://duoapptracker.github.io/">
+<meta name="description" content="iPhone Duo App Tracker: a daily-updated list of apps optimised for iPhone Duo on the App Store in India. See which apps support the foldable iPhone, when each added support, ratings and download links.">
+<meta property="og:title" content="iPhone Duo App Tracker">
+<meta property="og:url" content="https://duoapptracker.github.io/">
+<meta property="og:description" content="Which apps support iPhone Duo? A daily-updated, independent tracker for the App Store in India.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@500&display=swap">
+<style>
+:root{--color-fg:#16181d;--color-fg-muted:#5c6370;--color-bg:#ffffff;--color-panel:#f4f5f8;--color-border-line:#dfe2e8;
+--cds-text-secondary:#5c6370;--cds-chart-muted:#aab0bc;--cds-chart-grid:#e6e8ee;--cds-chart-axis:#c9cdd6;--cds-chart-reference:#8b92a0;
+--cds-surface-popover:#ffffff;--cds-border:#dfe2e8;--cds-shadow-popover:0 6px 24px rgba(20,24,40,.14);
+--font-anthropic-sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font-anthropic-serif:"Space Grotesk",Inter,-apple-system,sans-serif;
+--cds-font-size-caption:.82rem;--cds-font-size-body:.95rem;--cds-font-size-heading:1.1rem;--cds-font-size-title:2rem;--cds-font-weight-medium:600;
+--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;--cds-gap-xl:32px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:18px;--cds-pad-xl:28px;--cds-radius:10px;
+--c1:#2f6fed;--c2:#e8590c;--c3:#0e9f6e;--c4:#9b51e0;--c5:#d6336c;--c6:#0c8599;--c7:#b7791f;--c8:#5f6ad4}
+@media (prefers-color-scheme: dark){:root{color-scheme:dark;--color-fg:#e8eaf0;--color-fg-muted:#9aa1b0;--color-bg:#101218;--color-panel:#191c24;--color-border-line:#2a2e3a;
+--cds-text-secondary:#9aa1b0;--cds-chart-muted:#5a6070;--cds-chart-grid:#242834;--cds-chart-axis:#3a3f4e;--cds-chart-reference:#7a8192;
+--cds-surface-popover:#1f232d;--cds-border:#2f3441;--cds-shadow-popover:0 6px 24px rgba(0,0,0,.5);
+--c1:#6ea0ff;--c2:#ff8a4c;--c3:#3fcf9a;--c4:#b98af5;--c5:#f06595;--c6:#3bc9db;--c7:#e0a84a;--c8:#8f98f0}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-fg);padding:28px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px))}
+a{color:inherit}
+.dash-select{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:6px 12px}
+details#method summary{cursor:pointer;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+details#method p{margin-top:8px}
+.duo-foot{border-top:1px solid var(--color-border-line);padding-top:var(--cds-gap-lg)}
+
+.duo{display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg);font-size:var(--cds-font-size-body);max-width:1240px;margin:0 auto}
+.duo h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+.duo h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0;text-wrap:balance}
+.duo-lede{margin:var(--cds-gap-sm) 0 0;max-width:68ch;line-height:1.5}
+.duo-muted{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:0;line-height:1.5;max-width:80ch}
+.duo>*,.duo-find>*{min-width:0;max-width:100%}
+.duo-chiprow:has(.duo-chips:empty){display:none}
+.duo-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--cds-gap-sm)}
+.duo-tile{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md);display:flex;flex-direction:column;gap:2px;min-width:0}
+.duo-tile .num{font-family:var(--font-anthropic-serif);font-weight:400;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.duo-tile .lab{font-size:var(--cds-font-size-caption);line-height:1.3;overflow-wrap:anywhere}
+.duo-tile .sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.duo-find{display:flex;flex-direction:column;gap:var(--cds-gap-md)}
+.duo-search{font:inherit;font-size:1rem;color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:10px 16px;width:100%;box-sizing:border-box;min-width:0}
+.duo-search:focus-visible,.duo-chip:focus-visible,.duo-seg button:focus-visible,.duo-more:focus-visible,.duo-get:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.duo-row{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center;justify-content:space-between}
+.duo-seg{display:inline-flex;border:1px solid var(--color-border-line);border-radius:999px;padding:2px;background:var(--color-panel);max-width:100%}
+.duo-seg button{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);background:transparent;border:0;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.duo-seg button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
+.duo-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;min-height:32px;scrollbar-width:thin}
+.duo-chiprow{display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:var(--cds-gap-sm);align-items:center}
+.duo-chiplab{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);padding-bottom:4px}
+.duo-chip{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap;flex:none}
+.duo-chip span{color:var(--color-fg-muted);margin-left:4px;font-variant-numeric:tabular-nums}
+.duo-chip[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg);border-color:var(--color-fg)}
+.duo-chip[aria-pressed=true] span{color:inherit;opacity:.75}
+.duo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));column-gap:var(--cds-gap-xl);min-height:300px;align-content:start}
+.duo-day{grid-column:1 / -1;display:flex;align-items:baseline;gap:var(--cds-gap-sm);margin:var(--cds-gap-lg) 0 2px;padding-bottom:6px;border-bottom:1px solid var(--color-border-line)}
+.duo-day:first-child{margin-top:0}
+.duo-day b{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium)}
+.duo-day span{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.duo-app{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--cds-gap-sm);align-items:center;padding:8px 0;border-bottom:1px solid var(--color-border-line);min-width:0}
+.duo-app .open{font:inherit;color:inherit;background:transparent;border:0;padding:0;margin:0;text-align:left;cursor:pointer;display:grid;grid-template-columns:48px minmax(0,1fr);gap:var(--cds-gap-sm);align-items:center;min-width:0;border-radius:var(--cds-radius)}
+.duo-app .open:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.duo-app img,.duo-app .noicon{width:48px;height:48px;border-radius:11px;border:1px solid var(--color-border-line);background:var(--color-panel);display:block}
+.duo-app .main{min-width:0;display:flex;flex-direction:column;gap:1px}
+.duo-app .name{font-weight:var(--cds-font-weight-medium);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-app .desc,.duo-app .facts{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.duo-app[data-open=true] .name{text-decoration:underline}
+.duo-get{font-size:var(--cds-font-size-caption);font-weight:var(--cds-font-weight-medium);color:var(--color-bg);background:var(--color-fg);border-radius:999px;padding:5px 14px;text-decoration:none;white-space:nowrap}
+.duo-info{grid-column:1 / -1;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md) var(--cds-pad-lg);margin:var(--cds-gap-sm) 0;display:flex;flex-direction:column;gap:var(--cds-gap-sm);font-size:var(--cds-font-size-caption);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.duo-info b.t{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium)}
+.duo-info p{margin:0;max-width:80ch}
+.duo-info .lab{color:var(--color-fg-muted)}
+.duo-info dl{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm) var(--cds-gap-xl);margin:0}
+.duo-info dt{color:var(--color-fg-muted)}
+.duo-info dd{margin:0;font-variant-numeric:tabular-nums}
+.duo-empty{padding:var(--cds-pad-xl) 0;color:var(--color-fg-muted);text-align:center}
+.duo-more{font:inherit;font-weight:var(--cds-font-weight-medium);color:var(--color-fg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:10px 20px;cursor:pointer;margin:var(--cds-gap-lg) auto 0}
+.duo-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--cds-gap-lg)}
+.duo-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-md);min-width:0}
+.duo-tip b{display:block;font-weight:600}
+.duo-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);box-shadow:var(--cds-shadow-popover);border-radius:var(--cds-radius);padding:4px 8px;font-size:var(--cds-font-size-caption);color:var(--color-fg);white-space:nowrap}
+.duo-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;min-height:300px;align-content:start}
+.duo-cal .wd{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);text-align:center;padding-bottom:2px}
+.duo-cal .c{font:inherit;color:var(--color-fg);border:0;border-radius:8px;padding:5px 6px;min-height:52px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0;background:var(--color-bg)}
+.duo-cal button.c{cursor:pointer}
+.duo-cal .c .d{font-size:11px;color:var(--color-fg-muted);white-space:nowrap;overflow:hidden}
+.duo-cal .c .k{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.duo-cal .c.off{background:transparent}
+.duo-cal .c.zero .k{color:var(--color-fg-muted);font-weight:400}
+.duo-cal .c[aria-pressed=true]{outline:2.5px solid var(--color-fg);outline-offset:1px}
+.duo-cal button.c:focus-visible{outline:2.5px solid var(--color-fg);outline-offset:1px}
+.duo-scale{display:flex;align-items:center;gap:8px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.duo-scale i{display:block;width:120px;height:10px;border-radius:5px}
+.duo-map{position:relative;height:340px;color:var(--color-fg-muted)}
+.duo-map .t{position:absolute;font:inherit;color:var(--color-fg);border:0;border-radius:8px;padding:6px 8px;cursor:pointer;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:1px;box-sizing:border-box}
+.duo-map .t .n{font-size:var(--cds-font-size-caption);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.duo-map .t .k{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.duo-map .t.s .k{font-size:var(--cds-font-size-caption)}
+.duo-map .t[aria-pressed=true]{outline:2.5px solid var(--color-fg);outline-offset:-2px}
+.duo-map .t:focus-visible{outline:2.5px solid var(--color-fg);outline-offset:-2px}
+.duo-daychip button{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-bg);background:var(--color-fg);border:0;border-radius:999px;padding:5px 12px;cursor:pointer}
+.duo [data-dash-source-state=refreshing]{opacity:.5}
+@media (max-width:480px){
+  .duo-tile .num{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+<div class="duo">
+  <header id="top">
+    <h1>iPhone Duo App Tracker</h1>
+    <p class="duo-muted">Apps optimised for iPhone Duo on the App Store in India. Independent, updated daily. Last updated <span data-draw="stamp">—</span>.</p>
+    <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store say in their update notes that they support iPhone Duo. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
+  </header>
+
+  <section class="duo-tiles" id="tiles">
+    <div class="duo-tile" id="tile-latest"><span class="num" data-draw="n_latest" data-source="summary" data-field="latest_count" data-row="0">—</span><span class="lab">added Duo support on the latest day</span><span class="sub" data-draw="n_latestday" data-source="summary" data-field="latest_day" data-row="0">—</span></div>
+    <div class="duo-tile" id="tile-week"><span class="num" data-draw="n_week" data-source="summary" data-field="week_count" data-row="0">—</span><span class="lab">added Duo support in the last 7 days</span><span class="sub">since <span data-draw="n_weekfrom" data-source="summary" data-field="week_from" data-row="0">—</span></span></div>
+    <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total" data-source="summary" data-field="total" data-row="0">—</span><span class="lab">apps found in all</span><span class="sub"><span data-draw="n_cats" data-source="summary" data-field="categories" data-row="0">—</span> categories</span></div>
+  </section>
+
+  <section class="duo-find" id="apps">
+    <input class="duo-search" id="duo-q" type="search" placeholder="Search for an app or developer" aria-label="Search for an app or developer">
+    <div class="duo-chiprow"><span class="duo-chiplab">Popular in</span><div class="duo-chips" data-draw="mktchips" data-source="by_market" role="group" aria-label="Market"></div></div>
+    <div class="duo-chiprow"><span class="duo-chiplab">Category</span><div class="duo-chips" data-draw="catchips" data-source="by_cat" role="group" aria-label="Category"></div></div>
+    <div class="duo-row">
+      <div class="duo-seg" role="group" aria-label="When Duo support was added">
+        <button type="button" data-when="all" aria-pressed="true">All dates</button>
+        <button type="button" data-when="week" aria-pressed="false">Last 7 days</button>
+        <button type="button" data-when="latest" aria-pressed="false">Latest day</button>
+      </div>
+      <select class="dash-select" id="duo-sort" aria-label="Sort"><option value="new">Newest Duo support first</option><option value="upd">Recently updated</option><option value="stars">Best rated in India</option><option value="rated">Most popular in India</option><option value="az">A to Z</option></select>
+    </div>
+    <div class="duo-daychip" data-draw="daychip"></div>
+    <p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store in India.</p>
+    <div class="duo-list" data-draw="rows" data-source="apps">—</div>
+  </section>
+
+  <section class="duo-two" id="trends">
+    <div class="duo-card" id="card-days">
+      <h2>Calendar of Duo support</h2>
+      <div class="duo-cal" data-draw="calendar" data-source="by_day">—</div>
+      <div class="duo-scale" data-draw="calscale"></div>
+      <p class="duo-muted">Each square is a day; the number is how many apps added iPhone Duo support that day, and a deeper colour means more. Tap a day to see its apps in the list above.</p>
+    </div>
+    <div class="duo-card" id="card-cats">
+      <h2>Where the apps are</h2>
+      <div class="duo-map" data-draw="catmap" data-source="by_cat">—</div>
+      <p class="duo-muted">Each block is a category, sized by its number of apps. Tap a block to see its apps in the list above.</p>
+    </div>
+  </section>
+
+  <details id="method">
+    <summary>How this list is made, and what it misses</summary>
+    <p class="duo-muted">A script reads Apple's public App Store charts for nine markets (India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany and Japan; top free, top paid and top grossing, overall and by category), keeps the apps available on the India store, and reads each app's version history for update notes that mention iPhone Duo or its folding screen. Apps that support iPhone Duo without ever saying so in their notes are not listed, so the real number is higher. "Duo support added" is the release date of the earliest version in the app's App Store version history whose notes mention iPhone Duo; "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo. Apple's "Made for iPhone Duo" badge is not in the public data. A few notes mention iPhone Duo for a bug fix and not for new support; tap an app to read its note and check. "Popular in" filters by the markets whose top charts list the app right now; every app shown is available on the India store, and ratings, prices and links are India's. Rating is the average on the App Store in India, with the number of India ratings in brackets. "Needs iOS" is the oldest iOS version the app runs on. The SDK version an app was built with is not published by Apple, so it is not shown.</p>
+  </details>
+  <footer class="duo-foot">
+    <p class="duo-muted">This is an independent project and is not affiliated with, endorsed by or sponsored by Apple Inc. iPhone and App Store are trademarks of Apple Inc. App names and icons belong to their owners. The list is built automatically from public App Store update notes, so it can miss apps or include one by mistake; check an app's App Store page before relying on it.</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+// --- small stand-in for the dashboard runtime the page was first written for ---
+const dash = (() => {
+  const sets = {apps: {status: 'loading', data: []}}, calcs = {}, draws = {};
+  let stamp = '';
+  const data = (id) => {
+    if (sets[id]) return sets[id];
+    const c = calcs[id];
+    if (!c) return {status: 'missing', data: null};
+    const ins = c.inputs.map(data);
+    if (ins.some((i) => i.status !== 'ok')) return {status: ins.find((i) => i.status !== 'ok').status, data: null};
+    if (!c.cache) c.cache = {status: 'ok', data: c.fn(...ins.map((i) => i.data))};
+    return c.cache;
+  };
+  const runAll = () => { for (const n of Object.keys(draws)) run(n); };
+  const run = (name) => { for (const el of document.querySelectorAll('[data-draw="' + name + '"]')) { try { draws[name](el); } catch (e) { console.error(name, e); } } };
+  const api = {
+    colors: ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)', 'var(--c7)', 'var(--c8)'],
+    data,
+    calc: (id, def) => { calcs[id] = def; },
+    draw: (name, fn) => { if (fn) draws[name] = fn; else run(name); },
+    stamp: () => stamp,
+    start: () => {
+      runAll();
+      fetch('data.json', {cache: 'no-cache'}).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => { sets.apps = {status: 'ok', data: d.rows || []}; stamp = d.updated || ''; runAll(); })
+        .catch(() => { sets.apps = {status: 'error', data: []}; runAll(); });
+      let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(runAll, 150); });
+    },
+  };
+  return api;
+})();
+
+dash.calc('summary', {
+  inputs: ['apps'],
+  title: 'Totals',
+  description: 'Counts of apps overall, and by the date iPhone Duo support first appeared in their update notes: the latest such date and the seven days up to it.',
+  fn: (apps) => {
+    if (!apps.length) return [];
+    const latest = d3.max(apps, (r) => r.duo_date);
+    const d = new Date(latest + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 6);
+    const from = d.toISOString().slice(0, 10);
+    const cats = d3.rollups(apps, (v) => v.length, (r) => r.category).sort((a, b) => b[1] - a[1]);
+    return [{
+      k: 'all', total: apps.length, categories: cats.length,
+      latest_day: latest, latest_count: apps.filter((r) => r.duo_date === latest).length,
+      week_from: from, week_count: apps.filter((r) => r.duo_date >= from).length,
+      top_category: cats[0][0], top_category_count: cats[0][1],
+    }];
+  },
+});
+dash.calc('by_day', {
+  inputs: ['apps'],
+  title: 'Apps per Duo support date',
+  description: 'Number of apps whose first version mentioning iPhone Duo was released on each date, with empty days as zero, and the running total up to that date.',
+  fn: (apps) => {
+    if (!apps.length) return [];
+    const count = d3.rollup(apps, (v) => v.length, (r) => r.duo_date);
+    const out = [];
+    let total = 0;
+    const end = new Date(d3.max(apps, (r) => r.duo_date) + 'T00:00:00Z');
+    for (let d = new Date(d3.min(apps, (r) => r.duo_date) + 'T00:00:00Z'); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+      const day = d.toISOString().slice(0, 10);
+      total += count.get(day) || 0;
+      out.push({day, apps: count.get(day) || 0, total});
+    }
+    return out;
+  },
+});
+const MARKETS = {in: 'India', us: 'United States', gb: 'United Kingdom', ae: 'UAE', sg: 'Singapore', au: 'Australia', ca: 'Canada', de: 'Germany', jp: 'Japan'};
+const marketsOf = (r) => String(r.markets || '').split(',').filter(Boolean);
+dash.calc('by_market', {
+  inputs: ['apps'],
+  title: 'Apps per market',
+  description: 'Number of apps on the board that are in the top charts of each market. An app in several markets is counted in each.',
+  fn: (apps) => {
+    const count = new Map();
+    for (const r of apps) for (const m of String(r.markets || '').split(',').filter(Boolean)) count.set(m, (count.get(m) || 0) + 1);
+    return [...count].map(([market, n]) => ({market, apps: n})).sort((a, b) => (b.market === 'in') - (a.market === 'in') || b.apps - a.apps);
+  },
+});
+dash.calc('by_cat', {
+  inputs: ['apps'],
+  title: 'Apps per category',
+  description: 'Number of apps in each App Store category, largest first.',
+  fn: (apps) => d3.rollups(apps, (v) => v.length, (r) => r.category)
+    .map(([category, n]) => ({category, apps: n}))
+    .sort((a, b) => b.apps - a.apps || a.category.localeCompare(b.category)),
+});
+
+const parseDay = d3.utcParse('%Y-%m-%d');
+const fmtDay = d3.utcFormat('%-d %b');
+const fmtLong = d3.utcFormat('%-d %b %Y');
+const fmtNum = d3.format(',');
+const day = (s, f) => { const d = parseDay(s); return d ? (f || fmtDay)(d) : '—'; };
+const okRows = (id) => { const g = dash.data(id); return g.status === 'ok' && Array.isArray(g.data) ? g.data : null; };
+const sum = () => { const r = okRows('summary'); return r && r.length ? r[0] : null; };
+const put = (name, f) => dash.draw(name, (el) => { const s = sum(); el.textContent = s ? f(s) : '—'; });
+
+put('t_total', (s) => fmtNum(s.total));
+put('t_week', (s) => fmtNum(s.week_count));
+put('t_latest', (s) => day(s.latest_day, fmtLong));
+put('n_total', (s) => fmtNum(s.total));
+put('n_cats', (s) => fmtNum(s.categories));
+put('n_week', (s) => fmtNum(s.week_count));
+put('n_weekfrom', (s) => day(s.week_from));
+put('n_latest', (s) => fmtNum(s.latest_count));
+put('n_latestday', (s) => day(s.latest_day, fmtLong));
+put('n_topcat', (s) => s.top_category);
+put('n_topcatn', (s) => fmtNum(s.top_category_count));
+
+const tint = (c, pct) => `color-mix(in srgb, ${c} ${pct}%, var(--color-bg))`;
+const toList = () => { for (const a of document.querySelectorAll('#apps')) a.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+dash.draw('calscale', (el) => {
+  el.replaceChildren();
+  const bar = document.createElement('i');
+  bar.style.background = `linear-gradient(90deg, ${tint(dash.colors[0], 10)}, ${tint(dash.colors[0], 62)})`;
+  el.append('Fewer', bar, 'More');
+});
+dash.draw('calendar', (el) => {
+  const g = dash.data('by_day');
+  const rows = okRows('by_day');
+  if (!rows || !rows.length) { el.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
+  el.replaceChildren();
+  for (const wd of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) { const hd = document.createElement('span'); hd.className = 'wd'; hd.textContent = wd; el.append(hd); }
+  const by = new Map(rows.map((r) => [r.day, r.apps]));
+  const max = d3.max(rows, (r) => r.apps) || 1;
+  const first = new Date(rows[0].day + 'T00:00:00Z'), end = new Date(rows[rows.length - 1].day + 'T00:00:00Z');
+  const d = new Date(first); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));   // back to Monday
+  const stop = new Date(end); stop.setUTCDate(stop.getUTCDate() + (7 - ((stop.getUTCDay() + 6) % 7) - 1));
+  const fmtMon = d3.utcFormat('%b');
+  let shownMonth = -1;
+  for (; d <= stop; d.setUTCDate(d.getUTCDate() + 1)) {
+    const key = d.toISOString().slice(0, 10);
+    const inRange = d >= first && d <= end;
+    const n = by.get(key) || 0;
+    const cell = document.createElement(inRange && n ? 'button' : 'span');
+    cell.className = 'c' + (inRange ? (n ? '' : ' zero') : ' off');
+    if (inRange) {
+      const label = document.createElement('span'); label.className = 'd';
+      const newMonth = d.getUTCMonth() !== shownMonth; shownMonth = d.getUTCMonth();
+      label.textContent = (newMonth ? fmtMon(d) + ' ' : '') + d.getUTCDate();
+      const num = document.createElement('span'); num.className = 'k'; num.textContent = n ? fmtNum(n) : '·';
+      if (n) { num.setAttribute('data-source', 'by_day'); num.setAttribute('data-field', 'apps'); num.setAttribute('data-where', 'day=' + key); }
+      cell.append(label, num);
+      if (n) {
+        cell.type = 'button';
+        cell.style.background = tint(dash.colors[0], 10 + 52 * Math.sqrt(n / max));
+        cell.setAttribute('aria-pressed', String(view.day === key));
+        cell.setAttribute('aria-label', `${day(key, fmtLong)}: ${n} apps. Show these apps.`);
+        cell.onclick = () => {
+          view.day = view.day === key ? '' : key; view.limit = 90;
+          dash.draw('calendar'); dash.draw('daychip'); redraw(); toList();
+        };
+      }
+    }
+    el.append(cell);
+  }
+});
+dash.draw('daychip', (el) => {
+  el.replaceChildren();
+  if (!view.day) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = 'Only ' + day(view.day, fmtLong) + '  ✕';
+  b.setAttribute('aria-label', 'Showing only ' + day(view.day, fmtLong) + '. Clear this day filter.');
+  b.onclick = () => { view.day = ''; view.limit = 90; dash.draw('calendar'); dash.draw('daychip'); redraw(); };
+  el.append(b);
+});
+dash.draw('catmap', (el) => {
+  const g = dash.data('by_cat');
+  const rows = okRows('by_cat');
+  if (!rows || !rows.length) { el.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
+  el.replaceChildren();
+  const w = Math.max(220, el.clientWidth || 500), h = el.clientHeight || 340;
+  const root = d3.hierarchy({children: rows}).sum((r) => r.apps || 0);
+  d3.treemap().size([w, h]).paddingInner(3).round(true)(root);
+  const tip = document.createElement('div'); tip.className = 'duo-tip'; tip.hidden = true;
+  root.leaves().forEach((leaf, i) => {
+    const r = leaf.data, tw = leaf.x1 - leaf.x0, th = leaf.y1 - leaf.y0;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 't' + (tw < 84 || th < 50 ? ' s' : '');
+    b.style.left = leaf.x0 + 'px'; b.style.top = leaf.y0 + 'px'; b.style.width = tw + 'px'; b.style.height = th + 'px';
+    // colour follows the category: the eight biggest get their own, the rest share a quiet one
+    b.style.background = i < Math.min(8, dash.colors.length) ? tint(dash.colors[i], 46) : tint('var(--cds-chart-muted)', 40);
+    b.setAttribute('aria-pressed', String(view.cat === r.category));
+    b.setAttribute('aria-label', `${r.category}: ${r.apps} apps. Show only these apps.`);
+    if (tw >= 46 && th >= 40) { const n = document.createElement('span'); n.className = 'n'; n.textContent = r.category; b.append(n); }
+    if (tw >= 30 && th >= 22) { const k = document.createElement('span'); k.className = 'k'; k.textContent = fmtNum(r.apps); b.append(k); }
+    const show = () => {
+      tip.hidden = false; tip.textContent = `${r.category}: ${fmtNum(r.apps)} apps`;
+      tip.style.left = Math.max(0, Math.min(w - tip.offsetWidth, leaf.x0 + 6)) + 'px';
+      tip.style.top = Math.max(0, leaf.y0 - 30) + 'px';
+    };
+    b.onpointerenter = show; b.onfocus = show;
+    b.onpointerleave = () => { tip.hidden = true; }; b.onblur = () => { tip.hidden = true; };
+    b.onclick = () => {
+      view.cat = view.cat === r.category ? '' : r.category; view.limit = 90;
+      dash.draw('catchips'); dash.draw('catmap'); redraw(); toList();
+    };
+    el.append(b);
+  });
+  el.append(tip);
+});
+
+const view = {q: '', cat: '', mkt: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
+dash.draw('mktchips', (box) => {
+  const rows = okRows('by_market') || [];
+  const s = sum();
+  box.replaceChildren();
+  if (!rows.length) return;
+  const chip = (label, value, n) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'duo-chip'; b.textContent = label;
+    const c = document.createElement('span'); c.textContent = fmtNum(n); b.append(c);
+    b.setAttribute('aria-pressed', String(view.mkt === value));
+    b.onclick = () => { view.mkt = value; view.limit = 90; dash.draw('mktchips'); dash.draw('rows'); dash.draw('shown'); };
+    box.append(b);
+  };
+  chip('All markets', '', s ? s.total : 0);
+  for (const r of rows) chip(MARKETS[r.market] || String(r.market).toUpperCase(), r.market, r.apps);
+});
+const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
+dash.draw('catchips', (box) => {
+  const rows = okRows('by_cat') || [];
+  const s = sum();
+  box.replaceChildren();
+  if (!rows.length) return;
+  const chip = (label, value, n) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'duo-chip'; b.textContent = label;
+    const c = document.createElement('span'); c.textContent = fmtNum(n); b.append(c);
+    b.setAttribute('aria-pressed', String(view.cat === value));
+    b.onclick = () => { view.cat = value; view.limit = 90; dash.draw('catchips'); dash.draw('catmap'); redraw(); };
+    box.append(b);
+  };
+  chip('All', '', s ? s.total : d3.sum(rows, (r) => r.apps));
+  for (const r of rows) chip(r.category, r.category, r.apps);
+});
+const visible = () => {
+  const rows = okRows('apps');
+  if (!rows) return null;
+  const s = sum();
+  const q = view.q.trim().toLowerCase();
+  const from = !s || view.when === 'all' ? '' : view.when === 'latest' ? s.latest_day : s.week_from;
+  const out = rows.filter((r) => (!view.cat || r.category === view.cat)
+    && (!view.day || r.duo_date === view.day)
+    && (!view.mkt || marketsOf(r).includes(view.mkt))
+    && (!from || String(r.duo_date) >= from)
+    && (!q || String(r.app).toLowerCase().includes(q) || String(r.developer).toLowerCase().includes(q)));
+  const byNew = (a, b) => String(b.duo_date).localeCompare(String(a.duo_date)) || (+b.ratings || 0) - (+a.ratings || 0);
+  if (view.sort === 'stars') out.sort((a, b) => (+b.rating || 0) - (+a.rating || 0) || (+b.ratings || 0) - (+a.ratings || 0));
+  else if (view.sort === 'upd') out.sort((a, b) => String(b.updated).localeCompare(String(a.updated)) || (+b.ratings || 0) - (+a.ratings || 0));
+  else if (view.sort === 'rated') out.sort((a, b) => (+b.ratings || 0) - (+a.ratings || 0));
+  else if (view.sort === 'az') out.sort((a, b) => String(a.app).localeCompare(String(b.app)));
+  else out.sort(byNew);
+  return out;
+};
+dash.draw('shown', (el) => { const v = visible(); el.textContent = v ? fmtNum(v.length) : '—'; });
+dash.draw('rows', (box) => {
+  const g = dash.data('apps');
+  const v = visible();
+  if (!v) { box.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
+  box.replaceChildren();
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const mark = (e, field, id) => { e.setAttribute('data-source', 'apps'); e.setAttribute('data-field', field); e.setAttribute('data-where', 'id=' + encodeURIComponent(id)); return e; };
+  if (!v.length) { const p = mk('p', 'duo-empty', 'No apps match. Try another search, category or date.'); p.style.gridColumn = '1 / -1'; box.append(p); return; }
+  const fmtStar = d3.format('.1f');
+  const s = sum();
+  const counts = d3.rollup(v, (x) => x.length, (r) => r.duo_date);
+  const info = (r) => {
+    const p = mk('div', 'duo-info');
+    p.append(mk('b', 't', r.app));
+    if (r.desc) p.append(mk('p', '', r.desc));
+    const note = mk('p');
+    note.append(mk('span', 'lab', 'What the update says: '), '“' + r.note + '”');
+    p.append(note);
+    const dl = mk('dl');
+    const pair = (k, val) => { const d = mk('div'); d.append(mk('dt', '', k), val instanceof Node ? val : mk('dd', '', val)); dl.append(d); };
+    pair('Developer', r.developer);
+    const duo = mk('dd');
+    duo.append(mark(mk('span', '', day(r.duo_date, fmtLong)), 'duo_date', r.id), ' · version ', mark(mk('span', '', r.duo_version), 'duo_version', r.id));
+    pair('Duo support added', duo);
+    const upd = mk('dd');
+    upd.append(mark(mk('span', '', day(r.updated, fmtLong)), 'updated', r.id), ' · version ', mark(mk('span', '', r.version), 'version', r.id));
+    pair('Latest update', upd);
+    pair('India rating', (+r.ratings || 0) ? '★ ' + fmtStar(+r.rating || 0) + ' from ' + fmtNum(+r.ratings) + ' ratings' : 'No ratings yet');
+    if (r.min_ios) pair('Needs iOS', r.min_ios + ' or later');
+    pair('Category', r.category + (r.price ? ' · ' + r.price : ''));
+    if (marketsOf(r).length) pair('In the top charts of', marketsOf(r).map((m) => MARKETS[m] || m.toUpperCase()).join(', '));
+    p.append(dl);
+    return p;
+  };
+  let lastDay = null;
+  for (const r of v.slice(0, view.limit)) {
+    if (view.sort === 'new' && r.duo_date !== lastDay) {
+      lastDay = r.duo_date;
+      const h = mk('div', 'duo-day');
+      const n = counts.get(r.duo_date) || 0;
+      h.append(mk('b', '', day(r.duo_date, d3.utcFormat('%A, %-d %B'))),
+        mk('span', '', (s && r.duo_date === s.latest_day ? 'Latest · ' : '') + fmtNum(n) + (n === 1 ? ' app' : ' apps') + ' added Duo support'));
+      box.append(h);
+    }
+    const isOpen = view.open === String(r.id);
+    const card = mk('article', 'duo-app');
+    card.setAttribute('data-open', String(isOpen));
+    const open = mk('button', 'open');
+    open.type = 'button';
+    open.setAttribute('aria-expanded', String(isOpen));
+    open.onclick = () => { view.open = isOpen ? '' : String(r.id); dash.draw('rows'); };
+    const art = String(r.art || '');
+    const src = /^https:\/\/is\d-ssl\.mzstatic\.com\//.test(art) ? art.replace(/\/[^\/]+$/, '/120x120bb.jpg') : String(r.icon || '');
+    let pic;
+    if (src.startsWith('https://') || src.startsWith('data:image/')) { pic = mk('img'); pic.src = src; pic.alt = ''; pic.loading = 'lazy'; pic.width = 48; pic.height = 48; }
+    else pic = mk('span', 'noicon');
+    const main = mk('span', 'main');
+    main.append(mk('span', 'name', r.app), mk('span', 'desc', r.desc || r.developer));
+    const facts = mk('span', 'facts');
+    const n = +r.ratings || 0;
+    if (n) facts.append('★ ', mark(mk('span', '', fmtStar(+r.rating || 0)), 'rating', r.id), ' · ');
+    facts.append(r.category + (view.sort === 'upd' ? ' · Updated ' + day(r.updated) : view.sort !== 'new' ? ' · Duo ' + day(r.duo_date) : ''));
+    main.append(facts);
+    open.append(pic, main);
+    card.append(open);
+    const url = String(r.url || '');
+    if (url.startsWith('https://apps.apple.com/')) {
+      const a = mk('a', 'duo-get', 'Get');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      a.setAttribute('aria-label', 'Get ' + r.app + ' on the App Store');
+      card.append(a);
+    }
+    box.append(card);
+    if (isOpen) box.append(info(r));
+  }
+  if (v.length > view.limit) {
+    const more = mk('button', 'duo-more', 'Show ' + fmtNum(Math.min(90, v.length - view.limit)) + ' more of ' + fmtNum(v.length - view.limit) + ' remaining');
+    more.type = 'button'; more.style.gridColumn = '1 / -1'; more.style.justifySelf = 'center';
+    more.onclick = () => { view.limit += 90; dash.draw('rows'); };
+    box.append(more);
+  }
+});
+for (const inp of document.querySelectorAll('#duo-q')) {
+  inp.addEventListener('input', () => { view.q = inp.value; view.limit = 90; redraw(); });
+}
+for (const sel of document.querySelectorAll('#duo-sort')) {
+  sel.addEventListener('change', () => { view.sort = sel.value; view.limit = 90; dash.draw('rows'); });
+}
+const segs = document.querySelectorAll('.duo-seg button[data-when]');
+for (const b of segs) {
+  b.addEventListener('click', () => {
+    view.when = b.getAttribute('data-when'); view.limit = 90; view.day = ''; dash.draw('calendar'); dash.draw('daychip');
+    for (const o of segs) o.setAttribute('aria-pressed', String(o === b));
+    redraw();
+  });
+}
+
+dash.draw('stamp', (el) => {
+  const t = dash.stamp();
+  const d = t ? new Date(t) : null;
+  el.textContent = d && !isNaN(d) ? d.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'}) : '—';
+});
+dash.start();
+</script>
+</body>
+</html>

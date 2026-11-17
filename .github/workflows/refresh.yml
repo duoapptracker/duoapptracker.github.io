@@ -1,0 +1,35 @@
+name: Daily refresh
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 6:30 am India time
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: refresh
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan the App Store
+        run: |
+          for i in $(seq 1 12); do
+            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30)
+            echo "$out" | cut -c1-2000
+            case "$out" in
+              DONE*) break ;;
+              CONTINUE*) ;;
+              *) echo "Scan stopped; the site is left unchanged."; exit 1 ;;
+            esac
+          done
+          test -s data.new.json
+          python3 -c "import json; a=json.load(open('data.json')); b=json.load(open('data.new.json')); assert len(b['rows']) >= len(a['rows']), 'fewer apps than before'"
+          mv data.new.json data.json
+      - name: Publish the new list
+        run: |
+          git config user.name "refresh-bot"
+          git config user.email "refresh-bot@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || git commit -m "Daily refresh"
+          git push
