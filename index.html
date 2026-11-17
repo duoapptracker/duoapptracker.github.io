@@ -29,9 +29,8 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--color-bg);color:var(--color-fg);padding:28px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px))}
 a{color:inherit}
 .dash-select{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:6px 12px}
-details#method summary{cursor:pointer;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
-details#method p{margin-top:8px}
-.duo-foot{border-top:1px solid var(--color-border-line);padding-top:var(--cds-gap-lg)}
+.duo-foot{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--cds-gap-lg)}
+.duo-notes{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:8px;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);line-height:1.5}
 
 .duo{display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg);font-size:var(--cds-font-size-body);max-width:1240px;margin:0 auto}
 .duo h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
@@ -98,7 +97,7 @@ details#method p{margin-top:8px}
 .duo-cal button.c:focus-visible{outline:2.5px solid var(--color-fg);outline-offset:1px}
 .duo-scale{display:flex;align-items:center;gap:8px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
 .duo-scale i{display:block;width:120px;height:10px;border-radius:5px}
-.duo-map{position:relative;height:340px;color:var(--color-fg-muted)}
+.duo-map{position:relative;flex:1 1 340px;min-height:340px;color:var(--color-fg-muted)}
 .duo-map .t{position:absolute;font:inherit;color:var(--color-fg);border:0;border-radius:8px;padding:6px 8px;cursor:pointer;text-align:left;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:1px;box-sizing:border-box}
 .duo-map .t .n{font-size:var(--cds-font-size-caption);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .duo-map .t .k{font-size:1.25rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -157,12 +156,27 @@ details#method p{margin-top:8px}
     </div>
   </section>
 
-  <details id="method">
-    <summary>How this list is made, and what it misses</summary>
-    <p class="duo-muted">A script reads Apple's public App Store charts for nine markets (India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany and Japan; top free, top paid and top grossing, overall and by category), keeps the apps available on the India store, and reads each app's version history for update notes that mention iPhone Duo or its folding screen. Apps that support iPhone Duo without ever saying so in their notes are not listed, so the real number is higher. "Duo support added" is the release date of the earliest version in the app's App Store version history whose notes mention iPhone Duo; "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo. Apple's "Made for iPhone Duo" badge is not in the public data. A few notes mention iPhone Duo for a bug fix and not for new support; tap an app to read its note and check. "Popular in" filters by the markets whose top charts list the app right now; every app shown is available on the India store, and ratings, prices and links are India's. Rating is the average on the App Store in India, with the number of India ratings in brackets. "Needs iOS" is the oldest iOS version the app runs on. The SDK version an app was built with is not published by Apple, so it is not shown.</p>
-  </details>
-  <footer class="duo-foot">
-    <p class="duo-muted">This is an independent project and is not affiliated with, endorsed by or sponsored by Apple Inc. iPhone and App Store are trademarks of Apple Inc. App names and icons belong to their owners. The list is built automatically from public App Store update notes, so it can miss apps or include one by mistake; check an app's App Store page before relying on it.</p>
+  <footer class="duo-foot" id="about">
+    <div class="duo-card">
+      <h2>How this list is made</h2>
+      <ul class="duo-notes">
+        <li>A script reads Apple's public App Store charts for nine markets: India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany and Japan.</li>
+        <li>It keeps the apps that are available on the India store and reads each app's version history for update notes that mention iPhone Duo or its folding screen.</li>
+        <li>"Duo support added" is the release date of the earliest version whose notes mention iPhone Duo. "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo.</li>
+        <li>"Popular in" filters by the markets whose top charts list the app right now.</li>
+        <li>Ratings, prices and links are from the App Store in India. "Needs iOS" is the oldest iOS version the app runs on.</li>
+      </ul>
+    </div>
+    <div class="duo-card">
+      <h2>Good to know</h2>
+      <ul class="duo-notes">
+        <li>Apps that support iPhone Duo without ever saying so in their update notes are not listed, so the real number is higher.</li>
+        <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
+        <li>Apple's "Made for iPhone Duo" badge and the SDK version an app was built with are not in the public data, so they are not shown.</li>
+        <li>The list is built automatically, so it can miss apps or include one by mistake. Check an app's App Store page before relying on it.</li>
+        <li>This is an independent project. It is not affiliated with, endorsed by or sponsored by Apple Inc. iPhone and App Store are trademarks of Apple Inc. App names and icons belong to their owners.</li>
+      </ul>
+    </div>
   </footer>
 </div>
 
