@@ -333,6 +333,44 @@ body.duo-lock{overflow:hidden}
   .duo-sidebox .duo-popgrid{left:0;top:calc(100% + 6px)}
 }
 @media (prefers-reduced-motion:reduce){.duo-tagline{transition:none}}
+
+/* calmer layout: one-line header, a single stats strip, compact filters */
+.duo{gap:20px}
+.duo-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:14px 28px}
+.duo-top h1{font-size:2.1rem}
+.duo-tagline{margin:8px 0 0;font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;min-height:1.5em;line-height:1.5}
+.duo-topright{justify-content:flex-end;align-items:center}
+.duo-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:var(--glass);border:1px solid var(--glass-line);border-radius:22px;box-shadow:var(--glass-shadow),var(--glass-hi);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);overflow:hidden}
+.duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){background:none;border:0;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;padding:16px 26px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:16px;row-gap:0}
+.duo-tile+.duo-tile{border-left:1px solid var(--glass-edge)}
+.duo-tile .num{grid-row:1 / span 2;font-size:2.2rem;line-height:1}
+.duo-tile .lab{font-size:var(--cds-font-size-caption);font-weight:600;align-self:end}
+.duo-tile .sub{align-self:start}
+.duo-tile:nth-child(1) .num{color:var(--c1)}
+.duo-tile:nth-child(2) .num{color:var(--c3)}
+.duo-tile:nth-child(3) .num{color:var(--c4)}
+.duo-sidebox{padding:2px 16px 16px}
+.duo-sidebox .duo-fgrid{gap:12px}
+.duo-f{gap:5px}
+.duo-f>span{font-size:10.5px}
+.duo-f .dash-select,.duo-f .duo-pop summary{height:40px;line-height:38px;background-color:var(--glass-2);border:1px solid var(--glass-line);color:var(--color-fg);box-shadow:none}
+.duo-f .duo-pop summary{line-height:1.2}
+.duo-f .dash-select:hover,.duo-f .duo-pop summary:hover{background-color:var(--glass-2);border-color:var(--color-fg-muted)}
+.duo-guidebtn{display:block;width:100%;margin-top:14px;padding:10px 12px;font:inherit;font-size:var(--cds-font-size-caption);font-weight:600;color:var(--c1);background:transparent;border:1px dashed var(--glass-line);border-radius:12px;cursor:pointer}
+.duo-guidebtn:hover{border-color:var(--c1)}
+.duo-searchrow{padding:6px 8px}
+.duo-searchrow .duo-search{padding:12px 16px}
+@media (max-width:900px){
+  .duo-top{grid-template-columns:1fr}
+  .duo-topright{justify-content:flex-start}
+  .duo-tagline{white-space:normal;min-height:3em}
+}
+@media (max-width:700px){
+  .duo-tiles{grid-template-columns:1fr}
+  .duo-tile+.duo-tile{border-left:0;border-top:1px solid var(--glass-edge)}
+  .duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){padding:12px 18px}
+  .duo-tile .num{font-size:1.8rem;min-width:3.2ch}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -345,7 +383,6 @@ body.duo-lock{overflow:hidden}
     <div>
       <h1>iPhone Duo App Tracker</h1>
       <p class="duo-tagline" id="takeaway" data-draw="tagline" aria-live="off">—</p>
-      <button type="button" class="duo-linkbtn" id="duo-reopen">Choose your market and interests</button>
     </div>
     <div class="duo-topright">
       <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
@@ -397,6 +434,7 @@ body.duo-lock{overflow:hidden}
           <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
           <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
         </div>
+        <button type="button" class="duo-guidebtn" id="duo-reopen">Open the welcome guide</button>
       </details>
     </aside>
     <div class="duo-main">
@@ -698,7 +736,7 @@ const scope = () => { const rows = okRows('apps'); return rows ? (view.mkt ? row
 
 // the line under the title: facts about the current market, rotating with a few friendly lines
 let tagI = 0;
-const short = (t) => (t.length > 26 ? t.slice(0, 24).trim() + '…' : t);
+const short = (t) => { const n = String(t).split(/\s[-–—|]\s|:\s|\s\(/)[0].trim() || String(t); return n.length > 24 ? n.slice(0, 22).trim() + '…' : n; };
 const tagMsgs = () => {
   const v = scope(), s = sum();
   if (!v || !s) return null;
@@ -863,7 +901,7 @@ dash.draw('rows', (box) => {
       card.append(a);
     }
     const how = mk('div', 'duo-src' + (r.source === 'reported' ? ' rep' : ''));
-    how.append(mk('i'), mk('span', '', r.source === 'reported' ? 'Reported by ' + (r.report_by || 'the press') : 'Confirmed in its update notes' + (r.duo_version ? ' · version ' + r.duo_version : '')));
+    how.append(mk('i'), mk('span', '', r.source === 'reported' ? 'Reported by ' + (/^site owner/i.test(r.report_by || '') ? 'the site owner' : (r.report_by || 'the press')) : 'Confirmed in its update notes' + (r.duo_version ? ' · version ' + r.duo_version : '')));
     card.append(how);
     box.append(card);
     if (isOpen) box.append(info(r));
