@@ -201,6 +201,28 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-filters .duo-sortsel{margin-left:auto}
 .duo-lede{max-width:none}
 @media (max-width:700px){.duo-filters .duo-sortsel{margin-left:0}.duo-filters .dash-select{flex:1 1 150px}}
+
+/* small search and category pop-up */
+.duo-toolbar{position:relative;z-index:5}
+.duo-filters{position:relative}
+.duo-toolbar .duo-filters .duo-search{flex:1 1 200px;max-width:300px;width:auto;padding:9px 14px;font-size:var(--cds-font-size-caption);line-height:1.2}
+.duo-pop summary{list-style:none;cursor:pointer;white-space:nowrap;font-size:var(--cds-font-size-caption);line-height:1.2;color:var(--color-fg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:9px 34px 9px 14px;position:relative;user-select:none}
+.duo-pop summary::-webkit-details-marker{display:none}
+.duo-pop summary::after{content:"";position:absolute;right:14px;top:50%;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-70%) rotate(45deg);opacity:.7}
+.duo-pop summary:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.duo-popgrid{position:absolute;z-index:30;left:0;top:calc(100% + 10px);width:min(620px,100%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 6px;padding:10px;border-radius:18px;background:var(--pop);border:1px solid var(--color-border-line);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.duo-popgrid button{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg);background:transparent;border:0;border-radius:10px;padding:9px 10px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0}
+.duo-popgrid button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-popgrid button i{font-style:normal;color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
+.duo-popgrid button:hover,.duo-popgrid button:focus-visible{background:var(--color-panel);outline:none}
+.duo-popgrid button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
+.duo-popgrid button[aria-pressed=true] i{color:inherit;opacity:.75}
+@media (max-width:700px){.duo-popgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.duo-toolbar .duo-filters .duo-search{max-width:none;flex-basis:100%}.duo-pop{flex:1 1 150px}.duo-pop summary{overflow:hidden;text-overflow:ellipsis}}
+:root{--pop:#ffffff}
+@media (prefers-color-scheme: dark){:root{--pop:#171a25}}
+.duo-pop summary{background:var(--glass-2);border-color:var(--glass-line);box-shadow:var(--glass-hi)}
+.duo-popgrid{border-color:var(--glass-line);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
+.duo-popgrid button:hover,.duo-popgrid button:focus-visible{background:var(--glass-2)}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -225,10 +247,10 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 
   <section class="duo-find" id="apps">
     <div class="duo-toolbar">
-    <input class="duo-search" id="duo-q" type="search" placeholder="Search for an app or developer" aria-label="Search for an app or developer">
     <div class="duo-filters">
+      <input class="duo-search" id="duo-q" type="search" placeholder="Search apps" aria-label="Search for an app or developer">
       <select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market" aria-label="Market"></select>
-      <select class="dash-select" id="duo-catsel" data-draw="catchips" data-source="by_cat" aria-label="Category"></select>
+      <details class="duo-pop" id="duo-catpop"><summary aria-label="Category"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details>
       <div class="duo-seg" role="group" aria-label="When Duo support was added">
         <button type="button" data-when="all" aria-pressed="true">All dates</button>
         <button type="button" data-when="week" aria-pressed="false">Last 7 days</button>
@@ -259,7 +281,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     <div class="duo-card">
       <h2>How this list is made</h2>
       <ul class="duo-notes">
-        <li>A script reads Apple's public App Store charts for nine markets: India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany and Japan.</li>
+        <li>A script reads Apple's public App Store charts for ten markets: India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany, Japan and China.</li>
         <li>It keeps the apps that are available on the India store and reads each app's version history for update notes that mention iPhone Duo or its folding screen.</li>
         <li>"Duo support added" is the release date of the earliest version whose notes mention iPhone Duo. "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo.</li>
         <li>"Popular in" filters by the markets whose top charts list the app right now.</li>
@@ -351,7 +373,7 @@ dash.calc('by_day', {
     return out;
   },
 });
-const MARKETS = {in: 'India', us: 'United States', gb: 'United Kingdom', ae: 'UAE', sg: 'Singapore', au: 'Australia', ca: 'Canada', de: 'Germany', jp: 'Japan'};
+const MARKETS = {in: 'India', us: 'United States', gb: 'United Kingdom', ae: 'UAE', sg: 'Singapore', au: 'Australia', ca: 'Canada', de: 'Germany', jp: 'Japan', cn: 'China'};
 const marketsOf = (r) => String(r.markets || '').split(',').filter(Boolean);
 dash.calc('by_market', {
   inputs: ['apps'],
@@ -479,7 +501,7 @@ dash.draw('catmap', (el) => {
     b.onpointerleave = () => { tip.hidden = true; }; b.onblur = () => { tip.hidden = true; };
     b.onclick = () => {
       view.cat = view.cat === r.category ? '' : r.category; view.limit = 90;
-      dash.draw('catchips'); dash.draw('catmap'); redraw(); toList();
+      dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); toList();
     };
     el.append(b);
   });
@@ -494,11 +516,26 @@ dash.draw('mktchips', (sel) => {
   sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
-dash.draw('catchips', (sel) => {
+dash.draw('catlabel', (el) => { el.textContent = view.cat || 'All categories'; });
+dash.draw('catchips', (box) => {
   const rows = okRows('by_cat') || [];
-  sel.replaceChildren(new Option('All categories', ''), ...rows.map((r) => new Option(`${r.category} (${fmtNum(r.apps)})`, r.category)));
-  sel.value = rows.some((r) => r.category === view.cat) ? view.cat : '';
-  sel.onchange = () => { view.cat = sel.value; view.limit = 90; dash.draw('catmap'); redraw(); };
+  const s = sum();
+  box.replaceChildren();
+  const item = (label, value, n) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.setAttribute('aria-pressed', String(view.cat === value));
+    const name = document.createElement('span'); name.textContent = label;
+    const count = document.createElement('i'); count.textContent = fmtNum(n);
+    b.append(name, count);
+    b.onclick = () => {
+      view.cat = value; view.limit = 90;
+      for (const d of document.querySelectorAll('#duo-catpop')) d.open = false;
+      dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
+    };
+    box.append(b);
+  };
+  item('All categories', '', s ? s.total : d3.sum(rows, (r) => r.apps));
+  for (const r of rows) item(r.category, r.category, r.apps);
 });
 const visible = () => {
   const rows = okRows('apps');
@@ -627,6 +664,8 @@ for (const inp of document.querySelectorAll('#duo-q')) {
 for (const sel of document.querySelectorAll('#duo-sort')) {
   sel.addEventListener('change', () => { view.sort = sel.value; view.limit = 90; dash.draw('rows'); });
 }
+document.addEventListener('click', (ev) => { for (const d of document.querySelectorAll('details.duo-pop[open]')) if (!d.contains(ev.target)) d.open = false; });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') for (const d of document.querySelectorAll('details.duo-pop[open]')) d.open = false; });
 const segs = document.querySelectorAll('.duo-seg button[data-when]');
 for (const b of segs) {
   b.addEventListener('click', () => {

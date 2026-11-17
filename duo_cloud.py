@@ -4,15 +4,15 @@ Usage: python3 duo_cloud.py PREVIOUS_board_rows.json NEW_board_rows.json [--slic
 --reported FILE: a JSON list of apps newly reported as optimised: [{"id": App Store id, "date": "YYYY-MM-DD", "source": site name, "text": one sentence, "url": "https://..."}]
 Each run works for at most --slice seconds (default 480), saves its progress in duo_state.json beside the output,
 and prints CONTINUE (run the same command again) or DONE with a summary (the output file is written).
-What it does: reads the App Store charts of nine markets (India, US, UK, UAE, Singapore, Australia, Canada, Germany,
-Japan; overall and 24 categories everywhere, plus 19 game types in India, the US and the UK), notes which markets'
+What it does: reads the App Store charts of ten markets (India, US, UK, UAE, Singapore, Australia, Canada, Germany,
+Japan, China; overall and 24 categories everywhere, plus 19 game types in India, the US and the UK), notes which markets'
 charts each app is in,
 keeps the apps available on the India store, and for each one not yet on the board reads its version history
 to find the first version whose notes mention iPhone Duo. Apps are never removed from the board.
 Reads only Apple's public feeds and store pages; writes only the output file and duo_state.json."""
 import json, re, subprocess, datetime, os, sys, time, base64
 from concurrent.futures import ThreadPoolExecutor
-MARKETS = {'in': 'India', 'us': 'United States', 'gb': 'United Kingdom', 'ae': 'UAE', 'sg': 'Singapore', 'au': 'Australia', 'ca': 'Canada', 'de': 'Germany', 'jp': 'Japan'}
+MARKETS = {'in': 'India', 'us': 'United States', 'gb': 'United Kingdom', 'ae': 'UAE', 'sg': 'Singapore', 'au': 'Australia', 'ca': 'Canada', 'de': 'Germany', 'jp': 'Japan', 'cn': 'China'}
 FULL = ['in', 'us', 'gb']   # these markets also get the 19 game-type charts
 GENRES = [0,6000,6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,6011,6012,6013,6014,6015,6016,6017,6018,6020,6023,6024,6026,6027] + list(range(7001, 7020))
 CHARTS = ['topfreeapplications','toppaidapplications','topgrossingapplications']
