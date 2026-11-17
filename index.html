@@ -344,6 +344,7 @@ body.duo-lock{overflow:hidden}
     <div class="duo-filters">
       <input class="duo-search" id="duo-q" type="search" placeholder="Search apps" aria-label="Search for an app or developer">
       <select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market" aria-label="Market"></select>
+      <select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps" aria-label="Confirmed by"></select>
       <div class="duo-seg" role="group" aria-label="Sort">
         <button type="button" data-sort="new" aria-pressed="true">New</button>
         <button type="button" data-sort="rated" aria-pressed="false">Popular</button>
@@ -613,7 +614,7 @@ dash.draw('catmap', (el) => {
   el.append(tip);
 });
 
-const view = {q: '', cats: [], mkt: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
+const view = {q: '', cats: [], mkt: '', conf: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
 // rating and number of ratings for the chosen market, or the app's home store when no market is chosen
 const stat = (r) => { const m = mkOf(r)[view.mkt || r.home || 'in']; return m ? [+m[0] || 0, +m[1] || 0] : [+r.rating || 0, +r.ratings || 0]; };
 const storeUrl = (r) => { const u = String(r.url || ''); return view.mkt ? u.replace(/^https:\/\/apps\.apple\.com\/[a-z]{2}\//, 'https://apps.apple.com/' + view.mkt + '/') : u; };
@@ -625,6 +626,30 @@ dash.draw('mktchips', (sel) => {
   sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('l_total'); dash.draw('l_where'); dash.draw('l_week'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
+// how an app was confirmed: its own update notes, Apple, the press, a forum or social post, the site owner, or a visitor
+const CONF = [['notes', 'Update notes'], ['apple', 'Apple'], ['press', 'News and press'], ['forum', 'Forum or social'], ['owner', 'Site owner'], ['visitor', 'Visitor report']];
+const confOf = (r) => {
+  const set = new Set();
+  if (r.source !== 'reported') set.add('notes');
+  const by = String(r.report_by || '');
+  if (by) {
+    if (/site owner/i.test(by)) set.add('owner');
+    else if (/^apple/i.test(by)) set.add('apple');
+    else if (/forum|reddit|community list|\bx community/i.test(by)) set.add('forum');
+    else if (/^community report$/i.test(by)) set.add('visitor');
+    else set.add('press');
+  }
+  return set;
+};
+dash.draw('confchips', (sel) => {
+  const rows = okRows('apps') || [];
+  const n = new Map();
+  for (const r of rows) for (const k of confOf(r)) n.set(k, (n.get(k) || 0) + 1);
+  sel.replaceChildren(new Option('Any confirmation', ''), ...CONF.filter(([k]) => n.get(k)).map(([k, t]) => new Option(`${t} (${fmtNum(n.get(k))})`, k)));
+  sel.value = n.get(view.conf) ? view.conf : '';
+  sel.onchange = () => { view.conf = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
+});
+
 // the sentence under the title follows the chosen market
 const scope = () => { const rows = okRows('apps'); return rows ? (view.mkt ? rows.filter((r) => !!mkOf(r)[view.mkt]) : rows) : null; };
 dash.draw('l_total', (el) => { const v = scope(); el.textContent = v ? fmtNum(v.length) : '—'; });
@@ -659,6 +684,7 @@ const visible = () => {
   const out = rows.filter((r) => (!view.cats.length || view.cats.includes(r.category))
     && (!view.day || r.duo_date === view.day)
     && (!view.mkt || !!mkOf(r)[view.mkt])
+    && (!view.conf || confOf(r).has(view.conf))
     && (!from || String(r.duo_date) >= from)
     && (!q || String(r.app).toLowerCase().includes(q) || String(r.developer).toLowerCase().includes(q)));
   const n = (r) => stat(r)[1], st = (r) => stat(r)[0];
