@@ -166,7 +166,7 @@ def main():
             add = json.load(open(args[args.index('--reported') + 1]))
             for e in (add if isinstance(add, list) else []):
                 i, d = str(e.get('id', '')), str(e.get('date', ''))
-                ok = i.isdigit() and re.fullmatch(r'\d{4}-\d\d-\d\d', d) and EARLIEST <= d <= today and str(e.get('url', '')).startswith('https://') and e.get('source') and e.get('text')
+                ok = i.isdigit() and re.fullmatch(r'\d{4}-\d\d-\d\d', d) and EARLIEST <= d <= today and (str(e.get('url', '')) == '' or str(e.get('url', '')).startswith('https://')) and e.get('source') and e.get('text')
                 if ok and i not in rp:
                     rp[i] = {'date': d, 'source': str(e['source'])[:60], 'text': str(e['text'])[:240], 'url': str(e['url'])[:300]}
         st['reported'] = rp

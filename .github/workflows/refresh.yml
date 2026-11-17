@@ -42,7 +42,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
-          import json, re, subprocess, urllib.parse
+          import json, re, subprocess, urllib.parse, os
           out = subprocess.run(['gh', 'issue', 'list', '--label', 'approved', '--state', 'open', '--limit', '30', '--json', 'number,body,createdAt,url'], capture_output=True, text=True).stdout
           add, nums = [], []
           for it in json.loads(out or '[]'):
@@ -63,6 +63,10 @@ jobs:
                   continue
               add.append({'id': m.group(1), 'date': it['createdAt'][:10], 'source': 'Community report', 'text': 'Reported by a visitor on ' + it['createdAt'][:10] + ' and reviewed by the site owner', 'url': it['url']})
               nums.append(it['number'])
+          # entries added by hand by the site owner (apps seen or tested on an iPhone Duo)
+          if os.path.exists('reported_manual.json'):
+              try: add.extend(json.load(open('reported_manual.json')))
+              except ValueError: pass
           json.dump(add, open('reported_add.json', 'w')); open('approved_numbers.txt', 'w').write(' '.join(str(n) for n in nums))
           print('approved community reports:', len(add))
           PY
