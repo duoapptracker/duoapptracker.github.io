@@ -240,6 +240,8 @@ def main():
             cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')
 
     if st['stage'] == 'discover':
+        if '--skip-discover' in args: st['stage'] = 'lookup'   # the extra daily runs skip the (slow) search step
+    if st['stage'] == 'discover':
         # apps that are in no chart: ask the App Store search for apps whose notes or description speak of iPhone Duo
         if 'dq' not in st:
             terms = DISCOVER_TERMS + ['iPhone Duo ' + c for c in DISCOVER_CATEGORIES]

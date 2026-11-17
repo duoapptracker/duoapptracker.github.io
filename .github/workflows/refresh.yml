@@ -1,7 +1,9 @@
 name: Daily refresh
 on:
   schedule:
-    - cron: "0 1 * * *"   # 6:30 am India time
+    - cron: "30 1 * * *"   # 7:00 am India time: full scan with the App Store search step
+    - cron: "30 7 * * *"   # 1:00 pm India time
+    - cron: "30 15 * * *"  # 9:00 pm India time
   workflow_dispatch:
 permissions:
   contents: write
@@ -65,9 +67,14 @@ jobs:
           print('approved community reports:', len(add))
           PY
       - name: Scan the App Store
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
+          # the 1 pm and 9 pm runs skip the slow App Store search step; the 7 am run and manual runs do it
+          SKIP=""
+          if [ "$SCHEDULE" = "30 7 * * *" ] || [ "$SCHEDULE" = "30 15 * * *" ]; then SKIP="--skip-discover"; fi
           for i in $(seq 1 12); do
-            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json --submitted submitted.json)
+            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json --submitted submitted.json $SKIP)
             echo "$out" | cut -c1-2000
             case "$out" in
               DONE*) break ;;

@@ -834,7 +834,7 @@ dash.draw('remindcount', (elc) => { const n = remind.count(); elc.textContent = 
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;
-  el.textContent = d && !isNaN(d) ? d.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'}) : '—';
+  el.textContent = d && !isNaN(d) ? d.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'}) : '—';
 });
 dash.start();
 </script>
