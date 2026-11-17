@@ -382,6 +382,16 @@ body.duo-lock{overflow:hidden}
 @media (max-width:900px){
   .duo-sidebox .duo-fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* one card: search + filters together */
+.duo-bar{display:block;background:var(--glass);border:1px solid var(--glass-line);border-radius:22px;box-shadow:var(--glass-shadow),var(--glass-hi);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);padding:14px 16px 10px;position:relative;z-index:20}
+.duo-bar>.duo-search{display:block;width:100%;max-width:none;box-sizing:border-box;height:46px;padding:0 16px;font-size:1rem;background:var(--glass-2);border:1px solid var(--glass-line);border-radius:14px;box-shadow:none}
+.duo-bar .duo-fgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:14px;position:relative}
+.duo-bar .duo-f.duo-cat{position:static}
+.duo-bar .duo-popgrid{left:0;top:calc(100% + 6px);width:min(620px,100%)}
+.duo-barfoot{display:flex;gap:18px;justify-content:flex-end;margin-top:8px}
+.duo-barfoot .duo-resetbtn{display:inline;margin:0;padding:4px 0}
+@media (max-width:900px){.duo-bar .duo-fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.duo-barfoot{justify-content:flex-start}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -436,19 +446,16 @@ body.duo-lock{overflow:hidden}
 
   <section class="duo-layout" id="apps">
     <div class="duo-main">
-      <div class="duo-bar">
-        <div class="duo-toolbar duo-searchrow"><input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer"></div>
-        <details class="duo-sidebox" id="duo-sidebox">
-          <summary><span>Filters</span><span class="duo-badge" data-draw="filtercount"></span><button type="button" class="duo-resetbtn" id="duo-reset">Reset all</button></summary>
-          <div class="duo-fgrid">
-            <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
-            <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
-            <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
-            <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
-            <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
-          </div>
-          <button type="button" class="duo-guidebtn" id="duo-reopen">Open the welcome guide</button>
-        </details>
+      <div class="duo-bar duo-toolbar">
+        <input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer">
+        <div class="duo-fgrid" id="duo-sidebox">
+          <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
+          <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
+          <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
+          <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
+          <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+        </div>
+        <div class="duo-barfoot"><button type="button" class="duo-resetbtn" id="duo-reset">Reset all filters</button><button type="button" class="duo-resetbtn" id="duo-reopen">Open the welcome guide</button></div>
       </div>
       <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div></div>
       <div class="duo-list" data-draw="rows" data-source="apps">—</div>
@@ -1035,7 +1042,6 @@ const resetFilters = () => {
 {
   const rb = document.getElementById('duo-reset'), box = document.getElementById('duo-sidebox');
   if (rb) rb.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); resetFilters(); });
-  if (box) for (const ev of ['change', 'click']) box.addEventListener(ev, () => setTimeout(() => dash.draw('filtercount'), 60));
 }
 const closeWelcome = (save, apply) => {
   if (apply) applyChoices(wsel);
