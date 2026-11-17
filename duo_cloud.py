@@ -352,6 +352,10 @@ def main():
         st['mjobs'] = []; st['mnew'] = {}
         st['stage'] = 'write'
 
+    # apps the owner reported or saw in Apple's iPhone Duo collections: dated by the app's last update, not the report date
+    for r in rows.values():
+        if r.get('source') == 'reported' and re.match(r"(Apple's iPhone Duo|Site owner)", r.get('report_by') or '') and r.get('updated'):
+            r['duo_date'] = r['updated']
     out = sorted(rows.values(), key=lambda r: (r['duo_date'], r['ratings']), reverse=True)
     assert len(out) >= st['before']
     pool = set(st['ids'])
