@@ -477,6 +477,16 @@ body.duo-lock{overflow:hidden}
   .duo-bar .duo-f.duo-cat{position:static}
   .duo-bar .duo-popgrid{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:62vh;overflow-y:auto;z-index:90;grid-template-columns:repeat(2,minmax(0,1fr));box-shadow:0 -8px 40px rgba(0,0,0,.45)}
 }
+
+/* phones, v3: search is smaller and shares the first row with Market and Category */
+@media (max-width:700px){
+  .duo-bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px 12px}
+  .duo-bar>.duo-search{grid-column:span 2;margin:0;height:38px;font-size:13px;padding:0 10px;border-radius:999px}
+  .duo-bar .duo-fgrid,.duo-bar.fopen .duo-fgrid{display:contents}
+  .duo-bar .duo-f{grid-column:span 2;width:auto;min-width:0}
+  .duo-bar .duo-f .dash-select,.duo-bar .duo-f .duo-pop summary{font-size:12px;padding:0 20px 0 10px;background-position:right 7px center;background-size:10px}
+  .duo-bar .duo-f .duo-pop summary::after{right:9px}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -1152,6 +1162,10 @@ dash.draw('filtercount', (el) => {
     document.getElementById('duo-fok').addEventListener('click', () => { setOpen(false); document.getElementById('apps').scrollIntoView({block: 'start'}); });
     for (const ev of ['change', 'click']) bar.addEventListener(ev, () => setTimeout(() => dash.draw('filtercount'), 80));
   }
+}
+{
+  const q = document.getElementById('duo-q');
+  if (q && window.matchMedia) { const mq = matchMedia('(max-width: 700px)'); const sync = () => { q.placeholder = mq.matches ? 'Search' : 'Search apps or developers'; }; sync(); mq.addEventListener('change', sync); }
 }
 const resetFilters = () => {
   view.conf = ''; view.when = 'all'; view.day = '';
