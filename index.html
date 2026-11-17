@@ -440,6 +440,27 @@ body.duo-lock{overflow:hidden}
 .duo-top h1{display:flex;align-items:center;gap:12px}
 .duo-logo{width:40px;height:40px;border-radius:10px;flex:none}
 @media (max-width:560px){.duo-logo{width:30px;height:30px;border-radius:8px}.duo-top h1{font-size:1.5rem;gap:10px}}
+
+/* filters on phones: one Filters button opens the menus */
+.duo-ftoggle,.duo-fdone{display:none}
+.duo-badge:empty{display:none}
+.duo-badge{background:var(--c1);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:2px 8px;line-height:1.4}
+@media (max-width:700px){
+  .duo-bar{grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px}
+  .duo-bar>.duo-search{grid-column:1;height:44px}
+  .duo-ftoggle{display:inline-flex;align-items:center;gap:8px;height:44px;box-sizing:border-box;padding:0 16px;font:inherit;font-size:var(--cds-font-size-caption);font-weight:650;color:var(--color-fg);background:var(--glass-2);border:1px solid var(--glass-line);border-radius:12px;cursor:pointer}
+  .duo-ftoggle::after{content:"";width:7px;height:7px;border-right:2px solid var(--color-fg-muted);border-bottom:2px solid var(--color-fg-muted);transform:rotate(45deg);margin:-3px 0 0 2px}
+  .duo-bar.fopen .duo-ftoggle::after{transform:rotate(-135deg);margin-top:3px}
+  .duo-bar .duo-fgrid{display:none;grid-column:1 / -1;grid-template-columns:1fr;gap:14px;margin:4px 0 0;padding-top:12px;border-top:1px solid var(--glass-edge)}
+  .duo-bar.fopen .duo-fgrid{display:grid}
+  .duo-bar .duo-f .dash-select,.duo-bar .duo-f .duo-pop summary{height:46px}
+  .duo-bar .duo-popgrid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .duo-fdone{display:flex;gap:10px;margin-top:2px}
+  .duo-fdone button{font:inherit;font-weight:650;height:46px;border-radius:12px;cursor:pointer}
+  .duo-fresetm{flex:0 0 auto;padding:0 18px;color:var(--c1);background:transparent;border:1px solid var(--glass-line)}
+  .duo-fok{flex:1;color:#fff;background:var(--c1);border:0}
+  .duo-count .duo-barfoot{margin:6px 0 0}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -460,13 +481,13 @@ body.duo-lock{overflow:hidden}
         <button type="button" id="duo-th-dark" aria-label="Dark theme" title="Dark">&#9790;</button>
       </div>
       <details class="duo-pop duo-remind duo-share" id="duo-share">
-        <summary>Suggest an app</summary>
+        <summary>App missing?</summary>
         <div class="duo-remindbox">
-          <b>Know an app that works on iPhone Duo?</b>
-          <p class="duo-muted">Type its name and send it. No account needed. We check the app in the next daily refresh and add it if its update notes say it supports iPhone Duo.</p>
+          <b>Is an app missing from the list?</b>
+          <p class="duo-muted">Tell us the app's name. No account needed. We check it in the next daily refresh and add it if its update notes say it supports iPhone Duo.</p>
           <input class="duo-search" id="duo-sq" type="text" maxlength="80" placeholder="App name" aria-label="App name" autocomplete="off">
           <input class="duo-search" id="duo-sl" type="url" maxlength="200" placeholder="App Store link (optional)" aria-label="App Store link" autocomplete="off">
-          <button type="button" class="duo-sbtn" id="duo-sgo">Send suggestion</button>
+          <button type="button" class="duo-sbtn" id="duo-sgo">Send app name</button>
           <p class="duo-muted" id="duo-smsg" role="status"></p>
           <p class="duo-muted">Only the app name and link are sent, through the free service ntfy.sh. Do not type personal details.</p>
         </div>
@@ -496,12 +517,14 @@ body.duo-lock{overflow:hidden}
     <div class="duo-main">
       <div class="duo-bar duo-toolbar">
         <input class="duo-search" id="duo-q" type="search" placeholder="Search apps or developers" aria-label="Search for an app or developer">
+        <button type="button" class="duo-ftoggle" id="duo-ftoggle" aria-expanded="false" aria-controls="duo-sidebox"><span>Filters</span><span class="duo-badge" data-draw="filtercount"></span></button>
         <div class="duo-fgrid" id="duo-sidebox">
           <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
           <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
           <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" title="Some apps have more than one source, so these numbers can add up to more than the total" data-draw="confchips" data-source="apps"></select></label>
           <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
           <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+          <div class="duo-fdone"><button type="button" class="duo-fresetm" id="duo-reset2">Reset</button><button type="button" class="duo-fok" id="duo-fok">Show apps</button></div>
         </div>
       </div>
       <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div><div class="duo-barfoot"><button type="button" class="duo-resetbtn" id="duo-reset">Reset all filters</button><button type="button" class="duo-resetbtn" id="duo-reopen">Open the welcome guide</button></div></div>
@@ -537,7 +560,7 @@ body.duo-lock{overflow:hidden}
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
-        <li>Visitors can suggest an app with "Suggest an app". The daily refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
+        <li>Visitors can report a missing app with "App missing?". The daily refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
         <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
         <li>Some apps have more than one source (for example their own notes and a report), so the Confirmed by numbers can add up to more than the total.</li>
         <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
@@ -1100,6 +1123,15 @@ dash.draw('filtercount', (el) => {
   const n = (view.mkt ? 1 : 0) + (view.cats.length ? 1 : 0) + (view.conf ? 1 : 0) + (view.when !== 'all' ? 1 : 0) + (view.sort !== 'new' ? 1 : 0);
   el.textContent = n ? String(n) : '';
 });
+{
+  const bar = document.querySelector('.duo-bar'), tg = document.getElementById('duo-ftoggle');
+  const setOpen = (o) => { bar.classList.toggle('fopen', o); tg.setAttribute('aria-expanded', String(o)); };
+  if (bar && tg) {
+    tg.addEventListener('click', () => setOpen(!bar.classList.contains('fopen')));
+    document.getElementById('duo-fok').addEventListener('click', () => { setOpen(false); document.getElementById('apps').scrollIntoView({block: 'start'}); });
+    for (const ev of ['change', 'click']) bar.addEventListener(ev, () => setTimeout(() => dash.draw('filtercount'), 80));
+  }
+}
 const resetFilters = () => {
   view.conf = ''; view.when = 'all'; view.day = '';
   const w = document.getElementById('duo-when'); if (w) w.value = 'all';
@@ -1109,6 +1141,7 @@ const resetFilters = () => {
 {
   const rb = document.getElementById('duo-reset'), box = document.getElementById('duo-sidebox');
   if (rb) rb.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); resetFilters(); });
+  const rb2 = document.getElementById('duo-reset2'); if (rb2) rb2.addEventListener('click', () => resetFilters());
 }
 const closeWelcome = (save, apply) => {
   if (apply) applyChoices(wsel);
