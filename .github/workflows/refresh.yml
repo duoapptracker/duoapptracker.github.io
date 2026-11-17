@@ -13,10 +13,39 @@ jobs:
     timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
+      - name: Collect approved community reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, re, subprocess, urllib.parse
+          out = subprocess.run(['gh', 'issue', 'list', '--label', 'approved', '--state', 'open', '--limit', '30', '--json', 'number,body,createdAt,url'], capture_output=True, text=True).stdout
+          add, nums = [], []
+          for it in json.loads(out or '[]'):
+              body = it.get('body') or ''
+              fields = dict(re.findall(r'### ([^\n]+)\n\n(.*?)(?=\n\n### |\Z)', body, re.S))
+              link = fields.get('App Store link', '')
+              m = re.search(r'/id(\d{5,})', link)
+              if not m:
+                  name = fields.get('App name', '').strip()
+                  if name:
+                      r = subprocess.run(['curl', '-s', '-m', '30', 'https://itunes.apple.com/search?country=in&entity=software&limit=3&term=' + urllib.parse.quote(name)], capture_output=True, text=True).stdout
+                      try:
+                          res = json.loads(r)['results']
+                          if res and name.lower()[:6] in res[0]['trackName'].lower(): m = re.match(r'(\d+)', str(res[0]['trackId']))
+                      except Exception:
+                          pass
+              if not m:
+                  continue
+              add.append({'id': m.group(1), 'date': it['createdAt'][:10], 'source': 'Community report', 'text': 'Reported by a visitor on ' + it['createdAt'][:10] + ' and reviewed by the site owner', 'url': it['url']})
+              nums.append(it['number'])
+          json.dump(add, open('reported_add.json', 'w')); open('approved_numbers.txt', 'w').write(' '.join(str(n) for n in nums))
+          print('approved community reports:', len(add))
+          PY
       - name: Scan the App Store
         run: |
           for i in $(seq 1 12); do
-            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30)
+            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json)
             echo "$out" | cut -c1-2000
             case "$out" in
               DONE*) break ;;
@@ -35,6 +64,14 @@ jobs:
           git diff --cached --quiet || git commit -m "Daily refresh"
           git pull --rebase
           git push
+      - name: Close approved community reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(cat approved_numbers.txt 2>/dev/null); do
+            gh issue comment "$n" --body "Thank you. This app was added to the tracker in today's refresh." || true
+            gh issue close "$n" || true
+          done
       - name: Email the owner about watched apps
         env:
           GH_TOKEN: ${{ github.token }}

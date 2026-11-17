@@ -11,7 +11,7 @@ and for each app not yet on the board reads its version history to find the firs
 iPhone Duo. Apps not sold in India are looked up on their home market's store. For every app on the board it
 also records, market by market, whether the app is on that store and its rating there. Apps are never removed from the board.
 Reads only Apple's public feeds and store pages; writes only the output file and duo_state.json."""
-import json, re, subprocess, datetime, os, sys, time, base64
+import json, re, subprocess, datetime, os, sys, time, base64, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 MARKETS = {'in': 'India', 'us': 'United States', 'gb': 'United Kingdom', 'ae': 'UAE', 'sg': 'Singapore', 'au': 'Australia', 'ca': 'Canada', 'de': 'Germany', 'jp': 'Japan', 'cn': 'China'}
 FULL = ['in', 'us', 'gb']   # these markets also get the 19 game-type charts
@@ -19,6 +19,13 @@ GENRES = [0,6000,6001,6002,6003,6004,6005,6006,6007,6008,6009,6010,6011,6012,601
 CHARTS = ['topfreeapplications','toppaidapplications','topgrossingapplications']
 FEEDS = [(c, g, ch) for c in MARKETS for g in GENRES if c in FULL or g < 7000 for ch in CHARTS]
 EARLIEST = '2026-09-01'   # iPhone Duo was announced in September 2026; a version older than this cannot mention it
+# search words used to find apps that are in no chart; the App Store search also matches update notes
+DISCOVER_TERMS = ['iPhone Duo', 'optimized for iPhone Duo', 'iPhone Duo support', 'supports iPhone Duo', 'made for iPhone Duo', 'iPhone Duo layout',
+                  'iPhone Duo display', 'iPhone Duo screen', 'foldable iPhone', 'foldable display iPhone', 'unfolded iPhone', 'iPhone Duo multitasking',
+                  'iPhone Duo split view', 'inner display Duo', 'Duo fold support', 'iPhone Duo compatible']
+DISCOVER_CATEGORIES = ['games', 'weather', 'music', 'photo', 'video', 'news', 'finance', 'travel', 'health', 'fitness', 'productivity', 'notes', 'calendar',
+                       'shopping', 'food', 'sports', 'education', 'books', 'reference', 'utilities', 'social', 'navigation', 'medical', 'business', 'camera', 'wallpaper']
+DISCOVER_MARKETS = ['in', 'us', 'gb', 'jp']
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
 # Apps reported as optimised by Apple or the press. Many big apps never mention iPhone Duo in their update
@@ -112,7 +119,7 @@ def show(st, path, done=False):
     if not done and time.time() - show.last < 3: return
     show.last = time.time()
     esc = lambda t: str(t).replace('&', '&amp;').replace('<', '&lt;')
-    order = {'charts': 0, 'lookup': 1, 'lookup2': 1, 'history': 2, 'mstats': 3, 'write': 3}
+    order = {'charts': 0, 'discover': 0, 'lookup': 1, 'lookup2': 1, 'history': 2, 'mstats': 3, 'write': 3}
     parts = [('Read the charts', 'charts', st['feed'], len(FEEDS), 'charts'),
              ('Look up each app on the India store', 'lookup', min(st['batch'] * 100, len(st['ids'])), len(st['ids']), 'apps'),
              ('Read version histories', 'history', st['qpos'], len(st['queue'] or []), 'apps')]
@@ -173,7 +180,7 @@ def main():
             json.dump(st, open(state_path + '.tmp', 'w'), ensure_ascii=False); os.replace(state_path + '.tmp', state_path); saved[0] = time.time()
     def pause():
         json.dump(st, open(state_path, 'w'), ensure_ascii=False)
-        print('CONTINUE stage=%s progress=%s' % (st['stage'], {'charts': '%d/%d feeds' % (st['feed'], len(FEEDS)),
+        print('CONTINUE stage=%s progress=%s' % (st['stage'], {'charts': '%d/%d feeds' % (st['feed'], len(FEEDS)), 'discover': '%d/%d searches' % (st.get('dpos', 0), len(st.get('dq', []))),
               'lookup': '%d/%d apps' % (st['batch'] * 100, len(st['ids'])), 'history': '%d/%d pages' % (st['qpos'], len(st['queue'] or []))}.get(st['stage'], '')))
         sys.exit(0)
 
@@ -193,7 +200,7 @@ def main():
         if st['india_ids'] < 3000:
             sys.exit(f"STOP: only {st['india_ids']} apps read from the India charts; Apple feeds unreachable or changed. Nothing written.")
         st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported)))
-        st['stage'] = 'lookup'
+        st['stage'] = 'discover'
 
     def take(a, cc):
         """Use one App Store answer. cc is the store it came from: 'in', or the app's home market when it is not sold in India."""
@@ -221,6 +228,23 @@ def main():
             # not on the board, recent enough, and this version's history has not been read yet
             cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')
 
+    if st['stage'] == 'discover':
+        # apps that are in no chart: ask the App Store search for apps whose notes or description speak of iPhone Duo
+        if 'dq' not in st:
+            terms = DISCOVER_TERMS + ['iPhone Duo ' + c for c in DISCOVER_CATEGORIES]
+            st['dq'] = [[t, cc] for cc in DISCOVER_MARKETS for t in terms]; st['dpos'] = 0; st['disc'] = {}; st['dfound'] = 0
+        while st['dpos'] < len(st['dq']):
+            if left() < 25: pause()
+            t, cc = st['dq'][st['dpos']]
+            d = get(f'https://itunes.apple.com/search?country={cc}&entity=software&limit=200&term=' + urllib.parse.quote(t))
+            have = set(st['ids'])
+            for a in (d or {}).get('results', []):
+                i = str(a.get('trackId', ''))
+                if i and i not in have and (PAT.search(a.get('releaseNotes') or '') or re.search(r'iphone\s*duo', a.get('description') or '', re.I)):
+                    st['ids'].append(i); st['disc'][i] = cc; have.add(i); st['dfound'] += 1
+            st['dpos'] += 1; tick(); time.sleep(2.5)   # the search service allows only a few requests a minute
+        st['stage'] = 'lookup'
+
     if st['stage'] == 'lookup':
         ids = st['ids']
         got = st.setdefault('got', [])
@@ -237,7 +261,7 @@ def main():
         have = set(got); todo = {}
         for i in ids:
             if i not in have:
-                cc = (st['mk'].get(i) or [rows.get(i, {}).get('home') or ''])[0]
+                cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or rows.get(i, {}).get('home') or ''])[0]
                 if cc and cc != 'in': todo.setdefault(cc, []).append(i)
         st['abroad'] = [[cc, v[k:k + 100]] for cc, v in todo.items() for k in range(0, len(v), 100)]
         st['apos'] = 0; st['got'] = []
@@ -333,7 +357,7 @@ def main():
     os.remove(state_path) if os.path.exists(state_path) else None
     print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
           'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
-          'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
+          'apps_found_by_search': st.get('dfound', 0), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
 
 if __name__ == '__main__':
     main()

@@ -243,6 +243,9 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-ritem .ok{color:var(--color-ok)}
 .duo-ritem button,.duo-alert button{font:inherit;font-size:var(--cds-font-size-caption);font-weight:600;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--color-fg);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
 .duo-ritem button.add{background:var(--c1);color:#fff;border-color:transparent}
+.duo-share summary{background:var(--glass-2);color:var(--color-fg);border:1px solid var(--glass-line)}
+.duo-sbtn{display:inline-block;align-self:flex-start;text-decoration:none;font-weight:600;font-size:var(--cds-font-size-caption);color:#fff;background:var(--c1);border-radius:999px;padding:9px 18px}
+.duo-sbtn:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
 .duo-rhead{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted);margin-top:4px}
 .duo-alerts{display:flex;flex-direction:column;gap:10px}
 .duo-alert{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:18px;border:1px solid color-mix(in srgb,var(--color-ok) 45%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--color-ok) 24%,transparent),var(--glass) 75%)}
@@ -262,6 +265,16 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     </div>
     <div class="duo-topright">
       <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
+      <details class="duo-pop duo-remind duo-share" id="duo-share">
+        <summary>Share an app</summary>
+        <div class="duo-remindbox">
+          <b>Know an app that works on iPhone Duo?</b>
+          <p class="duo-muted">Tell us about it. A person reviews every report before the app is added, and you will see it here after the next daily refresh. Reports are posted publicly on GitHub with your GitHub name, so you need a free GitHub account and should not include personal details.</p>
+          <input class="duo-search" id="duo-sq" type="text" placeholder="App name" aria-label="App name" autocomplete="off">
+          <input class="duo-search" id="duo-sl" type="url" placeholder="App Store link (optional)" aria-label="App Store link" autocomplete="off">
+          <a class="duo-sbtn" id="duo-sgo" href="https://github.com/duoapptracker/duoapptracker.github.io/issues/new?template=share-an-app.yml" target="_blank" rel="noopener">Continue on GitHub</a>
+        </div>
+      </details>
       <details class="duo-pop duo-remind" id="duo-remind">
         <summary>Remind me<span class="duo-rcount" data-draw="remindcount"></span></summary>
         <div class="duo-remindbox">
@@ -334,6 +347,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
+        <li>Visitors can report an app with "Share an app". A person reviews each report before it is added, and it shows as a community report.</li>
         <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
         <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
@@ -795,6 +809,19 @@ const remind = (() => {
   if (inp) inp.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => suggest(inp.value), 300); });
   return {count: () => list.filter((w) => !rowOf(w.id)).length, render};
 })();
+{
+  // the share form opens on GitHub with what the visitor typed already filled in
+  const q = document.getElementById('duo-sq'), l = document.getElementById('duo-sl'), go = document.getElementById('duo-sgo');
+  const base = 'https://github.com/duoapptracker/duoapptracker.github.io/issues/new?template=share-an-app.yml';
+  const upd = () => {
+    const link = (l.value || '').trim();
+    let url = base;
+    if (q.value.trim()) url += '&app=' + encodeURIComponent(q.value.trim()) + '&title=' + encodeURIComponent('App report: ' + q.value.trim());
+    if (/^https:\/\/apps\.apple\.com\//.test(link)) url += '&link=' + encodeURIComponent(link);
+    go.href = url;
+  };
+  if (q && l && go) { q.addEventListener('input', upd); l.addEventListener('input', upd); }
+}
 dash.draw('remindcount', (elc) => { const n = remind.count(); elc.textContent = n ? String(n) : ''; remind.render(); });
 dash.draw('stamp', (el) => {
   const t = dash.stamp();

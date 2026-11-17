@@ -4,3 +4,5 @@ duo_progress.html
 duo_progress.html.tmp
 data.new.json
 .DS_Store
+reported_add.json
+approved_numbers.txt

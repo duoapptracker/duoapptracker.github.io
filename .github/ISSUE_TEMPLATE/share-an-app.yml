@@ -1,0 +1,44 @@
+name: Share an app optimised for iPhone Duo
+description: Tell us about an app that supports iPhone Duo and is missing from the tracker.
+title: "App report: "
+labels: ["app-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping. **Everything you write here is public**, including your GitHub name. Do not include personal details.
+        A person reviews each report before the app is added to the tracker.
+  - type: input
+    id: app
+    attributes:
+      label: App name
+      placeholder: Microsoft Teams
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: App Store link
+      description: Open the app in the App Store, tap Share, copy the link. This makes sure we add the right app.
+      placeholder: https://apps.apple.com/in/app/microsoft-teams/id1113153706
+  - type: dropdown
+    id: how
+    attributes:
+      label: How do you know it supports iPhone Duo?
+      options:
+        - I use it on an iPhone Duo
+        - Its update notes say so
+        - A news article or the developer says so
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Link to the proof (optional)
+      description: An article, the developer's post, or a screenshot link.
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else we should know (optional)
+      description: For example the app version, or what looks different on the inner screen.
