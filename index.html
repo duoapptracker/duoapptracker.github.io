@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try{var t=localStorage.getItem("duo-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>iPhone Duo App Tracker: apps optimised for iPhone Duo</title>
 <link rel="canonical" href="https://duoapptracker.github.io/">
@@ -20,10 +21,14 @@
 --cds-font-size-caption:.82rem;--cds-font-size-body:.95rem;--cds-font-size-heading:1.1rem;--cds-font-size-title:2rem;--cds-font-weight-medium:600;
 --cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;--cds-gap-xl:32px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:18px;--cds-pad-xl:28px;--cds-radius:10px;
 --c1:#2f6fed;--c2:#e8590c;--c3:#0e9f6e;--c4:#9b51e0;--c5:#d6336c;--c6:#0c8599;--c7:#b7791f;--c8:#5f6ad4}
-@media (prefers-color-scheme: dark){:root{color-scheme:dark;--color-fg:#e8eaf0;--color-fg-muted:#9aa1b0;--color-bg:#101218;--color-panel:#191c24;--color-border-line:#2a2e3a;
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark;--color-fg:#e8eaf0;--color-fg-muted:#9aa1b0;--color-bg:#101218;--color-panel:#191c24;--color-border-line:#2a2e3a;
 --cds-text-secondary:#9aa1b0;--cds-chart-muted:#5a6070;--cds-chart-grid:#242834;--cds-chart-axis:#3a3f4e;--cds-chart-reference:#7a8192;
 --cds-surface-popover:#1f232d;--cds-border:#2f3441;--cds-shadow-popover:0 6px 24px rgba(0,0,0,.5);
 --c1:#6ea0ff;--c2:#ff8a4c;--c3:#3fcf9a;--c4:#b98af5;--c5:#f06595;--c6:#3bc9db;--c7:#e0a84a;--c8:#8f98f0}}
+:root[data-theme="dark"]{color-scheme:dark;--color-fg:#e8eaf0;--color-fg-muted:#9aa1b0;--color-bg:#101218;--color-panel:#191c24;--color-border-line:#2a2e3a;
+--cds-text-secondary:#9aa1b0;--cds-chart-muted:#5a6070;--cds-chart-grid:#242834;--cds-chart-axis:#3a3f4e;--cds-chart-reference:#7a8192;
+--cds-surface-popover:#1f232d;--cds-border:#2f3441;--cds-shadow-popover:0 6px 24px rgba(0,0,0,.5);
+--c1:#6ea0ff;--c2:#ff8a4c;--c3:#3fcf9a;--c4:#b98af5;--c5:#f06595;--c6:#3bc9db;--c7:#e0a84a;--c8:#8f98f0}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--color-bg);color:var(--color-fg);padding:28px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px))}
@@ -169,8 +174,10 @@ body{padding-top:36px}
 --color-panel:var(--glass);--color-border-line:var(--glass-edge);--color-ok:#12a36d;--color-warn:#d9861a;
 --font-anthropic-sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Inter,"Segoe UI",Roboto,sans-serif;--font-anthropic-serif:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Inter,"Segoe UI",Roboto,sans-serif;
 --bgfx:radial-gradient(60vmax 60vmax at 8% -12%,rgba(120,170,255,.55),transparent 62%),radial-gradient(52vmax 52vmax at 104% 4%,rgba(255,150,200,.42),transparent 60%),radial-gradient(64vmax 64vmax at 46% 112%,rgba(130,235,200,.45),transparent 62%)}
-@media (prefers-color-scheme: dark){:root{--color-bg:#0a0c14;--color-fg:#f1f3f9;--color-fg-muted:#a3aabb;--glass:rgba(255,255,255,.075);--glass-2:rgba(255,255,255,.13);--glass-line:rgba(255,255,255,.16);--glass-edge:rgba(255,255,255,.1);--glass-shadow:0 12px 40px rgba(0,0,0,.42);--glass-hi:inset 0 1px 0 rgba(255,255,255,.16);--color-ok:#3fcf9a;--color-warn:#f0b24e;
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--color-bg:#0a0c14;--color-fg:#f1f3f9;--color-fg-muted:#a3aabb;--glass:rgba(255,255,255,.075);--glass-2:rgba(255,255,255,.13);--glass-line:rgba(255,255,255,.16);--glass-edge:rgba(255,255,255,.1);--glass-shadow:0 12px 40px rgba(0,0,0,.42);--glass-hi:inset 0 1px 0 rgba(255,255,255,.16);--color-ok:#3fcf9a;--color-warn:#f0b24e;
 --bgfx:radial-gradient(60vmax 60vmax at 8% -12%,rgba(60,110,255,.42),transparent 62%),radial-gradient(52vmax 52vmax at 104% 4%,rgba(170,80,230,.32),transparent 60%),radial-gradient(64vmax 64vmax at 46% 112%,rgba(20,170,130,.28),transparent 62%)}}
+:root[data-theme="dark"]{--color-bg:#0a0c14;--color-fg:#f1f3f9;--color-fg-muted:#a3aabb;--glass:rgba(255,255,255,.075);--glass-2:rgba(255,255,255,.13);--glass-line:rgba(255,255,255,.16);--glass-edge:rgba(255,255,255,.1);--glass-shadow:0 12px 40px rgba(0,0,0,.42);--glass-hi:inset 0 1px 0 rgba(255,255,255,.16);--color-ok:#3fcf9a;--color-warn:#f0b24e;
+--bgfx:radial-gradient(60vmax 60vmax at 8% -12%,rgba(60,110,255,.42),transparent 62%),radial-gradient(52vmax 52vmax at 104% 4%,rgba(170,80,230,.32),transparent 60%),radial-gradient(64vmax 64vmax at 46% 112%,rgba(20,170,130,.28),transparent 62%)}
 html{background:var(--color-bg)}
 body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-smoothing:antialiased}
 .duo h1{font-weight:700;letter-spacing:-.025em}
@@ -221,7 +228,8 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-popgrid button[aria-pressed=true]{font-weight:600}
 @media (max-width:700px){.duo-popgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.duo-toolbar .duo-filters .duo-search{max-width:none;flex-basis:100%}.duo-pop{flex:1 1 150px}.duo-pop summary{overflow:hidden;text-overflow:ellipsis}}
 :root{--pop:#ffffff}
-@media (prefers-color-scheme: dark){:root{--pop:#171a25}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pop:#171a25}}
+:root[data-theme="dark"]{--pop:#171a25}
 .duo-pop summary{background:var(--glass-2);border-color:var(--glass-line);box-shadow:var(--glass-hi)}
 .duo-popgrid{border-color:var(--glass-line);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
 .duo-popgrid button:hover,.duo-popgrid button:focus-visible{background:var(--glass-2)}
@@ -250,6 +258,34 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-alerts{display:flex;flex-direction:column;gap:10px}
 .duo-alert{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:18px;border:1px solid color-mix(in srgb,var(--color-ok) 45%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--color-ok) 24%,transparent),var(--glass) 75%)}
 @media (max-width:560px){.duo-remindbox{right:auto;left:0}}
+
+/* light and dark switch, welcome screen */
+.duo-themeseg{display:inline-flex;border:1px solid var(--glass-line);border-radius:999px;padding:2px;background:var(--glass-2);box-shadow:var(--glass-hi)}
+.duo-themeseg button{font:inherit;font-size:15px;line-height:1;width:34px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--color-fg-muted);cursor:pointer}
+:root:not([data-theme]) .duo-themeseg button{color:var(--color-fg-muted)}
+.duo-themeseg button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
+.duo-themeseg button:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.duo-linkbtn{font:inherit;font-size:var(--cds-font-size-caption);color:var(--c1);background:none;border:0;padding:6px 0 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;display:block}
+.duo-welcome{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,12,20,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);overflow:auto}
+.duo-welcome[hidden]{display:none}
+.duo-welcome{font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-body);line-height:1.4}
+.duo-welcome button,.duo-welcome input{font-family:inherit}
+.duo-wcard h2{font-family:var(--font-anthropic-serif)}
+.duo-wcard{width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--pop);color:var(--color-fg);border:1px solid var(--glass-line);border-radius:26px;box-shadow:0 30px 80px rgba(0,0,0,.45);padding:28px;display:flex;flex-direction:column;gap:20px}
+.duo-wcard h2{font-size:1.5rem;margin:0;letter-spacing:-.02em}
+.duo-wcard .duo-muted{max-width:none}
+.duo-wq{display:flex;flex-direction:column;gap:10px}
+.duo-wq b{font-size:var(--cds-font-size-body)}
+.duo-wchips{display:flex;flex-wrap:wrap;gap:8px}
+.duo-wchips .duo-chip{background:var(--glass-2);border:1px solid var(--glass-line);color:var(--color-fg)}
+.duo-wchips .duo-chip[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg);border-color:transparent}
+.duo-wcard .duo-search{width:100%;max-width:none;padding:11px 16px;background:var(--glass-2);border:1px solid var(--glass-line);color:var(--color-fg);border-radius:999px}
+.duo-wact{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.duo-wskip{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:8px 4px}
+.duo-wcard .duo-sbtn{border:0;cursor:pointer;font:inherit;font-weight:600;padding:11px 26px}
+.duo-wcard button:focus-visible,.duo-wcard input:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+body.duo-lock{overflow:hidden}
+@media (max-width:560px){.duo-wcard{padding:20px;border-radius:22px}.duo-wcard h2{font-size:1.25rem}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -262,9 +298,14 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     <div>
       <h1>iPhone Duo App Tracker</h1>
       <p class="duo-lede" id="takeaway"><b data-draw="l_total" data-source="apps">—</b> apps <span data-draw="l_where">—</span> are optimised for iPhone Duo. <b data-draw="l_week" data-source="apps">—</b> added support in the last 7 days.</p>
+      <button type="button" class="duo-linkbtn" id="duo-reopen">Choose your market and interests</button>
     </div>
     <div class="duo-topright">
       <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
+      <div class="duo-themeseg" role="group" aria-label="Colour theme">
+        <button type="button" id="duo-th-light" aria-label="Light theme" title="Light">&#9728;</button>
+        <button type="button" id="duo-th-dark" aria-label="Dark theme" title="Dark">&#9790;</button>
+      </div>
       <details class="duo-pop duo-remind duo-share" id="duo-share">
         <summary>Share an app</summary>
         <div class="duo-remindbox">
@@ -361,6 +402,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
   </footer>
 </div>
 
+<div class="duo-welcome" id="duo-welcome" data-draw="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="duo-wt"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
 // --- small stand-in for the dashboard runtime the page was first written for ---
@@ -831,6 +873,75 @@ const remind = (() => {
   });
 }
 dash.draw('remindcount', (elc) => { const n = remind.count(); elc.textContent = n ? String(n) : ''; remind.render(); });
+
+// --- light / dark switch
+{
+  const root = document.documentElement, L = document.getElementById('duo-th-light'), D = document.getElementById('duo-th-dark');
+  const eff = () => root.getAttribute('data-theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const mark = () => { const e = eff(); if (L) L.setAttribute('aria-pressed', String(e === 'light')); if (D) D.setAttribute('aria-pressed', String(e === 'dark')); };
+  const set = (t) => { root.setAttribute('data-theme', t); try { localStorage.setItem('duo-theme', t); } catch (e) { /* keep for this visit */ } mark(); };
+  if (L && D) { L.addEventListener('click', () => set('light')); D.addEventListener('click', () => set('dark')); }
+  mark();
+  if (window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change', mark);
+}
+// --- welcome screen: asks for a market and what the visitor wants; remembered on this device
+const PREF_KEY = 'duo-prefs-v1';
+const loadPrefs = () => { try { const v = JSON.parse(localStorage.getItem(PREF_KEY) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } };
+const savePrefs = (v) => { try { localStorage.setItem(PREF_KEY, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+const wsel = {mkt: '', sort: 'new', cats: [], q: ''};
+let wstate = 'init', wfocus = false;
+const applyChoices = (c) => {
+  view.mkt = c.mkt && MARKETS[c.mkt] ? c.mkt : '';
+  view.sort = ['new', 'rated', 'stars'].includes(c.sort) ? c.sort : 'new';
+  view.cats = Array.isArray(c.cats) ? c.cats.filter((x) => typeof x === 'string').slice(0, 24) : [];
+  view.q = typeof c.q === 'string' ? c.q.slice(0, 80) : '';
+  view.limit = 90;
+  for (const i of document.querySelectorAll('#duo-q')) i.value = view.q;
+  for (const b of document.querySelectorAll('.duo-seg button[data-sort]')) b.setAttribute('aria-pressed', String(b.getAttribute('data-sort') === view.sort));
+  dash.draw('mktchips'); dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
+  dash.draw('l_total'); dash.draw('l_where'); dash.draw('l_week');
+};
+const closeWelcome = (save, apply) => {
+  if (apply) applyChoices(wsel);
+  if (save) savePrefs({mkt: wsel.mkt, sort: wsel.sort, cats: wsel.cats});
+  wstate = 'closed'; document.body.classList.remove('duo-lock'); dash.draw('welcome');
+};
+dash.draw('welcome', (el) => {
+  if (!okRows('apps')) return;
+  if (wstate === 'init') { const p = loadPrefs(); if (p) { Object.assign(wsel, {mkt: '', sort: 'new', cats: []}, p); applyChoices(wsel); wstate = 'closed'; } else wstate = 'open'; }
+  el.hidden = wstate !== 'open';
+  if (wstate !== 'open') { el.replaceChildren(); return; }
+  document.body.classList.add('duo-lock');
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const card = mk('div', 'duo-wcard');
+  const h = mk('h2', '', 'Welcome! Let us find your iPhone Duo apps'); h.id = 'duo-wt';
+  card.append(h, mk('p', 'duo-muted', 'Answer two quick questions, or skip. You can change everything later with the filters.'));
+  const pills = (label, options, isOn, click) => {
+    const q = mk('div', 'duo-wq'); q.append(mk('b', '', label));
+    const row = mk('div', 'duo-wchips');
+    for (const [v, t] of options) { const b = mk('button', 'duo-chip', t); b.type = 'button'; b.setAttribute('aria-pressed', String(isOn(v))); b.onclick = () => { click(v); wfocus = false; dash.draw('welcome'); }; row.append(b); }
+    q.append(row); return q;
+  };
+  card.append(pills('Which App Store market?', [['', 'All markets'], ...Object.entries(MARKETS)], (v) => wsel.mkt === v, (v) => { wsel.mkt = v; }));
+  card.append(pills('What matters most?', [['new', 'Newest support'], ['rated', 'Most popular'], ['stars', 'Best rated']], (v) => wsel.sort === v, (v) => { wsel.sort = v; }));
+  const top = (okRows('by_cat') || []).slice(0, 10).map((r) => [r.category, r.category]);
+  card.append(pills('Any categories? (pick as many as you like)', top, (v) => wsel.cats.includes(v), (v) => { wsel.cats = wsel.cats.includes(v) ? wsel.cats.filter((x) => x !== v) : [...wsel.cats, v]; }));
+  const sq = mk('div', 'duo-wq'); sq.append(mk('b', '', 'Looking for a specific app? (optional)'));
+  const inp = mk('input', 'duo-search'); inp.type = 'search'; inp.placeholder = 'App or developer name'; inp.maxLength = 80; inp.value = wsel.q; inp.setAttribute('aria-label', 'App or developer name');
+  inp.addEventListener('input', () => { wsel.q = inp.value; }); inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') closeWelcome(true, true); });
+  sq.append(inp); card.append(sq);
+  const act = mk('div', 'duo-wact');
+  const go = mk('button', 'duo-sbtn', 'Show apps'); go.type = 'button'; go.onclick = () => closeWelcome(true, true);
+  const skip = mk('button', 'duo-wskip', 'Skip for now'); skip.type = 'button'; skip.onclick = () => closeWelcome(true, false);
+  act.append(go, skip); card.append(act);
+  el.replaceChildren(card);
+  if (!wfocus) { wfocus = true; const f = card.querySelector('.duo-chip'); if (f) f.focus(); }
+});
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && wstate === 'open') closeWelcome(true, false); });
+{
+  const again = document.getElementById('duo-reopen');
+  if (again) again.addEventListener('click', () => { Object.assign(wsel, {mkt: view.mkt, sort: view.sort, cats: [...view.cats], q: view.q}); wstate = 'open'; wfocus = false; dash.draw('welcome'); });
+}
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;
