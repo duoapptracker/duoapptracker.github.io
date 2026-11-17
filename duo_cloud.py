@@ -352,7 +352,14 @@ def main():
             f.write(',\n'.join(json.dumps(r, ensure_ascii=False, sort_keys=True) for r in out))
             f.write('\n],\n"reported": %s,\n"checked": %s}\n' % (json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps(keep, sort_keys=True)))
     else:
-        json.dump({'rows': out, 'meta': meta, 'checked': keep, 'reported': reported}, open(out_path, 'w'), ensure_ascii=False)
+        payload = {'rows': out, 'meta': meta, 'checked': keep, 'reported': reported}
+        # the board's file store allows 15 MB: if the list is too big, drop the icons of the least rated apps first
+        LIMIT = 13_500_000
+        while len(json.dumps(payload, ensure_ascii=False).encode()) > LIMIT:
+            with_icon = sorted((r for r in out if r.get('icon')), key=lambda r: r['ratings'])
+            if not with_icon: break
+            for r in with_icon[:150]: r['icon'] = ''
+        json.dump(payload, open(out_path, 'w'), ensure_ascii=False)
     st['stage'] = 'write'; show(st, page_path, done=True)
     os.remove(state_path) if os.path.exists(state_path) else None
     print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
