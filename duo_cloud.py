@@ -19,6 +19,46 @@ FEEDS = [(c, g, ch) for c in MARKETS for g in GENRES if c in FULL or g < 7000 fo
 EARLIEST = '2026-09-01'   # iPhone Duo was announced in September 2026; a version older than this cannot mention it
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
+# Apps reported as optimised by Apple or the press. Many big apps never mention iPhone Duo in their update
+# notes, so the notes scan cannot find them. {App Store id: (date reported, source)}
+_A = 'Highlighted by Apple on 22 Oct 2026 as optimised, or soon to be, for iPhone Duo (reported by MacRumors)'
+_M = 'Named as optimised for iPhone Duo by MacRumors on 6 Nov 2026'
+_AM = 'Highlighted by Apple on 22 Oct 2026 and named as optimised for iPhone Duo by MacRumors on 6 Nov 2026'
+REPORTED = {
+    '363590051': ('2026-10-22', _AM),   # Netflix
+    '545519333': ('2026-10-22', _AM),   # Amazon Prime Video
+    '546505307': ('2026-10-22', _AM),   # Zoom Workplace
+    '389801252': ('2026-10-22', _AM),   # Instagram
+    '922744883': ('2026-10-22', _AM),   # SmartGym
+    '1358823008': ('2026-10-22', _AM),  # Flighty
+    '718043190': ('2026-10-22', _AM),   # Fantastical
+    '586447913': ('2026-10-22', _AM),   # Microsoft Word
+    '618783545': ('2026-10-22', _A),    # Slack
+    '529379082': ('2026-10-22', _A),    # Lyft
+    '951937596': ('2026-10-22', _A),    # Microsoft Outlook
+    '904237743': ('2026-10-22', _A),    # Things 3
+    '1016366447': ('2026-10-22', _A),   # Bear
+    '6480045936': ('2026-10-22', _A),   # Notewise
+    '489689106': ('2026-10-22', _A),    # PGA Tour
+    '6738967378': ('2026-10-22', _A),   # Edits
+    '1098342019': ('2026-10-22', _A),   # Sneaky Sasquatch
+    '6746784702': ('2026-10-22', _A),   # Retrocade
+    '911422904': ('2026-10-22', _A),    # NYT Cooking
+    '296581815': ('2026-10-22', _A),    # OpenTable
+    '284910350': ('2026-10-22', _A),    # Yelp
+    '382698565': ('2026-10-22', _A),    # American Airlines
+    '449945214': ('2026-10-22', _A),    # United Airlines
+    '586683407': ('2026-11-06', _M),    # Microsoft Excel
+    '586449534': ('2026-11-06', _M),    # Microsoft PowerPoint
+    '410395246': ('2026-11-06', _M),    # Microsoft OneNote
+    '477128284': ('2026-11-06', _M),    # Etsy
+    '1444383602': ('2026-11-06', _M),   # Goodnotes
+    '885697368': ('2026-11-06', _M),    # Halide Mark III
+    '484672289': ('2026-11-06', _M),    # NBA
+    '465092669': ('2026-11-06', _M),    # NHL
+    '310633997': ('2026-11-06', _M),    # WhatsApp Messenger
+    '544007664': ('2026-11-06', _M),    # YouTube
+}
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15'
 
 def curl(url, binary=False, agent=None):
@@ -136,7 +176,7 @@ def main():
             if c == 'in': st['india_ids'] = len(set(st['ids']))
         if st['india_ids'] < 3000:
             sys.exit(f"STOP: only {st['india_ids']} apps read from the India charts; Apple feeds unreachable or changed. Nothing written.")
-        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows)))
+        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(REPORTED)))
         st['stage'] = 'lookup'
 
     if st['stage'] == 'lookup':
@@ -158,6 +198,13 @@ def main():
                     if r.get('version') != latest['version']: st['changed'] += 1
                     r.update(latest)
                     if not SITE and not r.get('icon'): r['icon'] = icon(a.get('artworkUrl100', ''))
+                    if tid in REPORTED: r['report'] = REPORTED[tid][1]
+                elif tid in REPORTED:
+                    # reported as optimised, though its update notes never say so
+                    when, src = REPORTED[tid]
+                    rows[tid] = dict(latest, id=tid, duo_date=when, duo_version='', note=src, report=src, source='reported', first_seen=today, hist_ok=True)
+                    if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
+                    st['new'].append(tid)
                 elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
                     # not on the board, recent enough, and this version's history has not been read yet
                     cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')

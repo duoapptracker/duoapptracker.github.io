@@ -155,7 +155,7 @@ body{padding-top:36px}
     <div>
       <h1>iPhone Duo App Tracker</h1>
       <p class="duo-muted">Apps optimised for iPhone Duo on the App Store in India. Independent, updated daily.</p>
-      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store say in their update notes that they support iPhone Duo. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
+      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store support iPhone Duo, going by their update notes or by reports from Apple and the press. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
     </div>
     <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
   </header>
@@ -214,7 +214,8 @@ body{padding-top:36px}
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
-        <li>Apps that support iPhone Duo without ever saying so in their update notes are not listed, so the real number is higher.</li>
+        <li>Many big apps never mention iPhone Duo in their update notes. Those named as optimised by Apple or by MacRumors are added and marked "Reported", with the date of the report in place of the date support was added.</li>
+        <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
         <li>Apple's "Made for iPhone Duo" badge and the SDK version an app was built with are not in the public data, so they are not shown.</li>
         <li>The list is built automatically, so it can miss apps or include one by mistake. Check an app's App Store page before relying on it.</li>
@@ -500,14 +501,17 @@ dash.draw('rows', (box) => {
     p.append(mk('b', 't', r.app));
     if (r.desc) p.append(mk('p', '', r.desc));
     const note = mk('p');
-    note.append(mk('span', 'lab', 'What the update says: '), '“' + r.note + '”');
+    if (r.source === 'reported') note.append(mk('span', 'lab', 'Reported, not from update notes: '), r.note);
+    else note.append(mk('span', 'lab', 'What the update says: '), '“' + r.note + '”');
+    if (r.source !== 'reported' && r.report) p.append(mk('p', '', 'Also: ' + r.report + '.'));
     p.append(note);
     const dl = mk('dl');
     const pair = (k, val) => { const d = mk('div'); d.append(mk('dt', '', k), val instanceof Node ? val : mk('dd', '', val)); dl.append(d); };
     pair('Developer', r.developer);
     const duo = mk('dd');
-    duo.append(mark(mk('span', '', day(r.duo_date, fmtLong)), 'duo_date', r.id), ' · version ', mark(mk('span', '', r.duo_version), 'duo_version', r.id));
-    pair('Duo support added', duo);
+    duo.append(mark(mk('span', '', day(r.duo_date, fmtLong)), 'duo_date', r.id));
+    if (r.source !== 'reported') duo.append(' · version ', mark(mk('span', '', r.duo_version), 'duo_version', r.id));
+    pair(r.source === 'reported' ? 'Reported on' : 'Duo support added', duo);
     const upd = mk('dd');
     upd.append(mark(mk('span', '', day(r.updated, fmtLong)), 'updated', r.id), ' · version ', mark(mk('span', '', r.version), 'version', r.id));
     pair('Latest update', upd);
@@ -546,6 +550,7 @@ dash.draw('rows', (box) => {
     const n = +r.ratings || 0;
     if (n) facts.append('★ ', mark(mk('span', '', fmtStar(+r.rating || 0)), 'rating', r.id), ' · ');
     facts.append(r.category + (view.sort === 'upd' ? ' · Updated ' + day(r.updated) : view.sort !== 'new' ? ' · Duo ' + day(r.duo_date) : ''));
+    if (r.source === 'reported') facts.append(' · Reported');
     main.append(facts);
     open.append(pic, main);
     card.append(open);
