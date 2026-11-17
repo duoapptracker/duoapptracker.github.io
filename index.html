@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>iPhone Duo App Tracker: apps optimised for iPhone Duo in India</title>
+<title>iPhone Duo App Tracker: apps optimised for iPhone Duo</title>
 <link rel="canonical" href="https://duoapptracker.github.io/">
-<meta name="description" content="iPhone Duo App Tracker: a daily-updated list of apps optimised for iPhone Duo on the App Store in India. See which apps support the foldable iPhone, when each added support, ratings and download links.">
+<meta name="description" content="iPhone Duo App Tracker: a daily-updated list of apps optimised for iPhone Duo across ten App Store markets, including India, the US, the UK and China. See which apps support the foldable iPhone, when each added support, ratings and download links, and get reminded when your app is ready.">
 <meta property="og:title" content="iPhone Duo App Tracker">
 <meta property="og:url" content="https://duoapptracker.github.io/">
-<meta property="og:description" content="Which apps support iPhone Duo? A daily-updated, independent tracker for the App Store in India.">
+<meta property="og:description" content="Which apps support iPhone Duo? A daily-updated, independent tracker across ten App Store markets.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
@@ -225,6 +225,28 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-pop summary{background:var(--glass-2);border-color:var(--glass-line);box-shadow:var(--glass-hi)}
 .duo-popgrid{border-color:var(--glass-line);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
 .duo-popgrid button:hover,.duo-popgrid button:focus-visible{background:var(--glass-2)}
+
+/* nicer menus and the reminder panel */
+.duo-filters .dash-select{-webkit-appearance:none;appearance:none;padding-right:36px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238b93a7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.duo-top{position:relative;z-index:6}
+.duo-topright{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.duo-remind{position:relative}
+.duo-remind summary{font-weight:600;background:var(--c1);color:#fff;border-color:transparent;box-shadow:none;padding:8px 34px 8px 16px}
+.duo-rcount:not(:empty){margin-left:6px;background:rgba(255,255,255,.25);border-radius:999px;padding:1px 7px;font-size:11px}
+.duo-remindbox{position:absolute;right:0;top:calc(100% + 10px);z-index:40;width:min(400px,calc(100vw - 32px));display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:20px;background:var(--pop);border:1px solid var(--glass-line);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.duo-remindbox .duo-search{width:100%;padding:10px 14px;font-size:var(--cds-font-size-caption);background:var(--glass-2);border:1px solid var(--glass-line);color:var(--color-fg);border-radius:999px}
+.duo-rsug,.duo-rlist{display:flex;flex-direction:column;gap:6px}
+.duo-rsug:empty,.duo-rlist:empty{display:none}
+.duo-ritem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--glass);font-size:var(--cds-font-size-caption)}
+.duo-ritem b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-ritem span{display:block;color:var(--color-fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-ritem .ok{color:var(--color-ok)}
+.duo-ritem button,.duo-alert button{font:inherit;font-size:var(--cds-font-size-caption);font-weight:600;border:1px solid var(--glass-line);background:var(--glass-2);color:var(--color-fg);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.duo-ritem button.add{background:var(--c1);color:#fff;border-color:transparent}
+.duo-rhead{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted);margin-top:4px}
+.duo-alerts{display:flex;flex-direction:column;gap:10px}
+.duo-alert{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:18px;border:1px solid color-mix(in srgb,var(--color-ok) 45%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--color-ok) 24%,transparent),var(--glass) 75%)}
+@media (max-width:560px){.duo-remindbox{right:auto;left:0}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -236,10 +258,24 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
   <header id="top" class="duo-top">
     <div>
       <h1>iPhone Duo App Tracker</h1>
-      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps on India's App Store support iPhone Duo, and <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the last 7 days. Independent tracker, updated daily.</p>
+      <p class="duo-lede" id="takeaway"><b data-draw="l_total" data-source="apps">—</b> apps <span data-draw="l_where">—</span> are optimised for iPhone Duo. <b data-draw="l_week" data-source="apps">—</b> added support in the last 7 days.</p>
     </div>
-    <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
+    <div class="duo-topright">
+      <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
+      <details class="duo-pop duo-remind" id="duo-remind">
+        <summary>Remind me<span class="duo-rcount" data-draw="remindcount"></span></summary>
+        <div class="duo-remindbox">
+          <b>Get reminded when an app is ready</b>
+          <p class="duo-muted">Add an app that is not optimised for iPhone Duo yet, such as Microsoft Teams. When it gets support, this page will flag it for you at the top. Your list is saved on this device only.</p>
+          <input class="duo-search" id="duo-rq" type="search" placeholder="Type an app name" aria-label="App to be reminded about" autocomplete="off">
+          <div class="duo-rsug" id="duo-rsug"></div>
+          <div class="duo-rlist" id="duo-rlist"></div>
+        </div>
+      </details>
+    </div>
   </header>
+
+  <div class="duo-alerts" id="duo-alerts" hidden></div>
 
   <section class="duo-tiles" id="tiles">
     <div class="duo-tile" id="tile-latest"><span class="num" data-draw="n_latest" data-source="summary" data-field="latest_count" data-row="0">—</span><span class="lab">added Duo support on the latest day</span><span class="sub" data-draw="n_latestday" data-source="summary" data-field="latest_day" data-row="0">—</span></div>
@@ -528,9 +564,15 @@ dash.draw('mktchips', (sel) => {
   const s = sum();
   sel.replaceChildren(new Option('All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
-  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
+  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('l_total'); dash.draw('l_where'); dash.draw('l_week'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
+// the sentence under the title follows the chosen market
+const scope = () => { const rows = okRows('apps'); return rows ? (view.mkt ? rows.filter((r) => !!mkOf(r)[view.mkt]) : rows) : null; };
+dash.draw('l_total', (el) => { const v = scope(); el.textContent = v ? fmtNum(v.length) : '—'; });
+dash.draw('l_where', (el) => { el.textContent = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets'; });
+dash.draw('l_week', (el) => { const v = scope(), s = sum(); el.textContent = v && s ? fmtNum(v.filter((r) => String(r.duo_date) >= s.week_from).length) : '—'; });
+
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
 const catsChanged = () => { dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); };
 dash.draw('catlabel', (el) => { el.textContent = !view.cats.length ? 'All categories' : view.cats.length === 1 ? view.cats[0] : view.cats.length + ' categories'; });
@@ -694,6 +736,66 @@ for (const b of segs) {
   });
 }
 
+
+// --- "Remind me": a watch list kept on this device; the page flags an app once it appears on the list
+const remind = (() => {
+  const KEY = 'duo-remind-v1';
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+  const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { /* private window: keep it for this visit only */ } };
+  let list = load();
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const rowOf = (id) => (okRows('apps') || []).find((r) => String(r.id) === String(id));
+  const render = () => {
+    const box = document.getElementById('duo-rlist'), alerts = document.getElementById('duo-alerts');
+    if (!box || !alerts) return;
+    box.replaceChildren(); alerts.replaceChildren();
+    if (list.length) box.append(el('div', 'duo-rhead', 'Your reminders'));
+    for (const w of list) {
+      const r = rowOf(w.id);
+      const item = el('div', 'duo-ritem'), txt = el('div');
+      txt.append(el('b', '', w.name), el('span', r ? 'ok' : '', r ? 'Optimised for iPhone Duo since ' + day(r.duo_date, fmtLong) : 'Not optimised yet. We check every day.'));
+      const rm = el('button', '', 'Remove'); rm.type = 'button';
+      rm.onclick = () => { list = list.filter((x) => x.id !== w.id); save(list); dash.draw('remindcount'); };
+      item.append(txt, rm); box.append(item);
+      if (r && !w.seen) {
+        const a = el('div', 'duo-alert'), t = el('div');
+        t.append(el('b', '', w.name + ' is now optimised for iPhone Duo'), el('div', 'duo-muted', 'You asked to be reminded. Support was added on ' + day(r.duo_date, fmtLong) + '.'));
+        const ok = el('button', '', 'Got it'); ok.type = 'button';
+        ok.onclick = () => { w.seen = true; save(list); dash.draw('remindcount'); };
+        a.append(t, ok); alerts.append(a);
+      }
+    }
+    alerts.hidden = !alerts.childElementCount;
+  };
+  let timer = 0, turn = 0;
+  const suggest = (q) => {
+    const box = document.getElementById('duo-rsug'); if (!box) return;
+    const mine = ++turn;
+    if (q.trim().length < 2) { box.replaceChildren(); return; }
+    fetch('https://itunes.apple.com/search?entity=software&limit=6&country=' + (view.mkt || 'in') + '&term=' + encodeURIComponent(q.trim()))
+      .then((r) => r.json()).then((d) => {
+        if (mine !== turn) return;
+        box.replaceChildren();
+        for (const a of (d.results || []).slice(0, 6)) {
+          const id = String(a.trackId), r = rowOf(id), has = list.some((x) => x.id === id);
+          const item = el('div', 'duo-ritem'), txt = el('div');
+          txt.append(el('b', '', a.trackName), el('span', r ? 'ok' : '', r ? 'Already optimised for iPhone Duo' : (a.artistName || '')));
+          item.append(txt);
+          if (!r) {
+            const add = el('button', has ? '' : 'add', has ? 'Added' : 'Remind me'); add.type = 'button'; add.disabled = has;
+            add.onclick = () => { list.push({id, name: a.trackName, dev: a.artistName || '', at: new Date().toISOString().slice(0, 10)}); save(list); box.replaceChildren(); const inp = document.getElementById('duo-rq'); if (inp) inp.value = ''; dash.draw('remindcount'); };
+            item.append(add);
+          }
+          box.append(item);
+        }
+        if (!box.childElementCount) box.append(el('div', 'duo-muted', 'No app found with that name.'));
+      }).catch(() => { if (mine === turn) { box.replaceChildren(el('div', 'duo-muted', 'Could not search the App Store just now. Try again in a moment.')); } });
+  };
+  const inp = document.getElementById('duo-rq');
+  if (inp) inp.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => suggest(inp.value), 300); });
+  return {count: () => list.filter((w) => !rowOf(w.id)).length, render};
+})();
+dash.draw('remindcount', (elc) => { const n = remind.count(); elc.textContent = n ? String(n) : ''; remind.render(); });
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;

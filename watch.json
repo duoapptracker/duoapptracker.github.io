@@ -1,0 +1,7 @@
+{
+  "about": "Apps the site owner wants an email about. When one appears in data.json, the daily job opens a GitHub issue (GitHub emails the owner) and moves its id to notified.",
+  "watch": [
+    {"id": "1113153706", "name": "Microsoft Teams"}
+  ],
+  "notified": []
+}

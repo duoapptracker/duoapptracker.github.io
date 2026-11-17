@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  issues: write
 concurrency: refresh
 jobs:
   refresh:
@@ -34,3 +35,24 @@ jobs:
           git diff --cached --quiet || git commit -m "Daily refresh"
           git pull --rebase
           git push
+      - name: Email the owner about watched apps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          w = json.load(open('watch.json'))
+          rows = {str(r['id']): r for r in json.load(open('data.json'))['rows']}
+          hit = [x for x in w.get('watch', []) if str(x['id']) in rows and str(x['id']) not in w.get('notified', [])]
+          for x in hit:
+              r = rows[str(x['id'])]
+              how = ('Reported by ' + r.get('report_by', 'the press')) if r.get('source') == 'reported' else ('Confirmed in its update notes, version ' + str(r.get('duo_version', '')))
+              body = f"{r['app']} is now on the tracker.\n\n- Duo support date: {r['duo_date']}\n- {how}\n- App Store: {r.get('url', '')}\n- Tracker: https://duoapptracker.github.io/\n\nYou asked to be told when this app was optimised for iPhone Duo. Close this issue once read."
+              subprocess.run(['gh', 'issue', 'create', '--title', f"Now optimised for iPhone Duo: {r['app']}", '--body', body], check=True)
+              w.setdefault('notified', []).append(str(x['id']))
+          if hit:
+              json.dump(w, open('watch.json', 'w'), indent=2); open('watch.json', 'a').write('\n')
+          print('watched apps newly optimised:', [x['name'] for x in hit])
+          PY
+          git add watch.json
+          git diff --cached --quiet || { git commit -m "Watched app notified"; git pull --rebase; git push; }
