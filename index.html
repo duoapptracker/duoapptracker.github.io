@@ -487,6 +487,34 @@ body.duo-lock{overflow:hidden}
   .duo-bar .duo-f .dash-select,.duo-bar .duo-f .duo-pop summary{font-size:12px;padding:0 20px 0 10px;background-position:right 7px center;background-size:10px}
   .duo-bar .duo-f .duo-pop summary::after{right:9px}
 }
+
+/* phones: three small stat tiles and a one-line header */
+.duo-tile .short{display:none}
+@media (max-width:560px){
+  .duo-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:10px 12px;border-radius:14px}
+  .duo-tile .num{grid-row:auto;font-size:1.35rem;min-width:0;line-height:1.1}
+  .duo-tile .full{display:none}
+  .duo-tile .short{display:inline}
+  .duo-tile .lab{font-size:11.5px;font-weight:650;line-height:1.2}
+  .duo-tile .sub{font-size:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .duo-topright{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:6px;width:100%}
+  .duo-topright .duo-pill{padding:6px 10px;font-size:11.5px;white-space:nowrap}
+  .duo-topright .duo-pill .upd{display:none}
+  .duo-topright .duo-themeseg button{width:28px;height:26px;font-size:13px}
+  .duo-topright .duo-pop summary{padding:6px 10px;font-size:12px;white-space:nowrap}
+  .duo-topright .duo-pop summary::after,.duo-topright .duo-remind summary::after{display:none}
+  .duo-topright .duo-remind summary{padding:6px 12px}
+}
+
+.duo-tagline .tg-u{display:none}
+@media (max-width:560px){
+  .duo-topright .duo-pill{display:none}
+  .duo-tagline .tg-u{display:block;font-size:11.5px;color:var(--color-fg-muted);opacity:.85}
+  .duo-tile .lab{align-self:flex-start}
+  .duo-topright{justify-content:flex-start;gap:8px}
+  .duo-topright .duo-remind{margin-left:auto}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -501,7 +529,7 @@ body.duo-lock{overflow:hidden}
       <p class="duo-tagline" id="takeaway" data-draw="tagline" aria-live="off">—</p>
     </div>
     <div class="duo-topright">
-      <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
+      <span class="duo-pill" id="duo-pill"><span class="upd">Updated </span><span data-draw="stamp">—</span></span>
       <div class="duo-themeseg" role="group" aria-label="Colour theme">
         <button type="button" id="duo-th-light" aria-label="Light theme" title="Light">&#9728;</button>
         <button type="button" id="duo-th-dark" aria-label="Dark theme" title="Dark">&#9790;</button>
@@ -534,9 +562,9 @@ body.duo-lock{overflow:hidden}
   <div class="duo-alerts" id="duo-alerts" hidden></div>
 
   <section class="duo-tiles" id="tiles">
-    <div class="duo-tile" id="tile-latest"><span class="num" data-draw="n_latest" data-source="summary" data-field="latest_count" data-row="0">—</span><span class="lab">added Duo support on the latest day</span><span class="sub" data-draw="n_latestday" data-source="summary" data-field="latest_day" data-row="0">—</span></div>
-    <div class="duo-tile" id="tile-week"><span class="num" data-draw="n_week" data-source="summary" data-field="week_count" data-row="0">—</span><span class="lab">added Duo support in the last 7 days</span><span class="sub">since <span data-draw="n_weekfrom" data-source="summary" data-field="week_from" data-row="0">—</span></span></div>
-    <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total" data-source="summary" data-field="total" data-row="0">—</span><span class="lab">apps found in all</span><span class="sub"><span data-draw="n_cats" data-source="summary" data-field="categories" data-row="0">—</span> categories</span></div>
+    <div class="duo-tile" id="tile-latest"><span class="num" data-draw="n_latest" data-source="summary" data-field="latest_count" data-row="0">—</span><span class="lab"><span class="full">added Duo support on the latest day</span><span class="short">Latest day</span></span><span class="sub" data-draw="n_latestday" data-source="summary" data-field="latest_day" data-row="0">—</span></div>
+    <div class="duo-tile" id="tile-week"><span class="num" data-draw="n_week" data-source="summary" data-field="week_count" data-row="0">—</span><span class="lab"><span class="full">added Duo support in the last 7 days</span><span class="short">Last 7 days</span></span><span class="sub">since <span data-draw="n_weekfrom" data-source="summary" data-field="week_from" data-row="0">—</span></span></div>
+    <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total" data-source="summary" data-field="total" data-row="0">—</span><span class="lab"><span class="full">apps found in all</span><span class="short">All apps</span></span><span class="sub"><span data-draw="n_cats" data-source="summary" data-field="categories" data-row="0">—</span> categories</span></div>
   </section>
 
   <section class="duo-layout" id="apps">
@@ -866,7 +894,9 @@ dash.draw('tagline', (el) => {
     const b = (x) => mk('b', '', x);
     facts.append(b(fmtNum(v.length)), ' apps ' + where + ' are ready. ', b(fmtNum(week)), ' joined this week.');
   } else facts.textContent = 'Loading the list…';
-  el.replaceChildren(head, facts);
+  const up = mk('span', 'tg-u');
+  { const t = dash.stamp(), dd = t ? new Date(t) : null; if (dd && !isNaN(dd)) up.textContent = 'Updated ' + dd.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST'; }
+  el.replaceChildren(head, facts, up);
 });
 
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
@@ -1222,6 +1252,9 @@ document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && wstate
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;
+  const full = d && !isNaN(d) ? d.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST' : '';
+  const pill = document.getElementById('duo-pill'); if (pill) pill.title = full ? 'Updated ' + full : '';
+  if (full && window.matchMedia && matchMedia('(max-width: 560px)').matches) { el.textContent = d.toLocaleString('en-IN', {hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST'; return; }
   el.textContent = d && !isNaN(d) ? d.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST' : '—';
 });
 dash.start();
