@@ -105,6 +105,44 @@ a{color:inherit}
 .duo-map .t[aria-pressed=true]{outline:2.5px solid var(--color-fg);outline-offset:-2px}
 .duo-map .t:focus-visible{outline:2.5px solid var(--color-fg);outline-offset:-2px}
 .duo-daychip button{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-bg);background:var(--color-fg);border:0;border-radius:999px;padding:5px 12px;cursor:pointer}
+
+.duo-day{flex-wrap:wrap;column-gap:10px;row-gap:0}
+/* filter toolbar */
+.duo-toolbar{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.duo-toolbar .duo-search{background-color:var(--color-bg);padding:12px 18px;max-width:none}
+.duo-toolbar .duo-chiprow{grid-template-columns:78px minmax(0,1fr);gap:12px;align-items:center}
+.duo-toolbar .duo-chiplab{padding:0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.duo-toolbar .duo-chips{gap:8px;padding:2px 28px 2px 2px;min-height:38px;align-items:center;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}
+.duo-toolbar .duo-chips::-webkit-scrollbar{display:none}
+.duo-toolbar .duo-chip{padding:7px 14px;background:var(--color-bg);line-height:1.2}
+.duo-toolbar .duo-chip[aria-pressed=true]{background:var(--color-fg)}
+.duo-toolbar .duo-seg{background:var(--color-bg);padding:3px}
+.duo-toolbar .duo-seg button{padding:7px 14px;line-height:1.2}
+.duo-toolbar .duo-row{gap:12px;min-width:0}
+.duo-toolbar .dash-select{background-color:var(--color-bg)}
+.duo-count{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;min-height:30px}
+@media (max-width:560px){
+  .duo-toolbar{padding:14px}
+  .duo-toolbar .duo-chiprow{grid-template-columns:minmax(0,1fr);gap:6px}
+}
+
+/* look and feel */
+body{padding-top:36px}
+.duo-top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-start;justify-content:space-between}
+.duo-top h1{letter-spacing:-.01em}
+.duo-pill{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:7px 14px;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.duo-pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c3)}
+.duo-tiles{gap:var(--cds-gap-md)}
+.duo-tile{border-radius:16px;padding:18px 20px;gap:4px}
+.duo-tile:nth-child(1){background:color-mix(in srgb,var(--c1) 16%,var(--color-panel));border-color:color-mix(in srgb,var(--c1) 34%,var(--color-border-line))}
+.duo-tile:nth-child(2){background:color-mix(in srgb,var(--c3) 16%,var(--color-panel));border-color:color-mix(in srgb,var(--c3) 34%,var(--color-border-line))}
+.duo-tile:nth-child(3){background:color-mix(in srgb,var(--c4) 16%,var(--color-panel));border-color:color-mix(in srgb,var(--c4) 34%,var(--color-border-line))}
+.duo-tile .num{font-size:2.3rem}
+.duo-tile .lab{font-weight:600}
+.duo-card{border-radius:16px;padding:22px}
+.duo-day{margin-top:28px}
+.duo-day b{font-family:var(--font-anthropic-serif)}
+@media (max-width:560px){.duo-tile{padding:14px}.duo-tile .num{font-size:1.6rem}.duo-card{padding:16px}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -113,10 +151,13 @@ a{color:inherit}
 </head>
 <body>
 <div class="duo">
-  <header id="top">
-    <h1>iPhone Duo App Tracker</h1>
-    <p class="duo-muted">Apps optimised for iPhone Duo on the App Store in India. Independent, updated daily. Last updated <span data-draw="stamp">—</span>.</p>
-    <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store say in their update notes that they support iPhone Duo. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
+  <header id="top" class="duo-top">
+    <div>
+      <h1>iPhone Duo App Tracker</h1>
+      <p class="duo-muted">Apps optimised for iPhone Duo on the App Store in India. Independent, updated daily.</p>
+      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store say in their update notes that they support iPhone Duo. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
+    </div>
+    <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
   </header>
 
   <section class="duo-tiles" id="tiles">
@@ -126,9 +167,11 @@ a{color:inherit}
   </section>
 
   <section class="duo-find" id="apps">
+    <div class="duo-toolbar">
     <input class="duo-search" id="duo-q" type="search" placeholder="Search for an app or developer" aria-label="Search for an app or developer">
-    <div class="duo-chiprow"><span class="duo-chiplab">Popular in</span><div class="duo-chips" data-draw="mktchips" data-source="by_market" role="group" aria-label="Market"></div></div>
+    <div class="duo-chiprow"><span class="duo-chiplab">Market</span><div class="duo-chips" data-draw="mktchips" data-source="by_market" role="group" aria-label="Market"></div></div>
     <div class="duo-chiprow"><span class="duo-chiplab">Category</span><div class="duo-chips" data-draw="catchips" data-source="by_cat" role="group" aria-label="Category"></div></div>
+    <div class="duo-chiprow"><span class="duo-chiplab">Added</span>
     <div class="duo-row">
       <div class="duo-seg" role="group" aria-label="When Duo support was added">
         <button type="button" data-when="all" aria-pressed="true">All dates</button>
@@ -137,8 +180,9 @@ a{color:inherit}
       </div>
       <select class="dash-select" id="duo-sort" aria-label="Sort"><option value="new">Newest Duo support first</option><option value="upd">Recently updated</option><option value="stars">Best rated in India</option><option value="rated">Most popular in India</option><option value="az">A to Z</option></select>
     </div>
-    <div class="duo-daychip" data-draw="daychip"></div>
-    <p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store in India.</p>
+    </div>
+    </div>
+    <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store in India.</p><div class="duo-daychip" data-draw="daychip"></div></div>
     <div class="duo-list" data-draw="rows" data-source="apps">—</div>
   </section>
 
