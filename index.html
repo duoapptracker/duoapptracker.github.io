@@ -415,6 +415,18 @@ body.duo-lock{overflow:hidden}
 .duo-topright>details.duo-pop{position:static}
 .duo-remindbox{right:0;left:auto;top:calc(100% + 12px)}
 @media (max-width:900px){.duo-topright{position:static}.duo-top{position:relative}.duo-remindbox{left:0;right:auto;top:calc(100% + 8px)}}
+
+/* round of fixes: search contrast, phone stats, no-ratings label */
+.duo-bar>.duo-search{border:1px solid color-mix(in srgb,var(--color-fg) 26%,transparent);font-size:.88rem;padding:0 12px}
+.duo-bar>.duo-search::placeholder{color:var(--color-fg-muted);opacity:1}
+.duo-norate{color:var(--color-fg-muted)}
+@media (max-width:600px){
+  .duo-tiles{grid-template-columns:1fr;gap:10px}
+  .duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){display:grid;grid-template-columns:6.4ch 1fr;grid-template-rows:auto auto;column-gap:16px;align-items:center;padding:12px 18px}
+  .duo-tile .num{grid-row:1 / span 2;font-size:1.9rem;line-height:1}
+  .duo-tile .lab{align-self:end;font-size:var(--cds-font-size-caption)}
+  .duo-tile .sub{align-self:start}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -474,7 +486,7 @@ body.duo-lock{overflow:hidden}
         <div class="duo-fgrid" id="duo-sidebox">
           <label class="duo-f"><span>Market</span><select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market"></select></label>
           <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
-          <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" data-draw="confchips" data-source="apps"></select></label>
+          <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" title="Some apps have more than one source, so these numbers can add up to more than the total" data-draw="confchips" data-source="apps"></select></label>
           <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
           <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
         </div>
@@ -514,6 +526,7 @@ body.duo-lock{overflow:hidden}
       <ul class="duo-notes">
         <li>Visitors can suggest an app with "Suggest an app". The daily refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
         <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
+        <li>Some apps have more than one source (for example their own notes and a report), so the Confirmed by numbers can add up to more than the total.</li>
         <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
         <li>Apple's "Made for iPhone Duo" badge and the SDK version an app was built with are not in the public data, so they are not shown.</li>
@@ -746,7 +759,8 @@ const storeUrl = (r) => { const u = String(r.url || ''); return view.mkt ? u.rep
 dash.draw('mktchips', (sel) => {
   const rows = okRows('by_market') || [];
   const s = sum();
-  sel.replaceChildren(new Option('All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
+  const narrow = window.matchMedia && matchMedia('(max-width: 560px)').matches;
+  sel.replaceChildren(new Option(narrow ? 'All markets' : 'All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
   sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('tagline'); };
 });
@@ -832,6 +846,18 @@ const visible = () => {
   return out;
 };
 dash.draw('shown', (el) => { const v = visible(); el.textContent = v ? fmtNum(v.length) : '—'; });
+// the details panel opens under the whole row of tiles, not squeezed in after one tile
+const placeInfo = (box) => {
+  const p = box.querySelector(':scope > .duo-info'); if (!p) return;
+  const card = p.previousElementSibling; if (!card || !card.classList.contains('duo-app')) return;
+  p.remove();
+  const cols = Math.max(1, getComputedStyle(box).gridTemplateColumns.split(' ').filter(Boolean).length);
+  let group = [], e = card;
+  while (e.previousElementSibling && e.previousElementSibling.classList.contains('duo-app')) e = e.previousElementSibling;
+  for (; e && e.classList.contains('duo-app'); e = e.nextElementSibling) group.push(e);
+  const i = group.indexOf(card), last = group[Math.min(group.length - 1, (Math.floor(i / cols) + 1) * cols - 1)];
+  (last || card).after(p);
+};
 dash.draw('rows', (box) => {
   const g = dash.data('apps');
   const v = visible();
@@ -911,6 +937,7 @@ dash.draw('rows', (box) => {
     const facts = mk('span', 'facts');
     const [sr, n] = stat(r);
     if (n) facts.append('★ ', mk('span', '', fmtStar(sr)), ' · ');
+    else facts.append(mk('span', 'duo-norate', 'Unrated'), ' · ');
     facts.append(r.category + (view.sort === 'upd' ? ' · Updated ' + day(r.updated) : view.sort !== 'new' ? ' · Duo ' + day(r.duo_date) : ''));
     main.append(facts);
     open.append(pic, main);
@@ -928,6 +955,7 @@ dash.draw('rows', (box) => {
     box.append(card);
     if (isOpen) box.append(info(r));
   }
+  placeInfo(box);
   if (v.length > view.limit) {
     const more = mk('button', 'duo-more', 'Show ' + fmtNum(Math.min(90, v.length - view.limit)) + ' more of ' + fmtNum(v.length - view.limit) + ' remaining');
     more.type = 'button'; more.style.gridColumn = '1 / -1'; more.style.justifySelf = 'center';
@@ -1113,7 +1141,7 @@ document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && wstate
 dash.draw('stamp', (el) => {
   const t = dash.stamp();
   const d = t ? new Date(t) : null;
-  el.textContent = d && !isNaN(d) ? d.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'}) : '—';
+  el.textContent = d && !isNaN(d) ? d.toLocaleString('en-GB', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC'}) + ' UTC' : '—';
 });
 dash.start();
 </script>
