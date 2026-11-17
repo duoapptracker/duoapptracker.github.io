@@ -461,6 +461,22 @@ body.duo-lock{overflow:hidden}
   .duo-fok{flex:1;color:#fff;background:var(--c1);border:0}
   .duo-count .duo-barfoot{margin:6px 0 0}
 }
+
+/* phones: one slim swipeable row of filter pills, no tall panel */
+@media (max-width:700px){
+  .duo-bar{grid-template-columns:1fr;gap:10px;padding:10px 0 10px 12px;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--glass)}
+  .duo-bar>.duo-search{grid-column:1;margin-right:12px;width:auto;height:42px}
+  .duo-ftoggle,.duo-fdone{display:none !important}
+  .duo-bar .duo-fgrid,.duo-bar.fopen .duo-fgrid{display:flex;grid-column:1;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:visible;margin:0;padding:0 24px 2px 0;border:0;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .duo-bar .duo-fgrid::-webkit-scrollbar{display:none}
+  .duo-bar .duo-f{flex:0 0 auto;width:152px;gap:0}
+  .duo-bar .duo-f>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .duo-bar .duo-f .dash-select,.duo-bar .duo-f .duo-pop summary{height:38px;line-height:36px;border-radius:999px;font-size:13px;padding:0 30px 0 14px;background-position:right 11px center}
+  .duo-bar .duo-f .duo-pop summary{line-height:1.2}
+  .duo-bar .duo-f.on .dash-select,.duo-bar .duo-f.on .duo-pop summary{border-color:var(--c1);background-color:color-mix(in srgb,var(--c1) 22%,transparent);font-weight:650}
+  .duo-bar .duo-f.duo-cat{position:static}
+  .duo-bar .duo-popgrid{position:fixed;left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:62vh;overflow-y:auto;z-index:90;grid-template-columns:repeat(2,minmax(0,1fr));box-shadow:0 -8px 40px rgba(0,0,0,.45)}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -1119,7 +1135,12 @@ const applyChoices = (c) => {
   dash.draw('mktchips'); dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
   dash.draw('tagline'); dash.draw('filtercount');
 };
+const markActive = () => {
+  const on = (id, v) => { const f = document.getElementById(id); const box = f && f.closest('.duo-f'); if (box) box.classList.toggle('on', !!v); };
+  on('duo-mkt', view.mkt); on('duo-conf', view.conf); on('duo-when', view.when !== 'all'); on('duo-sort', view.sort !== 'new'); on('duo-catpop', view.cats.length);
+};
 dash.draw('filtercount', (el) => {
+  markActive();
   const n = (view.mkt ? 1 : 0) + (view.cats.length ? 1 : 0) + (view.conf ? 1 : 0) + (view.when !== 'all' ? 1 : 0) + (view.sort !== 'new' ? 1 : 0);
   el.textContent = n ? String(n) : '';
 });
