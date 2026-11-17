@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Refresh of the iPhone Duo apps board, in one file. Works in time slices so it can be run again and again.
-Usage: python3 duo_cloud.py PREVIOUS_board_rows.json NEW_board_rows.json [--slice SECONDS] [--hist-minutes MINUTES] [--site] [--reported FILE]
+Usage: python3 duo_cloud.py PREVIOUS_board_rows.json NEW_board_rows.json [--slice SECONDS] [--hist-minutes MINUTES] [--site] [--reported FILE] [--submitted FILE]
+--submitted FILE: apps suggested by visitors: [{"id": App Store id, "date": "YYYY-MM-DD"}]. They are checked like any other app (update notes, version history) and added only if the notes say so.
 --reported FILE: a JSON list of apps newly reported as optimised: [{"id": App Store id, "date": "YYYY-MM-DD", "source": site name, "text": one sentence, "url": "https://..."}]
 Each run works for at most --slice seconds (default 480), saves its progress in duo_state.json beside the output,
 and prints CONTINUE (run the same command again) or DONE with a summary (the output file is written).
@@ -169,6 +170,16 @@ def main():
                 if ok and i not in rp:
                     rp[i] = {'date': d, 'source': str(e['source'])[:60], 'text': str(e['text'])[:240], 'url': str(e['url'])[:300]}
         st['reported'] = rp
+        # apps suggested by visitors: remembered for 45 days, checked every run
+        sub = dict(prev.get('submitted', {})) if isinstance(prev, dict) else {}
+        if '--submitted' in args:
+            try: add = json.load(open(args[args.index('--submitted') + 1]))
+            except (OSError, ValueError): add = []
+            for e in (add if isinstance(add, list) else []):
+                i, d = str(e.get('id', '')), str(e.get('date', ''))
+                if i.isdigit() and re.fullmatch(r'\d{4}-\d\d-\d\d', d): sub.setdefault(i, d)
+        cutoff = (datetime.datetime.utcnow().date() - datetime.timedelta(days=45)).isoformat()
+        st['submitted'] = {i: d for i, d in sub.items() if d >= cutoff and i not in st['rows']}
         st['before'] = len(st['rows'])
     rows, checked, cand = st['rows'], st['checked'], st['cand']
     reported = st.setdefault('reported', dict(REPORTED))
@@ -199,7 +210,7 @@ def main():
             if c == 'in': st['india_ids'] = len(set(st['ids']))
         if st['india_ids'] < 3000:
             sys.exit(f"STOP: only {st['india_ids']} apps read from the India charts; Apple feeds unreachable or changed. Nothing written.")
-        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported)))
+        st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported) + list(st.get('submitted', {}))))
         st['stage'] = 'discover'
 
     def take(a, cc):
@@ -278,7 +289,7 @@ def main():
         st['abroad'] = []
         # read first: board apps still waiting for a history check, then apps whose current notes mention Duo, then the most rated
         st['queue'] = [t for t, r in rows.items() if r.get('hist_ok') is False] + \
-                      sorted(cand, key=lambda t: (not cand[t]['now'], -cand[t]['ratings']))
+                      sorted(cand, key=lambda t: (not (cand[t]['now'] or t in st.get('submitted', {})), -cand[t]['ratings']))
         st['stage'] = 'history'
 
     if st['stage'] == 'history':
@@ -293,7 +304,7 @@ def main():
         while st['qpos'] < len(q):
             # the history budget applies only to apps that do not mention Duo in their current notes
             head = q[st['qpos']]
-            urgent = head in rows or bool(cand.get(head, {}).get('now'))
+            urgent = head in rows or bool(cand.get(head, {}).get('now')) or head in st.get('submitted', {})
             if not urgent and st['hist_spent'] >= hist_s: break
             if left() < 75: pause()
             chunk = q[st['qpos']:st['qpos'] + 32]; t1 = time.time(); got = 0
@@ -350,9 +361,9 @@ def main():
         with open(out_path, 'w') as f:   # one app per line keeps daily changes small in version control
             f.write('{"updated": %s,\n"rows": [\n' % json.dumps(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%MZ')))
             f.write(',\n'.join(json.dumps(r, ensure_ascii=False, sort_keys=True) for r in out))
-            f.write('\n],\n"reported": %s,\n"checked": %s}\n' % (json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps(keep, sort_keys=True)))
+            f.write('\n],\n"reported": %s,\n"submitted": %s,\n"checked": %s}\n' % (json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps({i: d for i, d in st.get('submitted', {}).items() if i not in rows}, sort_keys=True), json.dumps(keep, sort_keys=True)))
     else:
-        payload = {'rows': out, 'meta': meta, 'checked': keep, 'reported': reported}
+        payload = {'rows': out, 'meta': meta, 'checked': keep, 'reported': reported, 'submitted': {i: d for i, d in st.get('submitted', {}).items() if i not in rows}}
         # the board's file store allows 15 MB: if the list is too big, drop the icons of the least rated apps first
         LIMIT = 13_500_000
         while len(json.dumps(payload, ensure_ascii=False).encode()) > LIMIT:
@@ -364,7 +375,7 @@ def main():
     os.remove(state_path) if os.path.exists(state_path) else None
     print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
           'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
-          'apps_found_by_search': st.get('dfound', 0), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
+          'apps_found_by_search': st.get('dfound', 0), 'visitor_suggestions_pending': len({i for i in st.get('submitted', {}) if i not in rows}), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
 
 if __name__ == '__main__':
     main()

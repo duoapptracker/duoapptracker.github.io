@@ -1,0 +1,44 @@
+name: Collect app suggestions
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: collect
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read new suggestions
+        run: |
+          python3 - <<'PY'
+          import json, re, subprocess, os
+          TOPIC = "duo-tracker-f430d1b1864b036f"
+          out = subprocess.run(['curl', '-s', '-m', '40', f'https://ntfy.sh/{TOPIC}/json?poll=1&since=12h'], capture_output=True, text=True).stdout
+          have = json.load(open('submissions.json')) if os.path.exists('submissions.json') else []
+          seen = {x['mid'] for x in have}
+          new = 0
+          for line in out.splitlines():
+              try: m = json.loads(line)
+              except ValueError: continue
+              if m.get('event') != 'message' or m.get('id') in seen: continue
+              try: body = json.loads(m.get('message', ''))
+              except ValueError: continue
+              app = re.sub(r'[\x00-\x1f<>]', ' ', str(body.get('app', ''))).strip()[:80]
+              link = str(body.get('link', '')).strip()[:200]
+              if len(app) < 2 or (link and not re.match(r'^https://apps\.apple\.com/', link)): continue
+              day = __import__('datetime').datetime.utcfromtimestamp(m['time']).date().isoformat()
+              have.append({'mid': m['id'], 'date': day, 'app': app, 'link': link}); seen.add(m['id']); new += 1
+          have = have[-500:]
+          json.dump(have, open('submissions.json', 'w'), ensure_ascii=False, indent=1)
+          print('new suggestions:', new, '| kept:', len(have))
+          PY
+      - name: Save
+        run: |
+          git config user.name "refresh-bot"
+          git config user.email "refresh-bot@users.noreply.github.com"
+          git add submissions.json
+          git diff --cached --quiet || { git commit -m "New app suggestions"; git pull --rebase; git push; }

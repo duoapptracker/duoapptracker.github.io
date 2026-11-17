@@ -13,6 +13,28 @@ jobs:
     timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare visitor suggestions
+        run: |
+          python3 - <<'PY'
+          import json, re, subprocess, urllib.parse, os
+          subs = json.load(open('submissions.json')) if os.path.exists('submissions.json') else []
+          out = []
+          for x in subs[-200:]:
+              m = re.search(r'/id(\d{5,})', x.get('link', ''))
+              if m: out.append({'id': m.group(1), 'date': x['date']}); continue
+              r = subprocess.run(['curl', '-s', '-m', '30', 'https://itunes.apple.com/search?country=in&entity=software&limit=3&term=' + urllib.parse.quote(x['app'])], capture_output=True, text=True).stdout
+              try:
+                  res = json.loads(r)['results']
+                  want = re.sub(r'[^a-z0-9]', '', x['app'].lower())
+                  for a in res:
+                      have = re.sub(r'[^a-z0-9]', '', a['trackName'].lower())
+                      if want and (have.startswith(want) or want.startswith(have[:max(5, len(want))])):
+                          out.append({'id': str(a['trackId']), 'date': x['date']}); break
+              except Exception:
+                  pass
+          json.dump(out, open('submitted.json', 'w'))
+          print('visitor suggestions resolved:', len(out), 'of', len(subs))
+          PY
       - name: Collect approved community reports
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,7 +67,7 @@ jobs:
       - name: Scan the App Store
         run: |
           for i in $(seq 1 12); do
-            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json)
+            out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json --submitted submitted.json)
             echo "$out" | cut -c1-2000
             case "$out" in
               DONE*) break ;;

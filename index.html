@@ -269,10 +269,12 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
         <summary>Share an app</summary>
         <div class="duo-remindbox">
           <b>Know an app that works on iPhone Duo?</b>
-          <p class="duo-muted">Tell us about it. A person reviews every report before the app is added, and you will see it here after the next daily refresh. Reports are posted publicly on GitHub with your GitHub name, so you need a free GitHub account and should not include personal details.</p>
-          <input class="duo-search" id="duo-sq" type="text" placeholder="App name" aria-label="App name" autocomplete="off">
-          <input class="duo-search" id="duo-sl" type="url" placeholder="App Store link (optional)" aria-label="App Store link" autocomplete="off">
-          <a class="duo-sbtn" id="duo-sgo" href="https://github.com/duoapptracker/duoapptracker.github.io/issues/new?template=share-an-app.yml" target="_blank" rel="noopener">Continue on GitHub</a>
+          <p class="duo-muted">Type its name and send it. No account needed. We check the app in the next daily refresh and add it if its update notes say it supports iPhone Duo.</p>
+          <input class="duo-search" id="duo-sq" type="text" maxlength="80" placeholder="App name" aria-label="App name" autocomplete="off">
+          <input class="duo-search" id="duo-sl" type="url" maxlength="200" placeholder="App Store link (optional)" aria-label="App Store link" autocomplete="off">
+          <button type="button" class="duo-sbtn" id="duo-sgo">Send</button>
+          <p class="duo-muted" id="duo-smsg" role="status"></p>
+          <p class="duo-muted">Only the app name and link are sent, through the free service ntfy.sh. Do not type personal details.</p>
         </div>
       </details>
       <details class="duo-pop duo-remind" id="duo-remind">
@@ -347,7 +349,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
-        <li>Visitors can report an app with "Share an app". A person reviews each report before it is added, and it shows as a community report.</li>
+        <li>Visitors can suggest an app with "Share an app". The daily refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
         <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
         <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
@@ -810,17 +812,23 @@ const remind = (() => {
   return {count: () => list.filter((w) => !rowOf(w.id)).length, render};
 })();
 {
-  // the share form opens on GitHub with what the visitor typed already filled in
-  const q = document.getElementById('duo-sq'), l = document.getElementById('duo-sl'), go = document.getElementById('duo-sgo');
-  const base = 'https://github.com/duoapptracker/duoapptracker.github.io/issues/new?template=share-an-app.yml';
-  const upd = () => {
-    const link = (l.value || '').trim();
-    let url = base;
-    if (q.value.trim()) url += '&app=' + encodeURIComponent(q.value.trim()) + '&title=' + encodeURIComponent('App report: ' + q.value.trim());
-    if (/^https:\/\/apps\.apple\.com\//.test(link)) url += '&link=' + encodeURIComponent(link);
-    go.href = url;
-  };
-  if (q && l && go) { q.addEventListener('input', upd); l.addEventListener('input', upd); }
+  // the share form sends the app name to a small public message service; a daily job collects them
+  const q = document.getElementById('duo-sq'), l = document.getElementById('duo-sl'), go = document.getElementById('duo-sgo'), msg = document.getElementById('duo-smsg');
+  const TOPIC = "duo-tracker-f430d1b1864b036f";
+  const DAY = new Date().toISOString().slice(0, 10);
+  const sent = () => { try { const v = JSON.parse(localStorage.getItem('duo-share-v1') || '{}'); return v.day === DAY ? v.n || 0 : 0; } catch (e) { return 0; } };
+  const bump = () => { try { localStorage.setItem('duo-share-v1', JSON.stringify({day: DAY, n: sent() + 1})); } catch (e) { /* ignore */ } };
+  if (q && l && go && msg) go.addEventListener('click', () => {
+    const app = q.value.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80), link = l.value.trim().slice(0, 200);
+    if (app.length < 2) { msg.textContent = 'Please type the app name.'; return; }
+    if (link && !/^https:\/\/apps\.apple\.com\//.test(link)) { msg.textContent = 'The link should start with https://apps.apple.com/ . Or leave it empty.'; return; }
+    if (sent() >= 5) { msg.textContent = 'You have sent a few today already. Thank you! Please try again tomorrow.'; return; }
+    go.disabled = true; msg.textContent = 'Sending...';
+    fetch('https://ntfy.sh/' + TOPIC, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=UTF-8'}, body: JSON.stringify({app, link})})
+      .then((r) => { if (!r.ok) throw new Error(r.status); bump(); q.value = ''; l.value = ''; msg.textContent = 'Thank you! We will check it in the next daily refresh.'; })
+      .catch(() => { msg.textContent = 'Could not send just now. Please try again in a moment.'; })
+      .finally(() => { go.disabled = false; });
+  });
 }
 dash.draw('remindcount', (elc) => { const n = remind.count(); elc.textContent = n ? String(n) : ''; remind.render(); });
 dash.draw('stamp', (el) => {
