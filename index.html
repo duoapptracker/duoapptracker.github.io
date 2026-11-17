@@ -184,7 +184,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-app{background:var(--glass);border:1px solid var(--glass-line);box-shadow:0 4px 18px rgba(20,30,70,.07),var(--glass-hi);transition:transform .15s ease,box-shadow .15s ease}
 @media (hover:hover) and (prefers-reduced-motion:no-preference){.duo-app:hover{transform:translateY(-2px);box-shadow:var(--glass-shadow),var(--glass-hi)}}
 .duo-src{border-top-color:var(--glass-edge)}
-.duo-toolbar .duo-search,.duo-toolbar .duo-chip,.duo-toolbar .duo-seg,.duo-toolbar .dash-select,.duo-more{background:var(--glass-2);background-color:var(--glass-2);border:1px solid var(--glass-line);box-shadow:var(--glass-hi)}
+.duo-toolbar .duo-search,.duo-toolbar .duo-chip,.duo-toolbar .duo-seg,.duo-toolbar .dash-select,.duo-more{color:var(--color-fg);background:var(--glass-2);background-color:var(--glass-2);border:1px solid var(--glass-line);box-shadow:var(--glass-hi)}
 .duo-toolbar .duo-chip[aria-pressed=true],.duo-seg button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg);border-color:transparent;box-shadow:none}
 .duo-get{background:var(--glass-2);color:var(--c1);font-weight:700;border:1px solid var(--glass-line);box-shadow:var(--glass-hi)}
 .duo-daychip button{background:var(--c1);color:#fff}
@@ -194,6 +194,13 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
 .duo-foot{gap:20px}
 .duo{gap:28px}
 @media (max-width:560px){.duo-tile,.duo-card,.duo-toolbar{padding:16px;border-radius:18px}.duo{gap:20px}}
+
+/* compact filters */
+.duo-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-width:0}
+.duo-filters .dash-select{max-width:100%;min-width:0;padding:9px 14px;border-radius:999px;font-size:var(--cds-font-size-caption);line-height:1.2}
+.duo-filters .duo-sortsel{margin-left:auto}
+.duo-lede{max-width:none}
+@media (max-width:700px){.duo-filters .duo-sortsel{margin-left:0}.duo-filters .dash-select{flex:1 1 150px}}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -205,8 +212,7 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
   <header id="top" class="duo-top">
     <div>
       <h1>iPhone Duo App Tracker</h1>
-      <p class="duo-muted">Apps optimised for iPhone Duo on the App Store in India. Independent, updated daily.</p>
-      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps available on India's App Store support iPhone Duo, going by their update notes or by reports from Apple and the press. <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the seven days to <b data-draw="t_latest" data-source="summary" data-field="latest_day" data-row="0">—</b>.</p>
+      <p class="duo-lede" id="takeaway"><b data-draw="t_total" data-source="summary" data-field="total" data-row="0">—</b> apps on India's App Store support iPhone Duo, and <b data-draw="t_week" data-source="summary" data-field="week_count" data-row="0">—</b> of them added it in the last 7 days. Independent tracker, updated daily.</p>
     </div>
     <span class="duo-pill">Updated <span data-draw="stamp">—</span></span>
   </header>
@@ -220,17 +226,15 @@ body{background:var(--bgfx) fixed,var(--color-bg);min-height:100vh;-webkit-font-
   <section class="duo-find" id="apps">
     <div class="duo-toolbar">
     <input class="duo-search" id="duo-q" type="search" placeholder="Search for an app or developer" aria-label="Search for an app or developer">
-    <div class="duo-chiprow"><span class="duo-chiplab">Market</span><div class="duo-chips" data-draw="mktchips" data-source="by_market" role="group" aria-label="Market"></div></div>
-    <div class="duo-chiprow"><span class="duo-chiplab">Category</span><div class="duo-chips" data-draw="catchips" data-source="by_cat" role="group" aria-label="Category"></div></div>
-    <div class="duo-chiprow"><span class="duo-chiplab">Added</span>
-    <div class="duo-row">
+    <div class="duo-filters">
+      <select class="dash-select" id="duo-mkt" data-draw="mktchips" data-source="by_market" aria-label="Market"></select>
+      <select class="dash-select" id="duo-catsel" data-draw="catchips" data-source="by_cat" aria-label="Category"></select>
       <div class="duo-seg" role="group" aria-label="When Duo support was added">
         <button type="button" data-when="all" aria-pressed="true">All dates</button>
         <button type="button" data-when="week" aria-pressed="false">Last 7 days</button>
         <button type="button" data-when="latest" aria-pressed="false">Latest day</button>
       </div>
-      <select class="dash-select" id="duo-sort" aria-label="Sort"><option value="new">Newest Duo support first</option><option value="upd">Recently updated</option><option value="stars">Best rated in India</option><option value="rated">Most popular in India</option><option value="az">A to Z</option></select>
-    </div>
+      <select class="dash-select duo-sortsel" id="duo-sort" aria-label="Sort"><option value="new">Newest Duo support first</option><option value="upd">Recently updated</option><option value="stars">Best rated in India</option><option value="rated">Most popular in India</option><option value="az">A to Z</option></select>
     </div>
     </div>
     <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store in India.</p><div class="duo-daychip" data-draw="daychip"></div></div>
@@ -483,38 +487,18 @@ dash.draw('catmap', (el) => {
 });
 
 const view = {q: '', cat: '', mkt: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
-dash.draw('mktchips', (box) => {
+dash.draw('mktchips', (sel) => {
   const rows = okRows('by_market') || [];
-  const s = sum();
-  box.replaceChildren();
-  if (!rows.length) return;
-  const chip = (label, value, n) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'duo-chip'; b.textContent = label;
-    const c = document.createElement('span'); c.textContent = fmtNum(n); b.append(c);
-    b.setAttribute('aria-pressed', String(view.mkt === value));
-    b.onclick = () => { view.mkt = value; view.limit = 90; dash.draw('mktchips'); dash.draw('rows'); dash.draw('shown'); };
-    box.append(b);
-  };
-  chip('All markets', '', s ? s.total : 0);
-  for (const r of rows) chip(MARKETS[r.market] || String(r.market).toUpperCase(), r.market, r.apps);
+  sel.replaceChildren(new Option('All markets', ''), ...rows.map((r) => new Option(`Popular in ${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
+  sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
+  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
-dash.draw('catchips', (box) => {
+dash.draw('catchips', (sel) => {
   const rows = okRows('by_cat') || [];
-  const s = sum();
-  box.replaceChildren();
-  if (!rows.length) return;
-  const chip = (label, value, n) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'duo-chip'; b.textContent = label;
-    const c = document.createElement('span'); c.textContent = fmtNum(n); b.append(c);
-    b.setAttribute('aria-pressed', String(view.cat === value));
-    b.onclick = () => { view.cat = value; view.limit = 90; dash.draw('catchips'); dash.draw('catmap'); redraw(); };
-    box.append(b);
-  };
-  chip('All', '', s ? s.total : d3.sum(rows, (r) => r.apps));
-  for (const r of rows) chip(r.category, r.category, r.apps);
+  sel.replaceChildren(new Option('All categories', ''), ...rows.map((r) => new Option(`${r.category} (${fmtNum(r.apps)})`, r.category)));
+  sel.value = rows.some((r) => r.category === view.cat) ? view.cat : '';
+  sel.onchange = () => { view.cat = sel.value; view.limit = 90; dash.draw('catmap'); redraw(); };
 });
 const visible = () => {
   const rows = okRows('apps');
