@@ -1,7 +1,7 @@
 name: Collect app suggestions
 on:
   schedule:
-    - cron: "17 */3 * * *"
+    - cron: "17 * * * *"   # hourly: GitHub often skips scheduled runs, so ask often
   workflow_dispatch:
 permissions:
   contents: write
