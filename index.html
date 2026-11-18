@@ -566,6 +566,15 @@ html,body{max-width:100%;overflow-x:clip}
   .duo-topright .duo-pop summary{width:auto}
   .duo-topright .duo-remind{margin-left:0}
 }
+/* pop-up fields (19 Nov): visible boxes in light mode, no default button border */
+.duo-wcard,.duo-remindbox,.duo-popgrid{--glass-line:color-mix(in srgb,var(--color-fg) 18%,transparent)}
+:root[data-theme="light"] :is(.duo-wcard,.duo-remindbox,.duo-popgrid){--glass-2:rgba(20,30,60,.045)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) :is(.duo-wcard,.duo-remindbox,.duo-popgrid){--glass-2:rgba(20,30,60,.045)}}
+.duo-remindbox .duo-search{box-shadow:none}
+.duo-remindbox .duo-search::placeholder{color:var(--color-fg-muted);opacity:1}
+.duo-remindbox .duo-search:focus{outline:none;border-color:var(--c1);box-shadow:0 0 0 3px color-mix(in srgb,var(--c1) 22%,transparent)}
+.duo-sbtn{border:0;cursor:pointer;font-family:inherit;box-shadow:none}
+.duo-sbtn:hover{filter:brightness(1.08)}
 </style>
 </head>
 <body>
