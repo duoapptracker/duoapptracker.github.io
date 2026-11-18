@@ -548,6 +548,24 @@ body.duo-lock{overflow:hidden}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
 }
+/* layout hardening (19 Nov): nothing may push the page wider than the screen (iPhone Duo open, 560-1040px) */
+html,body{max-width:100%;overflow-x:clip}
+.duo-top{grid-template-columns:minmax(0,1fr) minmax(0,auto)}
+.duo-topright{min-width:0;max-width:100%}
+.duo-top>*{min-width:0}
+.duo-tiles,.duo-bar,.duo-fgrid{max-width:100%;min-width:0}
+.duo-popgrid,.duo-remindbox{max-width:calc(100vw - 32px)}
+@media (max-width:1040px){
+  .duo-top{grid-template-columns:minmax(0,1fr)}
+  .duo-topright{justify-content:flex-start}
+  .duo-tagline{white-space:normal}
+}
+@media (min-width:561px) and (max-width:1040px){
+  .duo-topright{flex-wrap:wrap;gap:10px}
+  .duo-topright .duo-pop,.duo-topright .duo-remind{flex:0 0 auto}
+  .duo-topright .duo-pop summary{width:auto}
+  .duo-topright .duo-remind{margin-left:0}
+}
 </style>
 </head>
 <body>
@@ -1230,7 +1248,7 @@ dash.draw('filtercount', (el) => {
 {
   const so = document.getElementById('duo-sort');
   if (so && window.matchMedia) {
-    const full = [...so.options].map((o) => o.text), short = ['New to Duo', 'Popular', 'Rated'];
+    const full = [...so.options].map((o) => o.text), short = ['New', 'Popular', 'Rated'];
     const mq = matchMedia('(max-width: 560px)'); const sync = () => [...so.options].forEach((o, i) => { o.text = mq.matches ? short[i] : full[i]; });
     sync(); mq.addEventListener('change', () => { sync(); dash.draw('mktchips'); dash.draw('confchips'); dash.draw('catlabel'); });
   }
@@ -1268,7 +1286,7 @@ dash.draw('welcome', (el) => {
     q.append(row); return q;
   };
   card.append(pills('Which App Store market?', [['', 'All markets'], ...Object.entries(MARKETS)], (v) => wsel.mkt === v, (v) => { wsel.mkt = v; }));
-  card.append(pills('What matters most?', [['new', 'Newest support'], ['rated', 'Most popular'], ['stars', 'Best rated']], (v) => wsel.sort === v, (v) => { wsel.sort = v; }));
+  card.append(pills('What matters most?', [['new', 'New to Duo'], ['rated', 'Most popular'], ['stars', 'Top rated']], (v) => wsel.sort === v, (v) => { wsel.sort = v; }));
   const top = (okRows('by_cat') || []).slice(0, 10).map((r) => [r.category, r.category]);
   card.append(pills('Any categories? (pick as many as you like)', top, (v) => wsel.cats.includes(v), (v) => { wsel.cats = wsel.cats.includes(v) ? wsel.cats.filter((x) => x !== v) : [...wsel.cats, v]; }));
   const sq = mk('div', 'duo-wq'); sq.append(mk('b', '', 'Looking for a specific app? (optional)'));
