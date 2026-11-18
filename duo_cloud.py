@@ -232,7 +232,7 @@ def main():
             # reported as optimised, though its update notes never say so
             k = reported[tid]
             rows[tid] = dict(latest, id=tid, duo_date=k['date'], duo_version='', note=k['text'], report=k['text'], report_by=k['source'],
-                             report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=True)
+                             report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=False)   # False: its version history is read once, so a Duo mention in its own notes upgrades it to a green dot with the real date
             if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
             st['new'].append(tid)
         elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
