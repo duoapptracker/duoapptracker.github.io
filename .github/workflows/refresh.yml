@@ -153,3 +153,33 @@ jobs:
           PY
           git add watch.json
           git diff --cached --quiet || { git commit -m "Watched app notified"; git pull --rebase; git push; }
+      - name: Email the owner that a scan finished
+        if: steps.gate.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, datetime
+          new = json.load(open('data.json'))
+          shas = subprocess.run(['git', 'log', '--format=%H', '-n', '2', '--', 'data.json'], capture_output=True, text=True).stdout.split()
+          old_ids = set()
+          if len(shas) == 2:
+              old = json.loads(subprocess.run(['git', 'show', shas[1] + ':data.json'], capture_output=True, text=True).stdout)
+              old_ids = {str(r['id']) for r in old['rows']}
+          rows = new['rows']
+          added = [r for r in rows if str(r['id']) not in old_ids] if old_ids else []
+          reported = sum(1 for r in rows if r.get('source') == 'reported')
+          ist = (datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)).strftime('%d %b, %I:%M %p IST')
+          title = 'Scan finished: %d apps (%d new)' % (len(rows), len(added))
+          names = ', '.join(r['app'] for r in added[:8]) + (' and %d more' % (len(added) - 8) if len(added) > 8 else '')
+          body = '\n'.join(['The tracker scan finished at ' + ist + '.', '',
+                            '- Apps on the site: %d' % len(rows),
+                            '- New since the last scan: %d' % len(added),
+                            '- Reported only (no Duo mention in notes): %d' % reported,
+                            ('- New apps: ' + names) if added else '- No new apps this time',
+                            '', 'https://duoapptracker.github.io/'])
+          out = subprocess.run(['gh', 'issue', 'create', '--title', title, '--body', body], capture_output=True, text=True)
+          print(out.stdout.strip() or out.stderr.strip())
+          url = out.stdout.strip().split()[-1] if out.stdout.strip() else ''
+          if url: subprocess.run(['gh', 'issue', 'close', url], check=False)
+          PY
