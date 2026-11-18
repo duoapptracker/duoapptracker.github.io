@@ -606,7 +606,7 @@ body.duo-lock{overflow:hidden}
           <div class="duo-f duo-cat"><span>Category</span><details class="duo-pop" id="duo-catpop"><summary aria-label="Categories"><span data-draw="catlabel">—</span></summary><div class="duo-popgrid" data-draw="catchips" data-source="by_cat"></div></details></div>
           <label class="duo-f"><span>Confirmed by</span><select class="dash-select" id="duo-conf" title="Some apps have more than one source, so these numbers can add up to more than the total" data-draw="confchips" data-source="apps"></select></label>
           <label class="duo-f"><span>Added</span><select class="dash-select" id="duo-when"><option value="all">Any time</option><option value="week">Last 7 days</option><option value="latest">Latest day</option></select></label>
-          <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">Newest first</option><option value="rated">Most popular</option><option value="stars">Top rated</option><option value="upd">Recently updated</option></select></label>
+          <label class="duo-f"><span>Sort by</span><select class="dash-select" id="duo-sort"><option value="new">New to Duo</option><option value="rated">Most popular</option><option value="stars">Top rated</option></select></label>
           <div class="duo-fdone"><button type="button" class="duo-fresetm" id="duo-reset2">Reset</button><button type="button" class="duo-fok" id="duo-fok">Show apps</button></div>
         </div>
       </div>
@@ -1230,7 +1230,7 @@ dash.draw('filtercount', (el) => {
 {
   const so = document.getElementById('duo-sort');
   if (so && window.matchMedia) {
-    const full = [...so.options].map((o) => o.text), short = ['Newest', 'Popular', 'Rated', 'Updated'];
+    const full = [...so.options].map((o) => o.text), short = ['New to Duo', 'Popular', 'Rated'];
     const mq = matchMedia('(max-width: 560px)'); const sync = () => [...so.options].forEach((o, i) => { o.text = mq.matches ? short[i] : full[i]; });
     sync(); mq.addEventListener('change', () => { sync(); dash.draw('mktchips'); dash.draw('confchips'); dash.draw('catlabel'); });
   }

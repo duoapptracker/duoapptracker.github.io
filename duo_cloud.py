@@ -352,10 +352,18 @@ def main():
         st['mjobs'] = []; st['mnew'] = {}
         st['stage'] = 'write'
 
-    # every reported or suggested app (no Duo mention in its own notes) is dated by its last update, not the report date
+    # every reported or suggested app (no Duo mention in its own notes) is dated by the EARLIER of its report date and its
+    # last update at the time it was first added; that date is kept in 'dated' and never moves (a later App Store update
+    # or report does not re-date the app). An app whose own notes mention Duo is not here: it keeps its real date.
     for r in rows.values():
-        if r.get('source') == 'reported' and r.get('updated'):
-            r['duo_date'] = r['updated']
+        if r.get('source') == 'reported' and r.get('duo_version'):
+            r.pop('source'); r.pop('dated', None)   # its own release notes mention Duo: the real date and a green dot win over the report
+        elif r.get('source') == 'reported':
+            if not r.get('dated'):
+                base = r.get('duo_date') if r.get('first_seen') != today and r.get('duo_date') else r.get('updated')
+                rd = (reported.get(str(r.get('id'))) or {}).get('date')
+                r['dated'] = min([x for x in (base, rd) if x] or [''])
+            if r.get('dated'): r['duo_date'] = r['dated']
     out = sorted(rows.values(), key=lambda r: (r['duo_date'], r['ratings']), reverse=True)
     assert len(out) >= st['before']
     pool = set(st['ids'])
