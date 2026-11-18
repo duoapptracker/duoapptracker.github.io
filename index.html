@@ -515,6 +515,35 @@ body.duo-lock{overflow:hidden}
   .duo-topright{justify-content:flex-start;gap:8px}
   .duo-topright .duo-remind{margin-left:auto}
 }
+
+/* phones, final tidy: even spacing, equal control heights, one clean count line */
+@media (max-width:560px){
+  .duo{gap:16px;padding-left:2px;padding-right:2px}
+  .duo-top{gap:8px}
+  .duo-top h1{margin:0}
+  .duo-tagline{margin-top:4px;gap:3px}
+  .duo-tagline .tg-h{font-size:1.15rem}
+  .duo-topright{align-items:center;margin-top:4px}
+  .duo-topright .duo-themeseg,.duo-topright .duo-pop summary{height:36px;box-sizing:border-box;display:flex;align-items:center}
+  .duo-topright .duo-themeseg{padding:2px}
+  .duo-topright .duo-pop summary{justify-content:center;padding:0 14px}
+  .duo-topright .duo-pop{flex:1 1 0}
+  .duo-topright .duo-remind{margin-left:0}
+  .duo-topright .duo-pop summary{width:100%}
+  .duo-tiles{margin-top:2px}
+  .duo-bar{padding:10px}
+  .duo-bar .duo-f .dash-select,.duo-bar .duo-f .duo-pop summary{height:40px;line-height:38px;border-radius:12px;font-size:12.5px;padding:0 26px 0 12px}
+  .duo-bar .duo-f .duo-pop summary{line-height:1.2;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238b93a7' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;background-size:10px}
+  .duo-bar .duo-f .duo-pop summary::after{display:none}
+  .duo-bar>.duo-search{height:40px;border-radius:12px}
+  .duo-count{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+  .duo-count .duo-hint{display:none}
+  .duo-count .duo-muted{margin:0;font-size:13px;font-weight:650;color:var(--color-fg)}
+  .duo-count .duo-barfoot{display:flex;gap:14px;margin:0;justify-content:flex-end}
+  .duo-count .duo-barfoot .duo-resetbtn{font-size:12.5px;padding:2px 0}
+  .duo-count .duo-daychip{grid-column:1 / -1}
+  .duo-list{gap:12px}
+}
 .duo [data-dash-source-state=refreshing]{opacity:.5}
 @media (max-width:480px){
   .duo-tile .num{font-size:1.5rem}
@@ -581,7 +610,7 @@ body.duo-lock{overflow:hidden}
           <div class="duo-fdone"><button type="button" class="duo-fresetm" id="duo-reset2">Reset</button><button type="button" class="duo-fok" id="duo-fok">Show apps</button></div>
         </div>
       </div>
-      <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match. Tap an app for details, or "Get" to open it on the App Store.</p><div class="duo-daychip" data-draw="daychip"></div><div class="duo-barfoot"><button type="button" class="duo-resetbtn" id="duo-reset">Reset all filters</button><button type="button" class="duo-resetbtn" id="duo-reopen">Open the welcome guide</button></div></div>
+      <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match<span class="duo-hint">. Tap an app for details, or "Get" to open it on the App Store.</span></p><div class="duo-daychip" data-draw="daychip"></div><div class="duo-barfoot"><button type="button" class="duo-resetbtn" id="duo-reset">Reset all filters</button><button type="button" class="duo-resetbtn" id="duo-reopen">Open the welcome guide</button></div></div>
       <div class="duo-list" data-draw="rows" data-source="apps">—</div>
     </div>
   </section>
@@ -850,7 +879,7 @@ dash.draw('mktchips', (sel) => {
   const rows = okRows('by_market') || [];
   const s = sum();
   const narrow = window.matchMedia && matchMedia('(max-width: 560px)').matches;
-  sel.replaceChildren(new Option(narrow ? 'All markets' : 'All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(`${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
+  sel.replaceChildren(new Option(narrow ? 'Markets' : 'All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(narrow ? (MARKETS[r.market] || String(r.market).toUpperCase()) : `${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
   sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('tagline'); };
 });
@@ -874,7 +903,7 @@ dash.draw('confchips', (sel) => {
   const rows = okRows('apps') || [];
   const n = new Map();
   for (const r of rows) for (const k of confOf(r)) n.set(k, (n.get(k) || 0) + 1);
-  sel.replaceChildren(new Option('All sources', ''), ...CONF.filter(([k]) => n.get(k)).map(([k, t]) => new Option(`${t} (${fmtNum(n.get(k))})`, k)));
+  sel.replaceChildren(new Option(isPhone() ? 'Sources' : 'All sources', ''), ...CONF.filter(([k]) => n.get(k)).map(([k, t]) => new Option(`${t} (${fmtNum(n.get(k))})`, k)));
   sel.value = n.get(view.conf) ? view.conf : '';
   sel.onchange = () => { view.conf = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); };
 });
@@ -901,7 +930,8 @@ dash.draw('tagline', (el) => {
 
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
 const catsChanged = () => { dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw(); };
-dash.draw('catlabel', (el) => { el.textContent = !view.cats.length ? 'All categories' : view.cats.length === 1 ? view.cats[0] : view.cats.length + ' categories'; });
+const isPhone = () => window.matchMedia && matchMedia('(max-width: 560px)').matches;
+dash.draw('catlabel', (el) => { el.textContent = !view.cats.length ? (isPhone() ? 'Categories' : 'All categories') : view.cats.length === 1 ? view.cats[0] : view.cats.length + ' categories'; });
 dash.draw('catchips', (box) => {
   const rows = okRows('by_cat') || [];
   const s = sum();
@@ -1196,6 +1226,14 @@ dash.draw('filtercount', (el) => {
 {
   const q = document.getElementById('duo-q');
   if (q && window.matchMedia) { const mq = matchMedia('(max-width: 700px)'); const sync = () => { q.placeholder = mq.matches ? 'Search' : 'Search apps or developers'; }; sync(); mq.addEventListener('change', sync); }
+}
+{
+  const so = document.getElementById('duo-sort');
+  if (so && window.matchMedia) {
+    const full = [...so.options].map((o) => o.text), short = ['Newest', 'Popular', 'Rated', 'Updated'];
+    const mq = matchMedia('(max-width: 560px)'); const sync = () => [...so.options].forEach((o, i) => { o.text = mq.matches ? short[i] : full[i]; });
+    sync(); mq.addEventListener('change', () => { sync(); dash.draw('mktchips'); dash.draw('confchips'); dash.draw('catlabel'); });
+  }
 }
 const resetFilters = () => {
   view.conf = ''; view.when = 'all'; view.day = '';
