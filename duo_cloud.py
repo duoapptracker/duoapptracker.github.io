@@ -235,6 +235,7 @@ def main():
     def take(a, cc):
         """Use one App Store answer. cc is the store it came from: 'in', or the app's home market when it is not sold in India."""
         tid = str(a['trackId']); notes = a.get('releaseNotes') or ''
+        if tid in EXCLUDE: return   # checked by hand: listed only because of its own name
         latest = {'app': a['trackName'], 'developer': a.get('artistName', ''), 'category': a.get('primaryGenreName', ''),
                   'version': a.get('version', ''), 'updated': a.get('currentVersionReleaseDate', '')[:10], 'price': a.get('formattedPrice', ''),
                   'rating': round(a.get('averageUserRating', 0), 1), 'ratings': a.get('userRatingCount', 0),
@@ -376,6 +377,7 @@ def main():
     # last update at the time it was first added; that date is kept in 'dated' and never moves (a later App Store update
     # or report does not re-date the app). An app whose own notes mention Duo is not here: it keeps its real date.
     for tid in [t for t in rows if t in EXCLUDE]: rows.pop(tid)   # listed by mistake (see EXCLUDE)
+    st['new'] = [t for t in st['new'] if t in rows]
     for r in rows.values():
         if r.get('source') == 'reported' and r.get('duo_version'):
             r.pop('source'); r.pop('dated', None)   # its own release notes mention Duo: the real date and a green dot win over the report
@@ -408,7 +410,7 @@ def main():
         json.dump(payload, open(out_path, 'w'), ensure_ascii=False)
     st['stage'] = 'write'; show(st, page_path, done=True)
     os.remove(state_path) if os.path.exists(state_path) else None
-    print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
+    print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new'] if t in rows],
           'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
           'apps_found_by_search': st.get('dfound', 0), 'visitor_suggestions_pending': len({i for i in st.get('submitted', {}) if i not in rows}), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path),
           'minutes_per_stage': {k: round(v / 60, 1) for k, v in st.get('times', {}).items()}}, ensure_ascii=False))
