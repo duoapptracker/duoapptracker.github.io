@@ -27,6 +27,8 @@ DISCOVER_TERMS = ['iPhone Duo', 'optimized for iPhone Duo', 'iPhone Duo support'
 DISCOVER_CATEGORIES = ['games', 'weather', 'music', 'photo', 'video', 'news', 'finance', 'travel', 'health', 'fitness', 'productivity', 'notes', 'calendar',
                        'shopping', 'food', 'sports', 'education', 'books', 'reference', 'utilities', 'social', 'navigation', 'medical', 'business', 'camera', 'wallpaper']
 DISCOVER_MARKETS = ['in', 'us', 'gb', 'jp']
+LB = 200          # app ids per lookup request (Apple accepts 200; was 100)
+CHART_THREADS = 8 # chart lists read at the same time (the RSS feeds are not rate-limited like search)
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
 def duo_hit(text, name=''):
     """True if the notes speak of iPhone Duo. The app's own name never counts: an app called "Remote Duo" or
@@ -132,7 +134,7 @@ def show(st, path, done=False):
     esc = lambda t: str(t).replace('&', '&amp;').replace('<', '&lt;')
     order = {'charts': 0, 'discover': 0, 'lookup': 1, 'lookup2': 1, 'history': 2, 'mstats': 3, 'write': 3}
     parts = [('Read the charts', 'charts', st['feed'], len(FEEDS), 'charts'),
-             ('Look up each app on the India store', 'lookup', min(st['batch'] * 100, len(st['ids'])), len(st['ids']), 'apps'),
+             ('Look up each app on the India store', 'lookup', min(st['batch'] * LB, len(st['ids'])), len(st['ids']), 'apps'),
              ('Read version histories', 'history', st['qpos'], len(st['queue'] or []), 'apps')]
     now = 3 if done else order.get(st['stage'], 3)
     bars = ''
@@ -195,29 +197,36 @@ def main():
     reported = st.setdefault('reported', dict(REPORTED))
     page_path = os.path.join(os.path.dirname(state_path), 'duo_progress.html')
     saved = [time.time()]
+    last = [time.time()]
     def tick():
+        now = time.time(); tm = st.setdefault('times', {}); tm[st['stage']] = tm.get(st['stage'], 0) + now - last[0]; last[0] = now   # seconds spent per stage
         show(st, page_path)
         if time.time() - saved[0] > 120:   # checkpoint, so an interrupted run loses little
             json.dump(st, open(state_path + '.tmp', 'w'), ensure_ascii=False); os.replace(state_path + '.tmp', state_path); saved[0] = time.time()
     def pause():
         json.dump(st, open(state_path, 'w'), ensure_ascii=False)
         print('CONTINUE stage=%s progress=%s' % (st['stage'], {'charts': '%d/%d feeds' % (st['feed'], len(FEEDS)), 'discover': '%d/%d searches' % (st.get('dpos', 0), len(st.get('dq', []))),
-              'lookup': '%d/%d apps' % (st['batch'] * 100, len(st['ids'])), 'history': '%d/%d pages' % (st['qpos'], len(st['queue'] or []))}.get(st['stage'], '')))
+              'lookup': '%d/%d apps' % (st['batch'] * LB, len(st['ids'])), 'history': '%d/%d pages' % (st['qpos'], len(st['queue'] or []))}.get(st['stage'], '')))
         sys.exit(0)
 
     if st['stage'] == 'charts':
-        while st['feed'] < len(FEEDS):
-            if left() < 20: pause()
-            c, g, ch = FEEDS[st['feed']]
+        def feed(f):
+            c, g, ch = f
             d = get(f'https://itunes.apple.com/{c}/rss/{ch}/limit=200/' + (f'genre={g}/' if g else '') + 'json')
             e = (d or {}).get('feed', {}).get('entry', [])
-            got = [x['id']['attributes']['im:id'] for x in ([e] if isinstance(e, dict) else e)]
-            st['ids'] += got
-            for i in got:   # remember which markets' charts list this app
-                m = st['mk'].setdefault(i, [])
-                if c not in m: m.append(c)
-            st['feed'] += 1; tick()
-            if c == 'in': st['india_ids'] = len(set(st['ids']))
+            return c, [x['id']['attributes']['im:id'] for x in ([e] if isinstance(e, dict) else e)]
+        with ThreadPoolExecutor(CHART_THREADS) as ex:
+            while st['feed'] < len(FEEDS):
+                if left() < 20: pause()
+                group = FEEDS[st['feed']:st['feed'] + CHART_THREADS * 2]
+                for c, got in ex.map(feed, group):   # results come back in feed order
+                    st['ids'] += got
+                    for i in got:   # remember which markets' charts list this app
+                        m = st['mk'].setdefault(i, [])
+                        if c not in m: m.append(c)
+                    st['feed'] += 1
+                    if c == 'in': st['india_ids'] = len(set(st['ids']))
+                tick()
         if st['india_ids'] < 3000:
             sys.exit(f"STOP: only {st['india_ids']} apps read from the India charts; Apple feeds unreachable or changed. Nothing written.")
         st['ids'] = list(dict.fromkeys(st['ids'] + list(rows) + list(reported) + list(st.get('submitted', {}))))
@@ -271,10 +280,10 @@ def main():
     if st['stage'] == 'lookup':
         ids = st['ids']
         got = st.setdefault('got', [])
-        while st['batch'] * 100 < len(ids):
+        while st['batch'] * LB < len(ids):
             if left() < 30: pause()
-            k = st['batch'] * 100
-            d = get('https://itunes.apple.com/lookup?country=in&id=' + ','.join(ids[k:k + 100]))
+            k = st['batch'] * LB
+            d = get('https://itunes.apple.com/lookup?country=in&id=' + ','.join(ids[k:k + LB]))
             for a in (d or {}).get('results', []):
                 st['seen'] += 1; got.append(str(a['trackId'])); take(a, 'in')
             st['batch'] += 1; tick()
@@ -286,7 +295,7 @@ def main():
             if i not in have:
                 cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or rows.get(i, {}).get('home') or ''])[0]
                 if cc and cc != 'in': todo.setdefault(cc, []).append(i)
-        st['abroad'] = [[cc, v[k:k + 100]] for cc, v in todo.items() for k in range(0, len(v), 100)]
+        st['abroad'] = [[cc, v[k:k + LB]] for cc, v in todo.items() for k in range(0, len(v), LB)]
         st['apos'] = 0; st['got'] = []
         st['stage'] = 'lookup2'
 
@@ -343,7 +352,7 @@ def main():
         # for each market: is the app on that store, and what is its rating there?  mk = {market: [rating, number of ratings]}
         if 'mjobs' not in st:
             idl = list(rows)
-            st['mjobs'] = [[cc, idl[k:k + 100]] for cc in MARKETS for k in range(0, len(idl), 100)]
+            st['mjobs'] = [[cc, idl[k:k + LB]] for cc in MARKETS for k in range(0, len(idl), LB)]
             st['mpos'] = 0; st['mnew'] = {}
         while st['mpos'] < len(st['mjobs']):
             if left() < 30: pause()
@@ -401,7 +410,8 @@ def main():
     os.remove(state_path) if os.path.exists(state_path) else None
     print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new']],
           'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
-          'apps_found_by_search': st.get('dfound', 0), 'visitor_suggestions_pending': len({i for i in st.get('submitted', {}) if i not in rows}), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path)}, ensure_ascii=False))
+          'apps_found_by_search': st.get('dfound', 0), 'visitor_suggestions_pending': len({i for i in st.get('submitted', {}) if i not in rows}), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path),
+          'minutes_per_stage': {k: round(v / 60, 1) for k, v in st.get('times', {}).items()}}, ensure_ascii=False))
 
 if __name__ == '__main__':
     main()
