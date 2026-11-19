@@ -28,6 +28,16 @@ DISCOVER_CATEGORIES = ['games', 'weather', 'music', 'photo', 'video', 'news', 'f
                        'shopping', 'food', 'sports', 'education', 'books', 'reference', 'utilities', 'social', 'navigation', 'medical', 'business', 'camera', 'wallpaper']
 DISCOVER_MARKETS = ['in', 'us', 'gb', 'jp']
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
+def duo_hit(text, name=''):
+    """True if the notes speak of iPhone Duo. The app's own name never counts: an app called "Remote Duo" or
+    "Duo Keyboard" mentions itself, not the phone. "iPhone Duo" is protected before the name is removed."""
+    t = re.sub(r'iphone\s*duo', 'IPHONEDUO', text or '', flags=re.I)
+    base = re.split(r'\s*[:|–—-]\s+|\s*[:|]', name or '')[0].strip()
+    for w in {base, name or ''}:
+        if w and re.search(r'duo', w, re.I): t = re.sub(r'(?<![A-Za-z])' + re.escape(w) + r'(?![A-Za-z])', ' ', t, flags=re.I)
+    return bool(PAT.search(t))
+# apps checked by hand and found to match only because of their own name; never listed
+EXCLUDE = {'6834531434', '6746059246', '6826541573', '6819230205', '6737245881'}
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
 # Apps reported as optimised by Apple or the press. Many big apps never mention iPhone Duo in their update
 # notes, so the notes scan cannot find them. {App Store id: {date reported, source name, sentence, web address}}.
@@ -237,7 +247,7 @@ def main():
             st['new'].append(tid)
         elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
             # not on the board, recent enough, and this version's history has not been read yet
-            cand[tid] = dict(latest, now=snippet(notes) if PAT.search(notes) else '')
+            cand[tid] = dict(latest, now=snippet(notes) if duo_hit(notes, latest['app']) else '')
 
     if st['stage'] == 'discover':
         if '--skip-discover' in args: st['stage'] = 'lookup'   # the extra daily runs skip the (slow) search step
@@ -253,7 +263,7 @@ def main():
             have = set(st['ids'])
             for a in (d or {}).get('results', []):
                 i = str(a.get('trackId', ''))
-                if i and i not in have and (PAT.search(a.get('releaseNotes') or '') or re.search(r'iphone\s*duo', a.get('description') or '', re.I)):
+                if i and i not in have and i not in EXCLUDE and (duo_hit(a.get('releaseNotes') or '', a.get('trackName', '')) or re.search(r'iphone\s*duo', a.get('description') or '', re.I)):
                     st['ids'].append(i); st['disc'][i] = cc; have.add(i); st['dfound'] += 1
             st['dpos'] += 1; tick(); time.sleep(2.5)   # the search service allows only a few requests a minute
         st['stage'] = 'lookup'
@@ -312,7 +322,8 @@ def main():
             chunk = q[st['qpos']:st['qpos'] + 32]; t1 = time.time(); got = 0
             with ThreadPoolExecutor(4) as ex:
                 for tid, h in ex.map(read, chunk):
-                    hits = [x for x in h if x[1] >= EARLIEST and PAT.search(x[2])]   # older mentions are other products called Duo
+                    nm = rows[tid]['app'] if tid in rows else cand[tid].get('app', '')
+                    hits = [x for x in h if x[1] >= EARLIEST and duo_hit(x[2], nm)]   # older mentions are other products called Duo
                     first = min(hits, key=lambda x: x[1]) if hits else None
                     if h: got += 1; st['pages_read'] += 1
                     if tid in rows:
@@ -355,6 +366,7 @@ def main():
     # every reported or suggested app (no Duo mention in its own notes) is dated by the EARLIER of its report date and its
     # last update at the time it was first added; that date is kept in 'dated' and never moves (a later App Store update
     # or report does not re-date the app). An app whose own notes mention Duo is not here: it keeps its real date.
+    for tid in [t for t in rows if t in EXCLUDE]: rows.pop(tid)   # listed by mistake (see EXCLUDE)
     for r in rows.values():
         if r.get('source') == 'reported' and r.get('duo_version'):
             r.pop('source'); r.pop('dated', None)   # its own release notes mention Duo: the real date and a green dot win over the report

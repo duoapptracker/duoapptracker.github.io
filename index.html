@@ -568,6 +568,12 @@ html,body{max-width:100%;overflow-x:clip}
   .duo-topright .duo-pop summary{width:auto}
   .duo-topright .duo-remind{margin-left:0}
 }
+/* welcome guide intro and key (19 Nov) */
+.duo-wintro{margin:2px 0 10px;font-size:var(--cds-font-size-body);line-height:1.45}
+.duo-wkey{display:grid;gap:6px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
+.duo-wkey .duo-src{border-top:0;padding-top:0}
+.duo-wkey .duo-src span{white-space:normal}
+.duo-wtip{margin:10px 0 0;font-size:var(--cds-font-size-caption)}
 /* pop-up fields (19 Nov): visible boxes in light mode, no default button border */
 .duo-wcard,.duo-remindbox,.duo-popgrid{--glass-line:color-mix(in srgb,var(--color-fg) 18%,transparent)}
 :root[data-theme="light"] :is(.duo-wcard,.duo-remindbox,.duo-popgrid){--glass-2:rgba(20,30,60,.045)}
@@ -662,23 +668,24 @@ html,body{max-width:100%;overflow-x:clip}
     <div class="duo-card">
       <h2>How this list is made</h2>
       <ul class="duo-notes">
-        <li>A script reads Apple's public App Store charts for ten markets: India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany, Japan and China.</li>
-        <li>It reads each app's version history for update notes that mention iPhone Duo or its folding screen.</li>
-        <li>"Duo support added" is the release date of the earliest version whose notes mention iPhone Duo. "Latest update" is the date of the app's newest version, which may have nothing to do with iPhone Duo.</li>
-        <li>Choosing a market shows every listed app that is on that market's App Store, with that market's rating and store link. "Popular" sorts by the number of ratings there, and "Top rated" by the rating.</li>
+        <li>Several times a day a script reads Apple's public App Store charts for ten markets (India, United States, United Kingdom, UAE, Singapore, Australia, Canada, Germany, Japan and China) and searches the App Store for apps that mention iPhone Duo.</li>
+        <li>It reads each app's version history and keeps apps whose update notes mention iPhone Duo or its folding screen. A "Duo" in the app's own name does not count.</li>
+        <li>Apps that support iPhone Duo without saying so in their notes are added from Apple's iPhone Duo collections, press reports, the community (X, Reddit, YouTube and similar), or after the site owner downloads and tests them on an iPhone Duo.</li>
+        <li>Choosing a market shows every listed app that is on that market's App Store, with that market's rating and store link. "Most popular" sorts by the number of ratings there, and "Top rated" by the rating.</li>
         <li>With no market chosen, ratings and links are from the App Store in India (or the app's home market if it is not sold in India). "Needs iOS" is the oldest iOS version the app runs on.</li>
       </ul>
     </div>
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
-        <li>Visitors can report a missing app with "App missing?". The daily refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
-        <li>Every app shows how it was confirmed. A green dot means its own update notes say so. An amber dot means it was reported as optimised by Apple or the press; those apps carry the date of the report in place of the date support was added, and a link to the report.</li>
+        <li>Every app shows how it was confirmed. A <b>green dot</b> means its own update notes say so; its date is the release date of the earliest version that mentions iPhone Duo.</li>
+        <li>An <b>amber dot</b> means it was reported as optimised (by Apple, the press, the community or the site owner) but its notes do not say so. Its date is the earlier of the report date and the app's last update when it was added, and it does not change later.</li>
+        <li>If an app's own notes later mention iPhone Duo, it turns green and takes the real date.</li>
+        <li>Visitors can report a missing app with "App missing?". The next refresh checks the app's update notes and adds it only if they say it supports iPhone Duo.</li>
         <li>Some apps have more than one source (for example their own notes and a report), so the Confirmed by numbers can add up to more than the total.</li>
-        <li>Other apps that support iPhone Duo without saying so are not listed, so the real number is higher.</li>
         <li>A few notes mention iPhone Duo for a bug fix and not for new support. Tap an app to read its note and check.</li>
         <li>Apple's "Made for iPhone Duo" badge and the SDK version an app was built with are not in the public data, so they are not shown.</li>
-        <li>The list is built automatically, so it can miss apps or include one by mistake. Check an app's App Store page before relying on it.</li>
+        <li>The list is built mostly automatically, so it can miss apps or include one by mistake. Check an app's App Store page before relying on it.</li>
         <li>This is an independent project. It is not affiliated with, endorsed by or sponsored by Apple Inc. iPhone and App Store are trademarks of Apple Inc. App names and icons belong to their owners.</li>
       </ul>
     </div>
@@ -761,6 +768,8 @@ dash.calc('by_day', {
     return out;
   },
 });
+// tidy a description for display: drop decoration such as '-----', '★★★' or '【】' at the start and end
+const cleanDesc = (t) => String(t || '').replace(/^[\s\-–—=_~*•·★☆✦◆▶►|#【】「」\[\]()]+/u, '').replace(/[\s\-–—=_~*•·★☆✦◆|#]+$/u, '').trim();
 const MARKETS = {in: 'India', us: 'United States', gb: 'United Kingdom', ae: 'UAE', sg: 'Singapore', au: 'Australia', ca: 'Canada', de: 'Germany', jp: 'Japan', cn: 'China'};
 const marketsOf = (r) => String(r.markets || '').split(',').filter(Boolean);
 // mk = {market: [rating, number of ratings]} for every store the app is on
@@ -1023,7 +1032,7 @@ dash.draw('rows', (box) => {
   const info = (r) => {
     const p = mk('div', 'duo-info');
     p.append(mk('b', 't', r.app));
-    if (r.desc) p.append(mk('p', '', r.desc));
+    if (cleanDesc(r.desc)) p.append(mk('p', '', cleanDesc(r.desc)));
     const note = mk('p');
     if (r.source === 'reported') note.append(mk('span', 'lab', 'Reported, not from update notes: '), r.note);
     else note.append(mk('span', 'lab', 'What the update says: '), '“' + r.note + '”');
@@ -1084,7 +1093,7 @@ dash.draw('rows', (box) => {
     if (src.startsWith('https://') || src.startsWith('data:image/')) { pic = mk('img'); pic.src = src; pic.alt = ''; pic.loading = 'lazy'; pic.width = 56; pic.height = 56; }
     else pic = mk('span', 'noicon');
     const main = mk('span', 'main');
-    main.append(mk('span', 'name', r.app), mk('span', 'desc', r.desc || r.developer));
+    main.append(mk('span', 'name', r.app), mk('span', 'desc', cleanDesc(r.desc) || r.developer));
     const facts = mk('span', 'facts');
     const [sr, n] = stat(r);
     if (n) facts.append('★ ', mk('span', '', fmtStar(sr)), ' · ');
@@ -1222,6 +1231,20 @@ const PREF_KEY = 'duo-prefs-v1';
 const loadPrefs = () => { try { const v = JSON.parse(localStorage.getItem(PREF_KEY) || 'null'); return v && typeof v === 'object' ? v : null; } catch (e) { return null; } };
 const savePrefs = (v) => { try { localStorage.setItem(PREF_KEY, JSON.stringify(v)); } catch (e) { /* ignore */ } };
 const wsel = {mkt: '', sort: 'new', cats: [], q: ''};
+// first visit: pre-select the visitor's own App Store market, guessed from the time zone or browser language (nothing is sent anywhere)
+const guessMkt = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const byTz = [[/^Asia\/(Kolkata|Calcutta)$/, 'in'], [/^Asia\/Dubai$/, 'ae'], [/^Asia\/Singapore$/, 'sg'], [/^Australia\//, 'au'], [/^Asia\/Tokyo$/, 'jp'],
+      [/^Asia\/(Shanghai|Chongqing|Harbin|Urumqi)$/, 'cn'], [/^Europe\/(London|Belfast)$/, 'gb'], [/^Europe\/Berlin$/, 'de'],
+      [/^America\/(Toronto|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina)$/, 'ca'], [/^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Detroit|Indiana)|Pacific\/Honolulu)/, 'us']];
+    for (const [re, m] of byTz) if (re.test(tz)) return m;
+    const reg = ((navigator.language || '').split('-')[1] || '').toLowerCase();
+    const alias = {uk: 'gb'};
+    const m = alias[reg] || reg;
+    return MARKETS[m] ? m : '';
+  } catch (e) { return ''; }
+};
 let wstate = 'init', wfocus = false;
 const applyChoices = (c) => {
   view.mkt = c.mkt && MARKETS[c.mkt] ? c.mkt : '';
@@ -1282,14 +1305,19 @@ const closeWelcome = (save, apply) => {
 };
 dash.draw('welcome', (el) => {
   if (!okRows('apps')) return;
-  if (wstate === 'init') { const p = loadPrefs(); if (p) { Object.assign(wsel, {mkt: '', sort: 'new', cats: []}, p); applyChoices(wsel); wstate = 'closed'; } else wstate = 'open'; }
+  if (wstate === 'init') { const p = loadPrefs(); if (p) { Object.assign(wsel, {mkt: '', sort: 'new', cats: []}, p); applyChoices(wsel); wstate = 'closed'; } else { wsel.mkt = guessMkt(); if (wsel.mkt) applyChoices(wsel); wstate = 'open'; } }
   el.hidden = wstate !== 'open';
   if (wstate !== 'open') { el.replaceChildren(); return; }
   document.body.classList.add('duo-lock');
   const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const card = mk('div', 'duo-wcard');
   const h = mk('h2', '', 'Welcome! Let us find your iPhone Duo apps'); h.id = 'duo-wt';
-  card.append(h, mk('p', 'duo-muted', 'Answer two quick questions, or skip. You can change everything later with the filters.'));
+  card.append(h, mk('p', 'duo-wintro', 'A free, independent list of apps ready for iPhone Duo, checked several times a day across 10 App Store markets.'));
+  const key = mk('div', 'duo-wkey');
+  for (const [cls, t] of [['', 'Its own App Store notes mention iPhone Duo'], [' rep', 'Reported as working (Apple, press, community or tested by the site owner)']]) {
+    const k = mk('div', 'duo-src' + cls); k.append(mk('i'), mk('span', '', t)); key.append(k);
+  }
+  card.append(key, mk('p', 'duo-muted', 'Answer a few quick questions, or skip. You can change everything later with the filters.'));
   const pills = (label, options, isOn, click) => {
     const q = mk('div', 'duo-wq'); q.append(mk('b', '', label));
     const row = mk('div', 'duo-wchips');
@@ -1297,10 +1325,10 @@ dash.draw('welcome', (el) => {
     q.append(row); return q;
   };
   card.append(pills('Which App Store market?', [['', 'All markets'], ...Object.entries(MARKETS)], (v) => wsel.mkt === v, (v) => { wsel.mkt = v; }));
-  card.append(pills('What matters most?', [['new', 'New to Duo'], ['rated', 'Most popular'], ['stars', 'Top rated']], (v) => wsel.sort === v, (v) => { wsel.sort = v; }));
+  card.append(pills('Show first', [['new', 'New to Duo'], ['rated', 'Most popular'], ['stars', 'Top rated']], (v) => wsel.sort === v, (v) => { wsel.sort = v; }));
   const top = (okRows('by_cat') || []).slice(0, 10).map((r) => [r.category, r.category]);
   card.append(pills('Any categories? (pick as many as you like)', top, (v) => wsel.cats.includes(v), (v) => { wsel.cats = wsel.cats.includes(v) ? wsel.cats.filter((x) => x !== v) : [...wsel.cats, v]; }));
-  const sq = mk('div', 'duo-wq'); sq.append(mk('b', '', 'Looking for a specific app? (optional)'));
+  const sq = mk('div', 'duo-wq'); sq.append(mk('b', '', 'Looking for a specific app?'));
   const inp = mk('input', 'duo-search'); inp.type = 'search'; inp.placeholder = 'App or developer name'; inp.maxLength = 80; inp.value = wsel.q; inp.setAttribute('aria-label', 'App or developer name');
   inp.addEventListener('input', () => { wsel.q = inp.value; }); inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') closeWelcome(true, true); });
   sq.append(inp); card.append(sq);
@@ -1308,8 +1336,9 @@ dash.draw('welcome', (el) => {
   const go = mk('button', 'duo-sbtn', 'Show apps'); go.type = 'button'; go.onclick = () => closeWelcome(true, true);
   const skip = mk('button', 'duo-wskip', 'Skip for now'); skip.type = 'button'; skip.onclick = () => closeWelcome(true, false);
   act.append(go, skip); card.append(act);
+  card.append(mk('p', 'duo-muted duo-wtip', 'App not listed? Tap “App missing?” at the top and we’ll check it.'));
   el.replaceChildren(card);
-  if (!wfocus) { wfocus = true; const f = card.querySelector('.duo-chip'); if (f) f.focus(); }
+  if (!wfocus) { wfocus = true; const f = card.querySelector('.duo-chip[aria-pressed="true"]') || card.querySelector('.duo-chip'); if (f) f.focus({focusVisible: false}); }
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && wstate === 'open') closeWelcome(true, false); });
 {
