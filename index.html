@@ -575,7 +575,9 @@ html,body{max-width:100%;overflow-x:clip}
 .duo-wkey .duo-src span{white-space:normal}
 .duo-wtip{font-size:var(--cds-font-size-caption)}
 /* compact welcome guide: fits a laptop screen without a scroll bar */
-.duo-wcard{gap:14px;padding:24px 28px}
+.duo-wcard{gap:14px;padding:24px 28px;scrollbar-width:none}
+.duo-wcard::-webkit-scrollbar{display:none}
+@media (max-height:760px){.duo-wcard{gap:10px;padding:18px 24px}.duo-wintro{font-size:var(--cds-font-size-caption)}}
 .duo-wcard p,.duo-wintro,.duo-wkey{margin:0}
 .duo-wcard h2{margin-bottom:-4px}
 .duo-wq{gap:8px}
