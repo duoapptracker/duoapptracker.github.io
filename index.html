@@ -608,6 +608,18 @@ html,body{max-width:100%;overflow-x:clip}
   .duo-tile .split .leg{font-size:10px;gap:6px}
   .duo-tile .split .leg .g{display:none}
 }
+/* popular searches (19 Nov) */
+.duo-tags{display:flex;align-items:center;gap:10px;min-width:0}
+.duo-tags .lab{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted)}
+.duo-tags .row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px;min-width:0;-webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);mask-image:linear-gradient(90deg,#000 92%,transparent)}
+.duo-tags .row::-webkit-scrollbar{display:none}
+.duo-tags .tg{flex:none;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;color:var(--color-fg);background:var(--glass-2);border:1px solid color-mix(in srgb,var(--color-fg) 14%,transparent);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.duo-tags .tg .n{font-size:12px;color:var(--color-fg-muted);font-variant-numeric:tabular-nums}
+.duo-tags .tg:hover{border-color:color-mix(in srgb,var(--color-fg) 30%,transparent)}
+.duo-tags .tg[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg);border-color:transparent}
+.duo-tags .tg[aria-pressed=true] .n{color:var(--color-bg);opacity:.75}
+.duo-tags .tg:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+@media (max-width:560px){.duo-tags{flex-direction:column;align-items:stretch;gap:6px}.duo-tags .tg{font-size:12px;padding:5px 10px}}
 /* trends (19 Nov): heatmap, growth curve, categories */
 .duo-trends{grid-template-columns:repeat(2,minmax(0,1fr))}
 .duo-trends .duo-wide{grid-column:1 / -1}
@@ -752,6 +764,7 @@ html,body{max-width:100%;overflow-x:clip}
           <div class="duo-fdone"><button type="button" class="duo-fresetm" id="duo-reset2">Reset</button><button type="button" class="duo-fok" id="duo-fok">Show apps</button></div>
         </div>
       </div>
+      <div class="duo-tags" data-draw="tagchips" role="group" aria-label="Popular searches"></div>
       <div class="duo-count"><p class="duo-muted"><span data-draw="shown" data-source="apps">—</span> apps match<span class="duo-hint">. Tap an app for details, or "Get" to open it on the App Store.</span></p><div class="duo-daychip" data-draw="daychip"></div><div class="duo-barfoot"><button type="button" class="duo-resetbtn" id="duo-reset">Reset all filters</button><button type="button" class="duo-resetbtn" id="duo-reopen">Open the welcome guide</button></div></div>
       <div class="duo-list" data-draw="rows" data-source="apps">—</div>
     </div>
@@ -997,6 +1010,51 @@ const dayCounts = () => {
   return out;
 };
 const heatLv = (n, mx) => !n ? '' : `color-mix(in srgb, var(--color-ok) ${Math.round(22 + 78 * Math.sqrt(n / mx))}%, transparent)`;
+// ---- popular searches (19 Nov): tags people often search the App Store for, which the Category filter cannot answer.
+// An app gets a tag when its name matches and its App Store category fits ('alone' categories qualify by themselves).
+// PIN adds an app to a tag by hand, DROP removes a wrong match.
+const TAGDEFS = [
+  ['Browsers', /\bbrowser\b|\bbrave\b|firefox|\bchrome\b|\bopera\b|duckduckgo|\bedge\b/i, [], ['Utilities', 'Productivity', 'Reference', 'Social Networking']],
+  ['Messaging', /messenger|messaging|whatsapp|telegram|\bsignal\b|threema|wechat|slack|discord|\bsms\b/i, [], ['Social Networking', 'Business', 'Productivity', 'Utilities', 'Lifestyle']],
+  ['Banking & UPI', /\bbank|banking|credit union|\bupi\b|paytm|phonepe|\bbhim\b|neobank|kotak|hdfc|icici|\bsbi\b|\byono\b|revolut|monzo|starling|\bchase\b|\bwise\b/i, [], ['Finance']],
+  ['Streaming & TV', /stream|\btv\b|movies|netflix|prime video|hotstar|jiocinema|youtube|\bhbo\b|disney|discovery\+|\bplex\b|\bott\b/i, [], ['Entertainment', 'Photo & Video', 'Sports']],
+  ['AI assistants', /\bai\b|chatgpt|\bgpt\b|copilot|gemini|\bgrok\b|claude|perplexity|assistant/i, [], ['Productivity', 'Utilities', 'Business', 'Education', 'Reference']],
+  ['Notes & to-do', /\bnotes?\b|notion|obsidian|journal|notebook|to-?do|todo|\btasks?\b|reminder/i, [], ['Productivity', 'Lifestyle', 'Education', 'Utilities']],
+  ['Email', /\be-?mail\b|\bmail\b|inbox|outlook|gmail/i, [], ['Productivity', 'Business', 'Utilities']],
+  ['Calendar & planner', /calendar|planner|agenda|schedul/i, [], ['Productivity', 'Business', 'Lifestyle', 'Utilities']],
+  ['Photo & video editing', /\bedit|editor|filter|collage|retouch|lightroom|canva|capcut|vsco|snapseed|darkroom|luminar/i, [], ['Photo & Video', 'Graphics & Design']],
+  ['VPN & security', /\bvpn\b|ad ?block|adguard|password|authenticat|\b2fa\b|privacy/i, [], ['Utilities', 'Productivity']],
+  ['Keyboards', /keyboard/i, [], ['Utilities', 'Productivity']],
+  ['Maps & navigation', /\bmaps?\b|\bgps\b|navigat|transit|\bmetro\b/i, ['Navigation'], ['Travel']],
+];
+const TAGPIN = {};   // {'Browsers': ['id', ...]}
+const TAGDROP = {Email: [], Messaging: []};
+const tagCache = new Map();
+const tagsOf = (r) => {
+  const id = String(r.id); if (tagCache.has(id)) return tagCache.get(id);
+  const out = new Set(), nm = String(r.app || ''), cat = r.category;
+  for (const [t, re, alone, need] of TAGDEFS) if (alone.includes(cat) || (need.includes(cat) && re.test(nm))) out.add(t);
+  for (const t in TAGPIN) if (TAGPIN[t].includes(id)) out.add(t);
+  for (const t in TAGDROP) if (TAGDROP[t].includes(id)) out.delete(t);
+  tagCache.set(id, out); return out;
+};
+dash.draw('tagchips', (el) => {
+  el.replaceChildren();
+  const v = scope(); if (!v) return;
+  const cnt = new Map(); for (const r of v) for (const t of tagsOf(r)) cnt.set(t, (cnt.get(t) || 0) + 1);
+  el.append(vmk('span', 'lab', 'Popular searches'));
+  const row = vmk('div', 'row');
+  for (const [t] of TAGDEFS) {
+    const n = cnt.get(t) || 0; if (!n && view.tag !== t) continue;
+    const b = vmk('button', 'tg'); b.type = 'button';
+    b.setAttribute('aria-pressed', String(view.tag === t));
+    b.setAttribute('aria-label', t + ': ' + n + ' apps' + (view.tag === t ? '. Tap again to clear.' : ''));
+    b.append(vmk('span', '', t), vmk('span', 'n', fmtNum(n)));
+    b.onclick = () => { view.tag = view.tag === t ? '' : t; view.limit = 90; dash.draw('tagchips'); dash.draw('filtercount'); redraw(); };
+    row.append(b);
+  }
+  el.append(row);
+});
 let heatSel = '';
 dash.draw('heatsub', (el) => { el.textContent = mktName() + ' · every square is a day; brighter means more apps'; });
 dash.draw('heatkpi', (el) => {
@@ -1143,7 +1201,7 @@ dash.draw('daychip', (el) => {
   el.append(b);
 });
 
-const view = {q: '', cats: [], mkt: '', conf: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
+const view = {q: '', cats: [], mkt: '', conf: '', sort: 'new', when: 'all', day: '', tag: '', limit: 90, open: ''};
 // rating and number of ratings for the chosen market, or the app's home store when no market is chosen
 const stat = (r) => { const m = mkOf(r)[view.mkt || r.home || 'in']; return m ? [+m[0] || 0, +m[1] || 0] : [+r.rating || 0, +r.ratings || 0]; };
 const storeUrl = (r) => { const u = String(r.url || ''); return view.mkt ? u.replace(/^https:\/\/apps\.apple\.com\/[a-z]{2}\//, 'https://apps.apple.com/' + view.mkt + '/') : u; };
@@ -1153,7 +1211,7 @@ dash.draw('mktchips', (sel) => {
   const narrow = window.matchMedia && matchMedia('(max-width: 560px)').matches;
   sel.replaceChildren(new Option(narrow ? 'Markets' : 'All markets' + (s ? ` (${fmtNum(s.total)})` : ''), ''), ...rows.map((r) => new Option(narrow ? (MARKETS[r.market] || String(r.market).toUpperCase()) : `${MARKETS[r.market] || String(r.market).toUpperCase()} (${fmtNum(r.apps)})`, r.market)));
   sel.value = rows.some((r) => r.market === view.mkt) ? view.mkt : '';
-  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('tagline'); };
+  sel.onchange = () => { view.mkt = sel.value; view.limit = 90; dash.draw('rows'); dash.draw('shown'); dash.draw('tagline'); dash.draw('tagchips'); };
 });
 const redraw = () => { dash.draw('rows'); dash.draw('shown'); };
 // how an app was confirmed: its own update notes, Apple, the press, a forum or social post, the site owner, or a visitor
@@ -1231,6 +1289,7 @@ const visible = () => {
     && (!view.day || r.duo_date === view.day)
     && (!view.mkt || !!mkOf(r)[view.mkt])
     && (!view.conf || confOf(r).has(view.conf))
+    && (!view.tag || tagsOf(r).has(view.tag))
     && (!from || String(r.duo_date) >= from)
     && (!q || String(r.app).toLowerCase().includes(q) || String(r.developer).toLowerCase().includes(q)));
   const n = (r) => stat(r)[1], st = (r) => stat(r)[0];
@@ -1490,7 +1549,7 @@ const applyChoices = (c) => {
   for (const i of document.querySelectorAll('#duo-q')) i.value = view.q;
   const ss = document.getElementById('duo-sort'); if (ss) ss.value = view.sort;
   dash.draw('mktchips'); dash.draw('catlabel'); dash.draw('catchips'); dash.draw('catmap'); redraw();
-  dash.draw('tagline'); dash.draw('filtercount');
+  dash.draw('tagline'); dash.draw('filtercount'); dash.draw('tagchips');
 };
 const markActive = () => {
   const on = (id, v) => { const f = document.getElementById(id); const box = f && f.closest('.duo-f'); if (box) box.classList.toggle('on', !!v); };
@@ -1498,7 +1557,7 @@ const markActive = () => {
 };
 dash.draw('filtercount', (el) => {
   markActive();
-  const n = (view.mkt ? 1 : 0) + (view.cats.length ? 1 : 0) + (view.conf ? 1 : 0) + (view.when !== 'all' ? 1 : 0) + (view.sort !== 'new' ? 1 : 0);
+  const n = (view.tag ? 1 : 0) + (view.mkt ? 1 : 0) + (view.cats.length ? 1 : 0) + (view.conf ? 1 : 0) + (view.when !== 'all' ? 1 : 0) + (view.sort !== 'new' ? 1 : 0);
   el.textContent = n ? String(n) : '';
 });
 {
@@ -1523,7 +1582,7 @@ dash.draw('filtercount', (el) => {
   }
 }
 const resetFilters = () => {
-  view.conf = ''; view.when = 'all'; view.day = '';
+  view.conf = ''; view.when = 'all'; view.day = ''; view.tag = ''; dash.draw('tagchips');
   const w = document.getElementById('duo-when'); if (w) w.value = 'all';
   applyChoices({mkt: '', sort: 'new', cats: [], q: ''});
   dash.draw('confchips'); dash.draw('calendar'); dash.draw('daychip'); dash.draw('filtercount');
