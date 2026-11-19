@@ -2,9 +2,14 @@ name: Daily refresh
 on:
   schedule:
     # GitHub drops or delays scheduled runs, so ask every hour; the "gate" step below starts a real scan
-    # only when the list is more than 7 hours old (about three scans a day)
+    # only when the list is more than 5 hours old; an outside timer (cron-job.org) also starts it at fixed times
     - cron: "23 * * * *"
   workflow_dispatch:
+    inputs:
+      reason:
+        description: "manual = scan now; timer = outside timer, scan only if the list is old enough"
+        required: false
+        default: manual
 permissions:
   contents: write
   issues: write
@@ -21,6 +26,7 @@ jobs:
         id: gate
         env:
           EVENT: ${{ github.event_name }}
+          REASON: ${{ github.event.inputs.reason }}
         run: |
           python3 - <<'PY'
           import json, os, datetime
@@ -29,8 +35,8 @@ jobs:
           now = datetime.datetime.utcnow()
           age = (now - u).total_seconds() / 3600
           ist = lambda t: (t + datetime.timedelta(hours=5, minutes=30)).date()
-          manual = os.environ['EVENT'] == 'workflow_dispatch'
-          go = manual or age >= 7
+          manual = os.environ['EVENT'] == 'workflow_dispatch' and os.environ.get('REASON', 'manual') != 'timer'
+          go = manual or age >= 5   # 5 h: whenever GitHub or the outside timer fires, a scan almost always starts
           discover = manual or ist(u) < ist(now)   # the first scan of each India day also searches outside the charts
           print('list age (hours): %.1f | manual: %s | scan: %s | discover: %s' % (age, manual, go, discover))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
