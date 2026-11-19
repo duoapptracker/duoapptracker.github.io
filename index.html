@@ -942,7 +942,9 @@ const syncSelects = () => {
   view.limit = 90; dash.draw('calendar'); dash.draw('daychip'); dash.draw('filtercount'); redraw(); toList();
 };
 // big names: the most-rated apps (in the chosen market) that added Duo support in the last 7 days
-const bigNames = (t) => t.week.slice().sort((a, b) => stat(b)[1] - stat(a)[1]).slice(0, 4);
+// only apps confirmed by their own App Store notes (green dot)
+const bigOk = (r) => r.source !== 'reported';
+const bigNames = (t) => t.week.filter(bigOk).sort((a, b) => stat(b)[1] - stat(a)[1]).slice(0, 4);
 tput('n_total', (t) => fmtNum(t.total));
 tput('n_week', (t) => fmtNum(t.week_count));
 tput('n_latestline', (t) => 'since ' + day(t.week_from));
