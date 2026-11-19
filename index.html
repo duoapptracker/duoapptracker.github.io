@@ -573,7 +573,17 @@ html,body{max-width:100%;overflow-x:clip}
 .duo-wkey{display:grid;gap:6px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
 .duo-wkey .duo-src{border-top:0;padding-top:0}
 .duo-wkey .duo-src span{white-space:normal}
-.duo-wtip{margin:10px 0 0;font-size:var(--cds-font-size-caption)}
+.duo-wtip{font-size:var(--cds-font-size-caption)}
+/* compact welcome guide: fits a laptop screen without a scroll bar */
+.duo-wcard{gap:14px;padding:24px 28px}
+.duo-wcard p,.duo-wintro,.duo-wkey{margin:0}
+.duo-wcard h2{margin-bottom:-4px}
+.duo-wq{gap:8px}
+.duo-wchips .duo-chip{padding-top:6px;padding-bottom:6px}
+.duo-wkey{gap:4px;padding:8px 12px}
+.duo-wcard .duo-search{padding:9px 16px}
+.duo-wcard .duo-sbtn{padding:10px 24px}
+@media (max-width:560px){.duo-wcard{gap:12px;padding:18px}}
 /* pop-up fields (19 Nov): visible boxes in light mode, no default button border */
 .duo-wcard,.duo-remindbox,.duo-popgrid{--glass-line:color-mix(in srgb,var(--color-fg) 18%,transparent)}
 :root[data-theme="light"] :is(.duo-wcard,.duo-remindbox,.duo-popgrid){--glass-2:rgba(20,30,60,.045)}
