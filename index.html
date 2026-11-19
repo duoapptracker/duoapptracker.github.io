@@ -569,6 +569,100 @@ html,body{max-width:100%;overflow-x:clip}
   .duo-topright .duo-pop summary{width:auto}
   .duo-topright .duo-remind{margin-left:0}
 }
+/* shorter tiles, closer to the headline (19 Nov) */
+@media (min-width:561px){.duo-tile,.duo-tile:nth-child(1),.duo-tile:nth-child(2),.duo-tile:nth-child(3){padding:14px 20px;gap:2px}.duo-tile .num{font-size:2rem}.duo-tiles{margin-top:-8px}}
+.duo-tile .sub .full,.duo-tile .sub .short{white-space:nowrap}
+/* tile extras (19 Nov): tappable tiles, big-name icons, 7-day bars, green/amber split */
+.duo-tile{position:relative}
+.duo-tile[role=button]{cursor:pointer;transition:transform .15s ease}
+.duo-tile[role=button]:hover{transform:translateY(-2px)}
+.duo-tile[role=button]:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.duo-tile .go{position:absolute;right:14px;top:12px;font-size:12px;color:var(--color-fg-muted);border:1px solid var(--glass-line);border-radius:999px;padding:2px 10px}
+.duo-tile .icons{display:flex;gap:6px;margin:6px 0 2px;min-height:34px}
+.duo-tile .icons img{width:34px;height:34px;border-radius:9px;box-shadow:0 0 0 1px var(--glass-edge)}
+.duo-tile .spark{position:absolute;right:18px;bottom:14px;display:flex;align-items:flex-end;gap:4px;height:36px}
+.duo-tile .spark .bar{width:9px;padding:0;border:0;border-radius:3px;cursor:pointer;background:color-mix(in srgb,var(--c3) 50%,transparent)}
+.duo-tile .spark .bar.last{background:var(--c3)}
+.duo-tile .spark .bar.on{outline:2px solid var(--color-fg);outline-offset:1px}
+.duo-tile .split{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.duo-tile .split .bar{display:flex;height:6px;border-radius:99px;overflow:hidden;max-width:280px}
+.duo-tile .split i{background:var(--color-ok)}
+.duo-tile .split u{background:var(--color-warn);min-width:3px}
+.duo-tile .split .leg{display:flex;gap:14px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.duo-tile .split .leg span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--color-ok)}
+.duo-tile .split .leg .a::before{background:var(--color-warn)}
+.duo-tile .numrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.duo-tile .today{font-size:13px;font-weight:700;color:var(--color-fg);background:color-mix(in srgb,var(--c3) 30%,transparent);border:1px solid color-mix(in srgb,var(--c3) 55%,transparent);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.duo-tbig .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media (max-width:560px){
+  .duo-tile .go,.duo-tile .spark{display:none}
+  .duo-tile .numrow{gap:2px;flex-direction:column;align-items:flex-start}
+  .duo-tile .today{font-size:10px;padding:1px 6px;order:3}
+  #tile-week .sub{display:none}
+  .duo-tile .icons{gap:3px;margin:3px 0 1px;min-height:20px}
+  .duo-tile .icons img{width:20px;height:20px;border-radius:5px}
+  .duo-tile .icons img:nth-child(n+4){display:none}
+  .duo-tbig .sub{display:none}
+  .duo-tile .split{gap:2px;margin-top:2px}
+  .duo-tile .split .bar{height:4px}
+  .duo-tile .split .leg{font-size:10px;gap:6px}
+  .duo-tile .split .leg .g{display:none}
+}
+/* trends (19 Nov): heatmap, growth curve, categories */
+.duo-trends{grid-template-columns:repeat(2,minmax(0,1fr))}
+.duo-trends .duo-wide{grid-column:1 / -1}
+.duo-viz h2{margin:0}
+.duo-vsub{margin:2px 0 0;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.duo-kpis{display:flex;flex-wrap:wrap;gap:8px 26px;margin:14px 0 12px}
+.duo-kpis .kp small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted)}
+.duo-kpis .kp strong{font-size:1.7rem;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.duo-kpis .kp span{color:var(--color-fg-muted);font-size:13px;margin-left:4px}
+.duo-heat{display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;--sq:min(30px,calc((100% - 30px) / var(--weeks,11) - 5px))}
+.duo-heat .wdl{display:grid;grid-template-rows:16px repeat(7,1fr);gap:5px;font-size:10px;color:var(--color-fg-muted);align-items:center}
+.duo-heat .grid{display:grid;grid-auto-flow:column;grid-template-rows:16px repeat(7,auto);grid-auto-columns:minmax(0,30px);gap:5px}
+.duo-heat .m{font-size:11px;color:var(--color-fg-muted);white-space:nowrap;overflow:visible}
+.duo-heat .sq{display:block;aspect-ratio:1;width:100%;border:0;padding:0;border-radius:6px;background:color-mix(in srgb,var(--color-fg) 7%,transparent)}
+.duo-heat .sq.off{visibility:hidden}
+.duo-heat button.sq{cursor:pointer}
+.duo-heat .sq.latest{box-shadow:0 0 0 2px var(--color-ok)}
+.duo-heat .sq.on,.duo-heat .sq:focus-visible{outline:2px solid var(--color-fg);outline-offset:1px}
+.duo-vfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.duo-vpick .pk{display:inline-flex;gap:6px;align-items:center;background:var(--glass-2);border:1px solid color-mix(in srgb,var(--color-fg) 10%,transparent);border-radius:10px;padding:6px 10px;font-size:13px}
+.duo-hleg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-fg-muted)}
+.duo-hleg i{width:12px;height:12px;border-radius:3px;display:inline-block;background:color-mix(in srgb,var(--color-fg) 7%,transparent)}
+.duo-grow svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.duo-grow .gl{stroke:color-mix(in srgb,var(--color-fg) 10%,transparent)}
+.duo-grow .ax{font-size:11px;fill:var(--color-fg-muted)}
+.duo-grow .ln{fill:none;stroke:var(--c1);stroke-width:2.5;stroke-linejoin:round}
+.duo-grow .ms{fill:var(--c1);stroke:var(--color-bg);stroke-width:2}
+.duo-grow .gd{stroke:var(--color-fg);stroke-opacity:.35}
+.duo-grow .bb{fill:var(--pop,var(--color-bg));stroke:color-mix(in srgb,var(--color-fg) 14%,transparent)}
+.duo-grow .bv{font-size:13px;font-weight:700;fill:var(--color-fg)}
+.duo-vnote{margin:8px 0 0}
+.duo-cats .stack{display:flex;height:22px;border-radius:8px;overflow:hidden;gap:1.5px;margin:16px 0 14px}
+.duo-cats .sl{border:0;padding:0;cursor:pointer;min-width:2px}
+.duo-cats .sl:hover{filter:brightness(1.15)}
+.duo-cats .sl.on{box-shadow:inset 0 0 0 2px var(--color-fg)}
+.duo-cats .leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 14px}
+.duo-cats .li{display:grid;grid-template-columns:12px minmax(0,1fr) auto 3rem;align-items:center;gap:10px;font:inherit;color:var(--color-fg);background:none;border:0;border-radius:12px;padding:7px 10px;cursor:pointer;text-align:left}
+.duo-cats .li:hover{background:var(--glass-2)}
+.duo-cats .li[aria-pressed=true]{background:var(--glass-2);box-shadow:inset 0 0 0 1.5px var(--color-fg)}
+.duo-cats .li:focus-visible{outline:2px solid var(--color-fg);outline-offset:1px}
+.duo-cats .dot{width:10px;height:10px;border-radius:50%}
+.duo-cats .nm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.duo-cats .ct{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+.duo-cats .pc{color:var(--color-fg-muted);font-size:12px;text-align:right}
+.duo-cats .more{font:inherit;font-size:13px;font-weight:600;color:var(--c1);background:none;border:0;padding:10px 10px 0;cursor:pointer}
+@media (max-width:900px){.duo-trends{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){
+  .duo-kpis{gap:6px 18px;margin:10px 0}
+  .duo-kpis .kp strong{font-size:1.3rem}
+  .duo-heat{grid-template-columns:24px minmax(0,1fr);gap:4px}
+  .duo-heat .grid,.duo-heat .wdl{gap:3px}
+  .duo-heat .sq{border-radius:4px}
+  .duo-cats .leg{grid-template-columns:minmax(0,1fr)}
+  .duo-cats .li{padding:6px 6px}
+}
 /* welcome guide intro and key (19 Nov) */
 .duo-wintro{margin:2px 0 10px;font-size:var(--cds-font-size-body);line-height:1.45}
 .duo-wkey{display:grid;gap:6px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:var(--glass-2);border:1px solid var(--glass-line)}
@@ -639,9 +733,9 @@ html,body{max-width:100%;overflow-x:clip}
   <div class="duo-alerts" id="duo-alerts" hidden></div>
 
   <section class="duo-tiles" id="tiles">
-    <div class="duo-tile" id="tile-latest"><span class="num" data-draw="n_latest" data-source="summary" data-field="latest_count" data-row="0">—</span><span class="lab"><span class="full">added Duo support on the latest day</span><span class="short">Latest day</span></span><span class="sub" data-draw="n_latestday" data-source="summary" data-field="latest_day" data-row="0">—</span></div>
-    <div class="duo-tile" id="tile-week"><span class="num" data-draw="n_week" data-source="summary" data-field="week_count" data-row="0">—</span><span class="lab"><span class="full">added Duo support in the last 7 days</span><span class="short">Last 7 days</span></span><span class="sub">since <span data-draw="n_weekfrom" data-source="summary" data-field="week_from" data-row="0">—</span></span></div>
-    <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total" data-source="summary" data-field="total" data-row="0">—</span><span class="lab"><span class="full">apps found in all</span><span class="short">All apps</span></span><span class="sub"><span data-draw="n_cats" data-source="summary" data-field="categories" data-row="0">—</span> categories</span></div>
+    <div class="duo-tile duo-tbig" id="tile-latest" role="button" tabindex="0" aria-label="Show the most popular apps that added iPhone Duo support this week"><span class="go" aria-hidden="true">Show ›</span><span class="lab"><span class="full">Big names this week</span><span class="short">Big names</span></span><span class="icons" data-draw="n_bigicons"></span><span class="sub" data-draw="n_bignames">—</span></div>
+    <div class="duo-tile" id="tile-week" role="button" tabindex="0" aria-label="Show the apps that added iPhone Duo support in the last 7 days"><span class="go" aria-hidden="true">Show ›</span><span class="numrow"><span class="num" data-draw="n_week">—</span><span class="today" data-draw="n_today" title="Apps that added Duo support on the latest day"></span></span><span class="lab"><span class="full">added Duo support in the last 7 days</span><span class="short">Last 7 days</span></span><span class="sub" data-draw="n_latestline">—</span><span class="spark" data-draw="n_spark"></span></div>
+    <div class="duo-tile" id="tile-total"><span class="num" data-draw="n_total">—</span><span class="lab"><span class="full">apps ready for iPhone Duo</span><span class="short">All apps</span></span><span class="split" data-draw="n_split"></span></div>
   </section>
 
   <section class="duo-layout" id="apps">
@@ -663,17 +757,25 @@ html,body{max-width:100%;overflow-x:clip}
     </div>
   </section>
 
-  <section class="duo-two" id="trends">
-    <div class="duo-card" id="card-days">
-      <h2>Calendar of Duo support</h2>
-      <div class="duo-cal" data-draw="calendar" data-source="by_day">—</div>
-      <div class="duo-scale" data-draw="calscale"></div>
-      <p class="duo-muted">Each square is a day; the number is how many apps added iPhone Duo support that day, and a deeper colour means more. Tap a day to see its apps in the list above.</p>
+  <section class="duo-two duo-trends" id="trends">
+    <div class="duo-card duo-viz" id="card-days">
+      <h2>Duo support, day by day</h2>
+      <p class="duo-vsub" data-draw="heatsub">—</p>
+      <div class="duo-kpis" data-draw="heatkpi"></div>
+      <div class="duo-heat" data-draw="calendar" data-source="by_day">—</div>
+      <div class="duo-vfoot"><div class="duo-vpick" data-draw="heatpick"></div><div class="duo-hleg" data-draw="calscale"></div></div>
     </div>
-    <div class="duo-card" id="card-cats">
-      <h2>Where the apps are</h2>
-      <div class="duo-map" data-draw="catmap" data-source="by_cat">—</div>
-      <p class="duo-muted">Each block is a category, sized by its number of apps. Tap a block to see its apps in the list above.</p>
+    <div class="duo-card duo-viz" id="card-growth">
+      <h2>How fast apps are adding support</h2>
+      <p class="duo-vsub" data-draw="growsub">—</p>
+      <div class="duo-kpis" data-draw="growkpi"></div>
+      <div class="duo-grow" data-draw="growth">—</div>
+      <p class="duo-muted duo-vnote">Hover or tap the curve to see the total on any day. Dots mark each 1,000 apps.</p>
+    </div>
+    <div class="duo-card duo-viz duo-wide" id="card-cats">
+      <h2>Apps by category</h2>
+      <p class="duo-vsub" data-draw="catsub">—</p>
+      <div class="duo-cats" data-draw="catmap" data-source="by_cat">—</div>
     </div>
   </section>
 
@@ -821,61 +923,212 @@ const put = (name, f) => dash.draw(name, (el) => { const s = sum(); el.textConte
 put('t_total', (s) => fmtNum(s.total));
 put('t_week', (s) => fmtNum(s.week_count));
 put('t_latest', (s) => day(s.latest_day, fmtLong));
-put('n_total', (s) => fmtNum(s.total));
-put('n_cats', (s) => fmtNum(s.categories));
-put('n_week', (s) => fmtNum(s.week_count));
-put('n_weekfrom', (s) => day(s.week_from));
-put('n_latest', (s) => fmtNum(s.latest_count));
-put('n_latestday', (s) => day(s.latest_day, fmtLong));
+// the three tiles follow the chosen market, so every number at the top agrees with the list below
+const tstat = () => {
+  const s = sum(), all = okRows('apps'); if (!s || !all) return null;
+  const v = view.mkt ? all.filter((r) => !!mkOf(r)[view.mkt]) : all;
+  const latest = v.length ? d3.max(v, (r) => r.duo_date) : '';
+  const rep = v.filter((r) => r.source === 'reported').length;
+  return {total: v.length, latest, latest_count: v.filter((r) => r.duo_date === latest).length, week_from: s.week_from,
+    week_count: v.filter((r) => String(r.duo_date) >= s.week_from).length, week: v.filter((r) => String(r.duo_date) >= s.week_from), rep, notes: v.length - rep};
+};
+const tput = (name, f) => dash.draw(name, (el) => { const t = tstat(); el.textContent = t ? f(t) : '—'; });
+const tdraw = (name, f) => dash.draw(name, (el) => { const t = tstat(); el.replaceChildren(); if (t) f(el, t); });
+const TILES = ['n_total', 'n_split', 'n_week', 'n_today', 'n_latestline', 'n_spark', 'n_bigicons', 'n_bignames'];
+const tmk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const syncSelects = () => {
+  const w = document.getElementById('duo-when'); if (w) w.value = view.when;
+  const so = document.getElementById('duo-sort'); if (so) so.value = view.sort;
+  view.limit = 90; dash.draw('calendar'); dash.draw('daychip'); dash.draw('filtercount'); redraw(); toList();
+};
+// big names: the most-rated apps (in the chosen market) that added Duo support in the last 7 days
+const bigNames = (t) => t.week.slice().sort((a, b) => stat(b)[1] - stat(a)[1]).slice(0, 4);
+tput('n_total', (t) => fmtNum(t.total));
+tput('n_week', (t) => fmtNum(t.week_count));
+tput('n_latestline', (t) => 'since ' + day(t.week_from));
+tput('n_today', (t) => '+' + fmtNum(t.latest_count) + ' on ' + day(t.latest));
+tdraw('n_spark', (el, t) => {
+  const days = []; const d = new Date(t.week_from + 'T00:00:00Z');
+  for (let i = 0; i < 7; i++) { days.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
+  const cnt = days.map((k) => t.week.filter((r) => r.duo_date === k).length), mx = Math.max(1, ...cnt);
+  days.forEach((k, i) => {
+    const b = tmk('button', 'bar' + (k === t.latest ? ' last' : '') + (view.day === k ? ' on' : ''));
+    b.type = 'button'; b.style.height = Math.round(6 + 28 * cnt[i] / mx) + 'px';
+    b.title = day(k) + ': ' + cnt[i] + ' apps'; b.setAttribute('aria-label', day(k, fmtLong) + ': ' + cnt[i] + ' apps. Show these apps.');
+    b.onclick = (ev) => { ev.stopPropagation(); view.day = view.day === k ? '' : k; view.when = 'all'; syncSelects(); dash.draw('n_spark'); };
+    el.append(b);
+  });
+});
+tdraw('n_bigicons', (el, t) => {
+  for (const r of bigNames(t)) {
+    const src = String(r.art || '');
+    if (src.startsWith('https://')) { const i = tmk('img'); i.src = src; i.alt = ''; i.width = 34; i.height = 34; i.loading = 'lazy'; i.title = r.app; el.append(i); }
+  }
+});
+tput('n_bignames', (t) => bigNames(t).map((r) => { const x = String(r.app).split(/\s*[:\-–—|!！]\s*/)[0].trim(); return x.length > 16 ? x.slice(0, 15) + '…' : x; }).join(', ') || 'None yet this week');
+tdraw('n_split', (el, t) => {
+  const bar = tmk('span', 'bar'); const g = tmk('i'), a = tmk('u');
+  g.style.flex = String(t.notes); a.style.flex = String(t.rep); bar.append(g, a);
+  const leg = tmk('span', 'leg'); leg.append(tmk('span', 'g', fmtNum(t.notes) + (isPhone() ? '' : ' in their notes')), tmk('span', 'a', fmtNum(t.rep) + ' reported'));
+  el.append(bar, leg);
+});
+{
+  const act = (id, f) => { const el = document.getElementById(id); if (!el) return; el.addEventListener('click', f); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } }); };
+  act('tile-latest', () => { view.when = 'week'; view.day = ''; view.sort = 'rated'; syncSelects(); });
+  act('tile-week', () => { view.when = 'week'; view.day = ''; view.sort = 'new'; syncSelects(); });
+}
 put('n_topcat', (s) => s.top_category);
 put('n_topcatn', (s) => fmtNum(s.top_category_count));
 
 const tint = (c, pct) => `color-mix(in srgb, ${c} ${pct}%, var(--color-bg))`;
 const toList = () => { for (const a of document.querySelectorAll('#apps')) a.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+// ---- trends (19 Nov): heatmap (day by day), growth curve (running total), categories (stacked bar + legend) ----
+// all three follow the chosen market through scope()
+const vmk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const mktName = () => view.mkt ? (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'All 10 markets';
+const kpis = (el, items) => { el.replaceChildren(); for (const [lab, val, unit] of items) { const k = vmk('div', 'kp'); k.append(vmk('small', '', lab), vmk('strong', '', val)); if (unit) k.append(vmk('span', '', unit)); el.append(k); } };
+const dayCounts = () => {
+  const v = scope(); if (!v || !v.length) return null;
+  const by = d3.rollup(v, (x) => x.length, (r) => r.duo_date);
+  const first = d3.min(v, (r) => r.duo_date), last = d3.max(v, (r) => r.duo_date), out = [];
+  for (const d = new Date(first + 'T00:00:00Z'), e = new Date(last + 'T00:00:00Z'); d <= e; d.setUTCDate(d.getUTCDate() + 1)) { const k = d.toISOString().slice(0, 10); out.push([k, by.get(k) || 0]); }
+  return out;
+};
+const heatLv = (n, mx) => !n ? '' : `color-mix(in srgb, var(--color-ok) ${Math.round(22 + 78 * Math.sqrt(n / mx))}%, transparent)`;
+let heatSel = '';
+dash.draw('heatsub', (el) => { el.textContent = mktName() + ' · every square is a day; brighter means more apps'; });
+dash.draw('heatkpi', (el) => {
+  const c = dayCounts(); if (!c) { el.replaceChildren(); return; }
+  const mx = d3.max(c, (x) => x[1]), b = c.find((x) => x[1] === mx);
+  kpis(el, [['Days tracked', fmtNum(c.length)], ['Busiest day', fmtNum(mx), 'on ' + day(b[0])], ['Last 7 days', fmtNum(d3.sum(c.slice(-7), (x) => x[1])), 'apps']]);
+});
 dash.draw('calscale', (el) => {
+  el.replaceChildren('Fewer');
+  for (const f of [0, .05, .25, .55, 1]) { const i = vmk('i'); i.style.background = f ? heatLv(f * 100, 100) : ''; el.append(i); }
+  el.append('More');
+});
+dash.draw('heatpick', (el) => {
   el.replaceChildren();
-  const bar = document.createElement('i');
-  bar.style.background = `linear-gradient(90deg, ${tint(dash.colors[0], 10)}, ${tint(dash.colors[0], 62)})`;
-  el.append('Fewer', bar, 'More');
+  const c = dayCounts(); if (!c) return;
+  const k = view.day || heatSel || c[c.length - 1][0], n = (c.find((x) => x[0] === k) || [k, 0])[1];
+  const b = vmk('span', 'pk'); b.append(vmk('b', '', day(k)), ' ' + fmtNum(n) + ' apps' + (view.day ? ' · showing in the list' : ' · tap a square to show them'));
+  el.append(b);
 });
 dash.draw('calendar', (el) => {
-  const g = dash.data('by_day');
-  const rows = okRows('by_day');
-  if (!rows || !rows.length) { el.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
+  const g = dash.data('by_day'); const c = dayCounts();
+  if (!c) { el.textContent = g.status === 'error' ? 'Failed to load' : (scope() ? 'No apps in this market yet.' : '—'); return; }
   el.replaceChildren();
-  for (const wd of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) { const hd = document.createElement('span'); hd.className = 'wd'; hd.textContent = wd; el.append(hd); }
-  const by = new Map(rows.map((r) => [r.day, r.apps]));
-  const max = d3.max(rows, (r) => r.apps) || 1;
-  const first = new Date(rows[0].day + 'T00:00:00Z'), end = new Date(rows[rows.length - 1].day + 'T00:00:00Z');
-  const d = new Date(first); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));   // back to Monday
-  const stop = new Date(end); stop.setUTCDate(stop.getUTCDate() + (7 - ((stop.getUTCDay() + 6) % 7) - 1));
-  const fmtMon = d3.utcFormat('%b');
-  let shownMonth = -1;
-  for (; d <= stop; d.setUTCDate(d.getUTCDate() + 1)) {
-    const key = d.toISOString().slice(0, 10);
-    const inRange = d >= first && d <= end;
-    const n = by.get(key) || 0;
-    const cell = document.createElement(inRange && n ? 'button' : 'span');
-    cell.className = 'c' + (inRange ? (n ? '' : ' zero') : ' off');
-    if (inRange) {
-      const label = document.createElement('span'); label.className = 'd';
-      const newMonth = d.getUTCMonth() !== shownMonth; shownMonth = d.getUTCMonth();
-      label.textContent = (newMonth ? fmtMon(d) + ' ' : '') + d.getUTCDate();
-      const num = document.createElement('span'); num.className = 'k'; num.textContent = n ? fmtNum(n) : '·';
-      if (n) { num.setAttribute('data-source', 'by_day'); num.setAttribute('data-field', 'apps'); num.setAttribute('data-where', 'day=' + key); }
-      cell.append(label, num);
+  const mx = d3.max(c, (x) => x[1]) || 1, last = c[c.length - 1][0];
+  const first = new Date(c[0][0] + 'T00:00:00Z'), off = (first.getUTCDay() + 6) % 7;
+  const cells = Array(off).fill(null).concat(c); while (cells.length % 7) cells.push(null);
+  const wk = vmk('div', 'wdl'); wk.append(vmk('span'));
+  for (const w of ['Mon', '', 'Wed', '', 'Fri', '', 'Sun']) wk.append(vmk('span', '', w));
+  const grid = vmk('div', 'grid'); const weeks = cells.length / 7;
+  grid.style.setProperty('--weeks', weeks);
+  let lastM = -1;
+  for (let w = 0; w < weeks; w++) {
+    const col = cells.slice(w * 7, w * 7 + 7), f = col.find((x) => x);
+    const m = f ? new Date(f[0] + 'T00:00:00Z').getUTCMonth() : -1;
+    grid.append(vmk('span', 'm', f && m !== lastM ? d3.utcFormat('%b')(new Date(f[0] + 'T00:00:00Z')) : ''));
+    if (f) lastM = m;
+    for (const x of col) {
+      if (!x) { grid.append(vmk('span', 'sq off')); continue; }
+      const [k, n] = x;
+      const sq = vmk(n ? 'button' : 'span', 'sq' + (k === last ? ' latest' : '') + (view.day === k ? ' on' : ''));
       if (n) {
-        cell.type = 'button';
-        cell.style.background = tint(dash.colors[0], 10 + 52 * Math.sqrt(n / max));
-        cell.setAttribute('aria-pressed', String(view.day === key));
-        cell.setAttribute('aria-label', `${day(key, fmtLong)}: ${n} apps. Show these apps.`);
-        cell.onclick = () => {
-          view.day = view.day === key ? '' : key; view.limit = 90;
-          dash.draw('calendar'); dash.draw('daychip'); redraw(); toList();
-        };
+        sq.type = 'button'; sq.style.background = heatLv(n, mx);
+        sq.title = day(k) + ': ' + n + ' apps';
+        sq.setAttribute('aria-label', day(k, fmtLong) + ': ' + n + ' apps. Show these apps.');
+        sq.onmouseenter = () => { heatSel = k; dash.draw('heatpick'); };
+        sq.onclick = () => { view.day = view.day === k ? '' : k; view.when = 'all'; heatSel = k; syncSelects(); dash.draw('heatpick'); dash.draw('n_spark'); };
       }
+      grid.append(sq);
     }
-    el.append(cell);
+  }
+  el.append(wk, grid);
+});
+dash.draw('growsub', (el) => { const c = dayCounts(); el.textContent = mktName() + (c ? ' · running total since ' + day(c[0][0]) : ''); });
+dash.draw('growkpi', (el) => {
+  const c = dayCounts(); if (!c) { el.replaceChildren(); return; }
+  let run = 0; const cum = c.map((x) => run += x[1]), T = run, half = cum.findIndex((v) => v >= T / 2);
+  kpis(el, [['Apps now', fmtNum(T)], ['Doubled in', fmtNum(cum.length - 1 - half), 'days'], ['This week', fmtNum(d3.sum(c.slice(-7), (x) => x[1])), 'apps']]);
+});
+dash.draw('growth', (el) => {
+  const c = dayCounts(); if (!c) { el.textContent = scope() ? 'No apps in this market yet.' : '—'; return; }
+  el.replaceChildren();
+  let run = 0; const cum = c.map((x) => [x[0], run += x[1]]), T = run;
+  const W = Math.max(240, (el.clientWidth || 640) - 40), H = Math.round(Math.min(200, Math.max(140, W * 0.36))), top = Math.max(1000, Math.ceil(T / 1000) * 1000), step = top > 4000 ? 2000 : 1000;
+  const X = (i) => cum.length > 1 ? i * W / (cum.length - 1) : 0, Y = (v) => H - H * v / top;
+  const NS = 'http://www.w3.org/2000/svg', sv = (tag, at) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); return e; };
+  const svg = sv('svg', {viewBox: `-2 -14 ${W + 40} ${H + 36}`, role: 'img', 'aria-label': `Running total of apps with iPhone Duo support: ${T} apps`});
+  const defs = sv('defs', {}), lg = sv('linearGradient', {id: 'duo-ga', x1: 0, y1: 0, x2: 0, y2: 1});
+  lg.append(sv('stop', {offset: 0, 'stop-color': 'var(--c1)', 'stop-opacity': .4}), sv('stop', {offset: 1, 'stop-color': 'var(--c1)', 'stop-opacity': 0})); defs.append(lg); svg.append(defs);
+  for (let v = 0; v <= top; v += step) {
+    svg.append(sv('line', {x1: 0, x2: W, y1: Y(v), y2: Y(v), class: 'gl'}));
+    const t = sv('text', {x: W + 8, y: Y(v) + 4, class: 'ax'}); t.textContent = v ? (v / 1000) + 'k' : '0'; svg.append(t);
+  }
+  const d = cum.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(p[1]).toFixed(1)}`).join('');
+  svg.append(sv('path', {d: d + `L${W},${H}L0,${H}Z`, fill: 'url(#duo-ga)'}), sv('path', {d, class: 'ln'}));
+  for (let ms = 1000; ms <= T; ms += 1000) {
+    const i = cum.findIndex((p) => p[1] >= ms); if (i < 0) continue;
+    svg.append(sv('circle', {cx: X(i), cy: Y(cum[i][1]), r: 4.5, class: 'ms'}));
+    const t = sv('text', {x: X(i) - 7, y: Y(cum[i][1]) - 9, 'text-anchor': 'end', class: 'ax'}); t.textContent = (ms / 1000) + 'k on ' + day(cum[i][0]); svg.append(t);
+  }
+  const ticks = [...new Set([0, Math.round((cum.length - 1) / 3), Math.round(2 * (cum.length - 1) / 3), cum.length - 1])];
+  for (const i of ticks) { const t = sv('text', {x: X(i), y: H + 18, 'text-anchor': i === 0 ? 'start' : i === cum.length - 1 ? 'end' : 'middle', class: 'ax'}); t.textContent = day(cum[i][0]); svg.append(t); }
+  // hover / tap: a guide line and a bubble with the total on that day
+  const guide = sv('line', {y1: -6, y2: H, class: 'gd', visibility: 'hidden'}), dot = sv('circle', {r: 5, class: 'ms', visibility: 'hidden'});
+  const bub = sv('g', {visibility: 'hidden'}), br = sv('rect', {width: 120, height: 36, rx: 9, class: 'bb'}), b1 = sv('text', {x: 60, y: 14, 'text-anchor': 'middle', class: 'ax'}), b2 = sv('text', {x: 60, y: 29, 'text-anchor': 'middle', class: 'bv'});
+  bub.append(br, b1, b2); svg.append(guide, dot, bub);
+  const hit = sv('rect', {x: 0, y: -14, width: W, height: H + 14, fill: 'transparent'}); svg.append(hit);
+  const move = (ev) => {
+    const r = svg.getBoundingClientRect(), vx = (ev.clientX - r.left) * (W + 42) / r.width - 2;
+    const i = Math.max(0, Math.min(cum.length - 1, Math.round(vx / (W / Math.max(1, cum.length - 1)))));
+    const x = X(i), y = Y(cum[i][1]);
+    for (const e of [guide, dot, bub]) e.setAttribute('visibility', 'visible');
+    guide.setAttribute('x1', x); guide.setAttribute('x2', x); dot.setAttribute('cx', x); dot.setAttribute('cy', y);
+    b1.textContent = day(cum[i][0], fmtLong); b2.textContent = fmtNum(cum[i][1]) + ' apps';
+    bub.setAttribute('transform', `translate(${Math.max(0, Math.min(W - 120, x - 60))},${Math.max(-12, y - 50)})`);
+  };
+  hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move);
+  hit.addEventListener('pointerleave', () => { for (const e of [guide, dot, bub]) e.setAttribute('visibility', 'hidden'); });
+  el.append(svg);
+});
+{ let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => dash.draw('growth'), 200); }); }
+// categories: one stacked bar (every category its own slice; top 12 in strong colours, the rest softer) and a legend
+let catAll = false;
+const CATCOL = ['#5b8cff', '#f08a4b', '#34c38f', '#b07cff', '#ef5d8a', '#2ab7c9', '#d3a24a', '#7c83ff', '#4cc3a0', '#ff9f6b', '#c58cff', '#5fb4ff'];
+const catCol = (i) => i < 12 ? CATCOL[i] : `color-mix(in srgb, ${CATCOL[i % 12]} 40%, transparent)`;
+dash.draw('catsub', (el) => { const v = scope(); el.textContent = v ? fmtNum(v.length) + ' apps · ' + new Set(v.map((r) => r.category)).size + ' categories · ' + mktName() : '—'; });
+dash.draw('catmap', (el) => {
+  const g = dash.data('by_cat'); const v = scope();
+  if (!v) { el.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
+  el.replaceChildren();
+  const rows = d3.rollups(v, (x) => x.length, (r) => r.category).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])), T = v.length || 1;
+  const pct = (n) => { const p = 100 * n / T; return (p >= 10 || p === 0 ? Math.round(p) : p.toFixed(1)) + '%'; };
+  const bar = vmk('div', 'stack');
+  rows.forEach(([c, n], i) => {
+    const sl = vmk('button', 'sl'); sl.type = 'button'; sl.style.flex = String(Math.max(n, T / 400)); sl.style.background = catCol(i);
+    sl.title = c + ': ' + fmtNum(n) + ' apps (' + pct(n) + ')'; sl.setAttribute('aria-label', c + ': ' + n + ' apps. Show only these apps.');
+    if (view.cats.includes(c)) sl.classList.add('on');
+    sl.onclick = () => { toggleCat(c); catsChanged(); toList(); };
+    bar.append(sl);
+  });
+  const leg = vmk('div', 'leg');
+  (catAll ? rows : rows.slice(0, 12)).forEach(([c, n]) => {
+    const i = rows.findIndex((r) => r[0] === c);
+    const b = vmk('button', 'li'); b.type = 'button';
+    b.setAttribute('aria-pressed', String(view.cats.includes(c))); b.setAttribute('aria-label', c + ': ' + n + ' apps. Show only these apps.');
+    const dot = vmk('span', 'dot'); dot.style.background = catCol(i);
+    b.append(dot, vmk('span', 'nm', c), vmk('span', 'ct', fmtNum(n)), vmk('span', 'pc', pct(n)));
+    b.onclick = () => { toggleCat(c); catsChanged(); toList(); };
+    leg.append(b);
+  });
+  el.append(bar, leg);
+  if (rows.length > 12) {
+    const more = vmk('button', 'more', catAll ? 'Show the top 12 only' : 'Show all ' + rows.length + ' categories (' + (rows.length - 12) + ' more) ›');
+    more.type = 'button'; more.onclick = () => { catAll = !catAll; dash.draw('catmap'); };
+    el.append(more);
   }
 });
 dash.draw('daychip', (el) => {
@@ -884,42 +1137,8 @@ dash.draw('daychip', (el) => {
   const b = document.createElement('button');
   b.type = 'button'; b.textContent = 'Only ' + day(view.day, fmtLong) + '  ✕';
   b.setAttribute('aria-label', 'Showing only ' + day(view.day, fmtLong) + '. Clear this day filter.');
-  b.onclick = () => { view.day = ''; view.limit = 90; dash.draw('calendar'); dash.draw('daychip'); redraw(); };
+  b.onclick = () => { view.day = ''; view.limit = 90; dash.draw('calendar'); dash.draw('heatpick'); dash.draw('daychip'); redraw(); };
   el.append(b);
-});
-dash.draw('catmap', (el) => {
-  const g = dash.data('by_cat');
-  const rows = okRows('by_cat');
-  if (!rows || !rows.length) { el.textContent = g.status === 'error' ? 'Failed to load' : '—'; return; }
-  el.replaceChildren();
-  const w = Math.max(220, el.clientWidth || 500), h = el.clientHeight || 340;
-  const root = d3.hierarchy({children: rows}).sum((r) => r.apps || 0);
-  d3.treemap().size([w, h]).paddingInner(3).round(true)(root);
-  const tip = document.createElement('div'); tip.className = 'duo-tip'; tip.hidden = true;
-  root.leaves().forEach((leaf, i) => {
-    const r = leaf.data, tw = leaf.x1 - leaf.x0, th = leaf.y1 - leaf.y0;
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 't' + (tw < 84 || th < 50 ? ' s' : '');
-    b.style.left = leaf.x0 + 'px'; b.style.top = leaf.y0 + 'px'; b.style.width = tw + 'px'; b.style.height = th + 'px';
-    // colour follows the category: the eight biggest get their own, the rest share a quiet one
-    b.style.background = i < Math.min(8, dash.colors.length) ? tint(dash.colors[i], 46) : tint('var(--cds-chart-muted)', 40);
-    b.setAttribute('aria-pressed', String(view.cats.includes(r.category)));
-    b.setAttribute('aria-label', `${r.category}: ${r.apps} apps. Show only these apps.`);
-    if (tw >= 46 && th >= 40) { const n = document.createElement('span'); n.className = 'n'; n.textContent = r.category; b.append(n); }
-    if (tw >= 30 && th >= 22) { const k = document.createElement('span'); k.className = 'k'; k.textContent = fmtNum(r.apps); b.append(k); }
-    const show = () => {
-      tip.hidden = false; tip.textContent = `${r.category}: ${fmtNum(r.apps)} apps`;
-      tip.style.left = Math.max(0, Math.min(w - tip.offsetWidth, leaf.x0 + 6)) + 'px';
-      tip.style.top = Math.max(0, leaf.y0 - 30) + 'px';
-    };
-    b.onpointerenter = show; b.onfocus = show;
-    b.onpointerleave = () => { tip.hidden = true; }; b.onblur = () => { tip.hidden = true; };
-    b.onclick = () => {
-      toggleCat(r.category); catsChanged(); toList();
-    };
-    el.append(b);
-  });
-  el.append(tip);
 });
 
 const view = {q: '', cats: [], mkt: '', conf: '', sort: 'new', when: 'all', day: '', limit: 90, open: ''};
@@ -969,14 +1188,15 @@ dash.draw('tagline', (el) => {
   const head = mk('span', 'tg-h', 'Is your favourite app ready for iPhone Duo?');
   const facts = mk('span', 'tg-s');
   if (v && t) {
-    const week = v.filter((r) => String(r.duo_date) >= t.week_from).length;
     const where = view.mkt ? 'on the App Store in ' + (MARKETS[view.mkt] || view.mkt.toUpperCase()) : 'across ' + Object.keys(MARKETS).length + ' App Store markets';
     const b = (x) => mk('b', '', x);
-    facts.append(b(fmtNum(v.length)), ' apps ' + where + ' are ready. ', b(fmtNum(week)), ' joined this week.');
+    facts.append(b(fmtNum(v.length)), ' apps ' + where + ' are ready for iPhone Duo.');
   } else facts.textContent = 'Loading the list…';
   const up = mk('span', 'tg-u');
   { const t = dash.stamp(), dd = t ? new Date(t) : null; if (dd && !isNaN(dd)) up.textContent = 'Updated ' + dd.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST'; }
   el.replaceChildren(head, facts, up);
+  for (const n of TILES) dash.draw(n);
+  for (const n of ['calendar', 'heatsub', 'heatkpi', 'heatpick', 'growth', 'growsub', 'growkpi', 'catmap', 'catsub']) dash.draw(n);
 });
 
 const toggleCat = (c) => { view.cats = view.cats.includes(c) ? view.cats.filter((x) => x !== c) : [...view.cats, c]; view.limit = 90; };
