@@ -7,3 +7,9 @@ data.new.json
 reported_add.json
 approved_numbers.txt
 submitted.json
+.env
+*.pem
+*.key
+*.db
+*.sqlite
+_*.html

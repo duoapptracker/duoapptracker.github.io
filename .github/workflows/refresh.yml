@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
         with:
           ref: main
       - name: Decide whether it is time to scan
@@ -68,7 +68,17 @@ jobs:
           import json, re, subprocess, urllib.parse, os
           out = subprocess.run(['gh', 'issue', 'list', '--label', 'approved', '--state', 'open', '--limit', '30', '--json', 'number,body,createdAt,url'], capture_output=True, text=True).stdout
           add, nums = [], []
+          OWNERS = {'Raaj52', 'duoapptracker'}
           for it in json.loads(out or '[]'):
+              # guard: count it only if the owner added the 'approved' label and nobody edited the report afterwards
+              ev = subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/issues/%d/events' % it['number']], capture_output=True, text=True).stdout
+              try: ev = json.loads(ev or '[]')
+              except ValueError: ev = []
+              lab = [e for e in ev if e.get('event') == 'labeled' and (e.get('label') or {}).get('name') == 'approved']
+              if not lab or (lab[-1].get('actor') or {}).get('login') not in OWNERS: continue
+              q = 'query{repository(owner:"%s",name:"%s"){issue(number:%d){lastEditedAt}}}' % (*'${{ github.repository }}'.split('/'), it['number'])
+              ed = subprocess.run(['gh', 'api', 'graphql', '-f', 'query=' + q, '--jq', '.data.repository.issue.lastEditedAt'], capture_output=True, text=True).stdout.strip()
+              if ed and ed != 'null' and ed > lab[-1]['created_at']: continue
               body = it.get('body') or ''
               fields = dict(re.findall(r'### ([^\n]+)\n\n(.*?)(?=\n\n### |\Z)', body, re.S))
               link = fields.get('App Store link', '')
