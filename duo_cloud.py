@@ -268,8 +268,14 @@ def main():
                              report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=False)   # False: its version history is read once, so a Duo mention in its own notes upgrades it to a green dot with the real date
             if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
             st['new'].append(tid)
-        elif latest['updated'] >= EARLIEST and checked.get(tid) != latest['version']:
-            # not on the board, recent enough, and this version's history has not been read yet
+        elif latest['updated'] < EARLIEST:
+            st['skip_old'] = st.get('skip_old', 0) + 1        # not updated since iPhone Duo was announced: cannot mention it
+        elif 'iPhoneDuo' not in ''.join(a.get('supportedDevices') or ['iPhoneDuo']):
+            st['skip_nodevice'] = st.get('skip_nodevice', 0) + 1   # cannot run on iPhone Duo (e.g. iPad-only)
+        elif checked.get(tid) == latest['version']:
+            st['skip_same'] = st.get('skip_same', 0) + 1      # this version was already read and had no Duo mention
+        else:
+            # not on the board, recent enough, runs on iPhone Duo, and this version's history has not been read yet
             cand[tid] = dict(latest, now=snippet(notes) if duo_hit(notes, latest['app']) else '')
 
     if st['stage'] == 'discover':
@@ -428,10 +434,12 @@ def main():
         json.dump(payload, open(out_path, 'w'), ensure_ascii=False)
     st['stage'] = 'write'; show(st, page_path, done=True)
     os.remove(state_path) if os.path.exists(state_path) else None
-    print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_apps': [rows[t]['app'] for t in st['new'] if t in rows],
+    print('DONE ' + json.dumps({'date': today, 'apps_checked': st['seen'], 'total_apps': len(out), 'new_count': len([t for t in st['new'] if t in rows]),
           'reported_apps_known': len(reported), 'apps_with_a_newer_version': st['changed'], 'history_pages_read': st['pages_read'],
           'apps_found_by_search': st.get('dfound', 0), 'visitor_suggestions_pending': len({i for i in st.get('submitted', {}) if i not in rows}), 'history_pages_still_waiting': max(0, len(st['queue']) - st['qpos']), 'bytes': os.path.getsize(out_path),
-          'minutes_per_stage': {k: round(v / 60, 1) for k, v in st.get('times', {}).items()}}, ensure_ascii=False))
+          'minutes_per_stage': {k: round(v / 60, 1) for k, v in st.get('times', {}).items()},
+          'skipped': {'not_updated_since_sep': st.get('skip_old', 0), 'cannot_run_on_duo': st.get('skip_nodevice', 0), 'same_version_already_read': st.get('skip_same', 0), 'to_read': len(cand)},
+          'new_apps': [rows[t]['app'] for t in st['new'] if t in rows]}, ensure_ascii=False))
 
 if __name__ == '__main__':
     main()
