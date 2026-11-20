@@ -1,0 +1,19 @@
+{
+ "date": "2026-11-20",
+ "slices": 24,
+ "files": 1593,
+ "apps": 1814425,
+ "looked_up": 1689158,
+ "recent": 687296,
+ "not_on_duo": 4054,
+ "on_site": 3529,
+ "hits": 14700,
+ "slowed": 0,
+ "failed_lookups": 0,
+ "minutes": 712.4000000000001,
+ "files_total": 1593,
+ "new_finds": 14683,
+ "queued_today": 800,
+ "waiting_to_queue": 13883,
+ "found_total": 14683
+}
