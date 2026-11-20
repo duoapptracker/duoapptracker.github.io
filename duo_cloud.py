@@ -135,8 +135,11 @@ def icon(art):
     return 'data:image/jpeg;base64,' + base64.b64encode(b).decode() if b[:2] == b'\xff\xd8' else ''
 
 def history(url):
-    """[(version, 'YYYY-MM-DD', notes)] from the app's India store page, or [] if it could not be read."""
-    html = curl(url, agent=UA)
+    """[(version, 'YYYY-MM-DD', notes)] from the app's store page, or [] if it could not be read."""
+    return parse_history(curl(url, agent=UA))
+
+def parse_history(html):
+    """The version history embedded in an App Store page: [(version, 'YYYY-MM-DD', notes)], newest first."""
     i = html.find('"page":"versionHistory","pageData":')
     if i < 0: return []
     try: data, _ = json.JSONDecoder().raw_decode(html, html.index('{', i + 30))

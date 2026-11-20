@@ -15,7 +15,7 @@ env:
 jobs:
   slice:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 190
     strategy:
       fail-fast: false
       max-parallel: 14   # leaves job slots for the refresh and the website publishing (GitHub allows 20 at once)
@@ -25,8 +25,21 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
         with:
           ref: main
+      - name: Remember which version histories this slice has read
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0, pinned
+        with:
+          path: hist-done-${{ matrix.shard }}.txt
+          key: hist-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: hist-${{ matrix.shard }}-
       - name: Sweep one slice of the App Store
-        run: python3 sweep.py ${{ matrix.shard }} $SHARDS hits-${{ matrix.shard }}.json --minutes 120
+        run: python3 sweep.py ${{ matrix.shard }} $SHARDS hits-${{ matrix.shard }}.json --minutes 165
+      - name: Save which version histories were read
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0, pinned
+        with:
+          path: hist-done-${{ matrix.shard }}.txt
+          key: hist-${{ matrix.shard }}-${{ github.run_id }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2, pinned
         with:
           name: hits-${{ matrix.shard }}
@@ -52,9 +65,9 @@ jobs:
           # another job may save submissions.json at the same moment: on a failed push, start again from the newest copy
           for try in 1 2 3 4 5; do
             git fetch -q origin main && git reset -q --hard origin/main
-            git clean -fq -- sweep_found.json sweep_last.json   # first run: these files are not in the repository yet
+            git clean -fq -- sweep_found.json sweep_last.json leads.json   # first run: these files are not in the repository yet
             python3 sweep_merge.py sweep-results
-            git add sweep_found.json sweep_last.json submissions.json
+            git add sweep_found.json sweep_last.json submissions.json leads.json
             git diff --cached --quiet && break
             git commit -qm "App Store sweep: new finds queued" && git push -q origin HEAD:main && break
             echo "push failed (try $try), retrying"; sleep 20
