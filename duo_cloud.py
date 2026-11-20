@@ -36,9 +36,18 @@ PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layou
 DUO_RULE = 2      # bump when the rule changes: apps rejected under an older rule get their history read again
 NEG = re.compile(r'google\s+duo|duo\s*(mobile|security|push|lingo|link|cam)|cisco\s+duo|duolingo|(owl|mascot)[^.\n]{0,40}\bduo\b|'
                  r'\b(a|the|our|your|dynamic|power|comedy|music|musical|singing|dance|rap|pop)\s+duo\b|'
-                 r'duo\s+(mode|match|queue|battle|team|ranked|partner|quest|challenge|vs)\b|\bin\s+duo\b|\bduos\b', re.I)
-POS_I = re.compile(r'fold(able|ing)\s+(iphone|display|screen|device|phone)|\bunfold(ed|ing)?\b|inner (display|screen)|cover screen', re.I)
+                 r'duo\s+(mode|match|queue|battle|team|ranked|partner|quest|challenge|vs|plan|plans|watch face|subscription)\b|'
+                 r'modular\s+duo|\bin\s+duo\b|\bduos\b', re.I)
+# tightened 21 Nov after the first App Store sweep: "Discover screen"/"winner screen" and story-style "unfolding" were matching
+POS_I = re.compile(r'\bfold(able|ing)\s+(iphones?|displays?|screens?|devices?|phones?)\b|\bfoldables?\b|'
+                   r'\b(fold(ed)?|folding)\s+(and|or|&)\s+unfold|\bunfolded\s+(iphones?|phones?|devices?|state|mode|displays?|screens?|view|layouts?)\b|'
+                   r'\binner\s+(display|screen)\b|\bcover\s+(display|screen)\b', re.I)
 DUO_CAP = re.compile(r'\bDuo\b')
+# a bare "Duo" counts only with a device/support word close by
+DUO_CTX = re.compile(r'support|optimi[sz]|layout|adapt|fold|display|screen|ready|compatib|iphone|device|model|対応|适配|適配|版面|画面|最適化|화면|지원|대응|'
+                     r'поддерж|оптимиз|unterstütz|angepasst|prise en charge|soporte|suporte|compatível|compatible', re.I)
+def duo_cap_hit(t):
+    return any(DUO_CTX.search(t[max(0, m.start() - 45):m.end() + 45]) for m in DUO_CAP.finditer(t))
 def duo_hit(text, name=''):
     """True if the notes speak of iPhone Duo. The app's own name never counts: an app called "Remote Duo" or
     "Duo Keyboard" mentions itself, not the phone. "iPhone Duo" is protected before the name is removed."""
@@ -48,7 +57,7 @@ def duo_hit(text, name=''):
         if w and re.search(r'duo', w, re.I): t = re.sub(r'(?<![A-Za-z])' + re.escape(w) + r'(?![A-Za-z])', ' ', t, flags=re.I)
     if PAT.search(t): return True
     t2 = NEG.sub(' ', t)
-    return 'IPHONEDUO' in t2 or bool(POS_I.search(t2) or DUO_CAP.search(t2))
+    return 'IPHONEDUO' in t2 or bool(POS_I.search(t2)) or duo_cap_hit(t2)
 # apps checked by hand and found to match only because of their own name; never listed
 EXCLUDE = {'6834531434', '6746059246', '6826541573', '6819230205', '6737245881'}
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
