@@ -267,7 +267,7 @@ def main():
                   'version': a.get('version', ''), 'updated': a.get('currentVersionReleaseDate', '')[:10], 'price': a.get('formattedPrice', ''),
                   'rating': round(a.get('averageUserRating', 0), 1), 'ratings': a.get('userRatingCount', 0),
                   'url': a.get('trackViewUrl', '').split('?')[0], 'art': a.get('artworkUrl100', ''), 'desc': one_line(a.get('description', '')),
-                  'min_ios': a.get('minimumOsVersion', ''), 'home': cc}
+                  'min_ios': a.get('minimumOsVersion', ''), 'home': cc, 'released': (a.get('releaseDate') or '')[:10]}
         latest['markets'] = ','.join(st['mk'].get(tid, [])) or rows.get(tid, {}).get('markets', '')
         if tid in rows:
             r = rows[tid]
@@ -290,7 +290,10 @@ def main():
             st['skip_same'] = st.get('skip_same', 0) + 1      # this version was already read and had no Duo mention
         else:
             # not on the board, recent enough, runs on iPhone Duo, and this version's history has not been read yet
-            cand[tid] = dict(latest, now=snippet(notes) if duo_hit(notes, latest['app']) else '')
+            # apps first released since Sep 2026 have no Duo history to read: their own App Store description counts too
+            desc = a.get('description') or ''
+            cand[tid] = dict(latest, now=snippet(notes) if duo_hit(notes, latest['app']) else '',
+                             desc=snippet(desc) if latest['released'] >= EARLIEST and duo_hit(desc, latest['app']) else '')
 
     if st['stage'] == 'discover':
         if '--skip-discover' in args: st['stage'] = 'lookup'   # the extra daily runs skip the (slow) search step
@@ -344,7 +347,7 @@ def main():
         st['abroad'] = []
         # read first: board apps still waiting for a history check, then apps whose current notes mention Duo, then the most rated
         st['queue'] = [t for t, r in rows.items() if r.get('hist_ok') is False] + \
-                      sorted(cand, key=lambda t: (not (cand[t]['now'] or t in st.get('submitted', {})), -cand[t]['ratings']))
+                      sorted(cand, key=lambda t: (not (cand[t]['now'] or cand[t].get('desc') or t in st.get('submitted', {})), -cand[t]['ratings']))
         st['stage'] = 'history'
 
     if st['stage'] == 'history':
@@ -355,14 +358,14 @@ def main():
             h = history(f'https://apps.apple.com/us/app/id{tid}')
             return tid, h or history((rows.get(tid) or cand[tid])['url'])
         def add(tid, c, ver, d, note, ok):
-            rows[tid] = {k: c[k] for k in c if k != 'now'}
+            rows[tid] = {k: c[k] for k in c if k not in ('now', 'desc')}
             rows[tid].update(id=tid, duo_date=d, duo_version=ver, note=note, first_seen=today, hist_ok=ok)
             if not SITE: rows[tid]['icon'] = icon(c['art'])
             st['new'].append(tid)
         while st['qpos'] < len(q):
             # the history budget applies only to apps that do not mention Duo in their current notes
             head = q[st['qpos']]
-            urgent = head in rows or bool(cand.get(head, {}).get('now')) or head in st.get('submitted', {})
+            urgent = head in rows or bool(cand.get(head, {}).get('now') or cand.get(head, {}).get('desc')) or head in st.get('submitted', {})
             if not urgent and st['hist_spent'] >= hist_s: break
             if left() < 75: pause()
             chunk = q[st['qpos']:st['qpos'] + 32]; t1 = time.time(); got = 0
@@ -383,6 +386,9 @@ def main():
                     if h: checked[tid] = c['version']
                     if first: add(tid, c, first[0], first[1], snippet(first[2]), True)
                     elif c['now']: add(tid, c, c['version'], c['updated'], c['now'], bool(h))
+                    elif c.get('desc'):
+                        # new app (first released since Sep 2026) whose own App Store description mentions iPhone Duo
+                        add(tid, c, '', c['released'], c['desc'], bool(h)); rows[tid]['how'] = 'description'
             st['qpos'] += len(chunk); st['hist_spent'] += time.time() - t1; tick()
             if got < len(chunk) / 2: time.sleep(20)   # Apple is slowing us down; pages not read stay for the next run
         st['stage'] = 'mstats'

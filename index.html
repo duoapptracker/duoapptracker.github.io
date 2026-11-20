@@ -808,6 +808,7 @@ html,body{max-width:100%;overflow-x:clip}
       <h2>Good to know</h2>
       <ul class="duo-notes">
         <li>Apple said on 6 Nov 2026 that more than 100,000 apps are built for iPhone Duo (made with the iOS 27.1 SDK; they show a "Made for iPhone Duo" badge in the App Store on the device). That badge is not in Apple's public data, so this list can only include apps confirmed by their own update notes, by Apple, or by the site owner's testing. An app missing here may still be optimised.</li>
+        <li>A brand-new app (first released since September 2026) has no earlier update notes to read, so its own App Store description counts too: "Confirmed in its App Store description", dated by its first release.</li>
         <li>Every app shows how it was confirmed. A <b>green dot</b> means its own update notes say so; its date is the release date of the earliest version that mentions iPhone Duo.</li>
         <li>An <b>amber dot</b> means it was reported as optimised (by Apple, the press, the community or the site owner) but its notes do not say so. Its date is the earlier of the report date and the app's last update when it was added, and it does not change later.</li>
         <li>If an app's own notes later mention iPhone Duo, it turns green and takes the real date.</li>
@@ -1354,8 +1355,13 @@ dash.draw('rows', (box) => {
       how.append(u.startsWith('https://') ? link((r.report_by || 'Press report') + ' report', u) : (r.report_by || 'Press report'));
     } else {
       const u = String(r.url || '');
-      how.append('The app\'s own update notes');
-      if (u.startsWith('https://apps.apple.com/')) how.append(' (', link('version history', u), ')');
+      if (r.how === 'description') {
+        how.append('The app\'s own App Store description (a new app, first released ' + day(r.released || r.duo_date, fmtLong) + ')');
+        if (u.startsWith('https://apps.apple.com/')) how.append(' (', link('App Store page', u), ')');
+      } else {
+        how.append('The app\'s own update notes');
+        if (u.startsWith('https://apps.apple.com/')) how.append(' (', link('version history', u), ')');
+      }
       const ru = String(r.report_url || '');
       if (r.report_by) how.append(', and ', ru.startsWith('https://') ? link(r.report_by, ru) : r.report_by);
     }
@@ -1407,7 +1413,7 @@ dash.draw('rows', (box) => {
       card.append(a);
     }
     const how = mk('div', 'duo-src' + (r.source === 'reported' ? ' rep' : ''));
-    how.append(mk('i'), mk('span', '', r.source === 'reported' ? 'Reported by ' + (/^site owner/i.test(r.report_by || '') ? 'the site owner' : (r.report_by || 'the press')) : 'Confirmed in its update notes' + (r.duo_version ? ' · version ' + r.duo_version : '')));
+    how.append(mk('i'), mk('span', '', r.source === 'reported' ? 'Reported by ' + (/^site owner/i.test(r.report_by || '') ? 'the site owner' : (r.report_by || 'the press')) : (r.how === 'description' ? 'Confirmed in its App Store description' : 'Confirmed in its update notes' + (r.duo_version ? ' · version ' + r.duo_version : ''))));
     card.append(how);
     box.append(card);
     if (isOpen) box.append(info(r));
