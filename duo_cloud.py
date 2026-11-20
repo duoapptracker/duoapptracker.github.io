@@ -203,6 +203,8 @@ def main():
             for e in (add if isinstance(add, list) else []):
                 i, d = str(e.get('id', '')), str(e.get('date', ''))
                 if i.isdigit() and re.fullmatch(r'\d{4}-\d\d-\d\d', d): sub.setdefault(i, d)
+                cc = str(e.get('cc', ''))
+                if i.isdigit() and cc in MARKETS: st.setdefault('sub_cc', {})[i] = cc   # store the suggestion came from
         cutoff = (datetime.datetime.utcnow().date() - datetime.timedelta(days=45)).isoformat()
         st['submitted'] = {i: d for i, d in sub.items() if d >= cutoff and i not in st['rows']}
         st['before'] = len(st['rows'])
@@ -313,7 +315,7 @@ def main():
         have = set(got); todo = {}
         for i in ids:
             if i not in have:
-                cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or rows.get(i, {}).get('home') or 'us'])[0]   # unknown market: try the US store
+                cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or st.get('sub_cc', {}).get(i) or rows.get(i, {}).get('home') or 'us'])[0]   # unknown market: try the US store
                 if cc and cc != 'in': todo.setdefault(cc, []).append(i)
         st['abroad'] = [[cc, v[k:k + LB]] for cc, v in todo.items() for k in range(0, len(v), LB)]
         st['apos'] = 0; st['got'] = []

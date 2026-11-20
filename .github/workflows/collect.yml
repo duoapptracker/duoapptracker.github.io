@@ -35,7 +35,7 @@ jobs:
               if len(app) < 2 or (link and not re.match(r'^https://apps\.apple\.com/', link)): continue
               day = __import__('datetime').datetime.utcfromtimestamp(m['time']).date().isoformat()
               have.append({'mid': m['id'], 'date': day, 'app': app, 'link': link}); seen.add(m['id']); new += 1
-          have = have[-500:]
+          have = have[-4000:]
           json.dump(have, open('submissions.json', 'w'), ensure_ascii=False, indent=1)
           print('new suggestions:', new, '| kept:', len(have))
           PY

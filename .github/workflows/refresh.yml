@@ -13,6 +13,7 @@ on:
 permissions:
   contents: write
   issues: write
+  actions: write
 concurrency: refresh
 jobs:
   refresh:
@@ -42,6 +43,19 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('run=%s\ndiscover=%s\n' % (str(go).lower(), str(discover).lower()))
           PY
+      - name: Start the daily App Store sweep if it is due
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh run list --workflow sweep.yml --limit 1 --json createdAt --jq '.[0].createdAt // ""')
+          python3 - "$last" <<'PY' && gh workflow run sweep.yml --ref main || true
+          import sys, datetime
+          last = sys.argv[1]
+          if last:
+              age = (datetime.datetime.utcnow() - datetime.datetime.strptime(last, '%Y-%m-%dT%H:%M:%SZ')).total_seconds() / 3600
+              print('last sweep started %.1f hours ago' % age); sys.exit(0 if age >= 22 else 1)
+          print('no sweep yet')
+          PY
       - name: Prepare visitor suggestions
         if: steps.gate.outputs.run == 'true'
         run: |
@@ -49,9 +63,10 @@ jobs:
           import json, re, subprocess, urllib.parse, os
           subs = json.load(open('submissions.json')) if os.path.exists('submissions.json') else []
           out = []
-          for x in subs[-200:]:
+          for x in subs[-4000:]:
               m = re.search(r'/id(\d{5,})', x.get('link', ''))
-              if m: out.append({'id': m.group(1), 'date': x['date']}); continue
+              c = re.search(r'apps\.apple\.com/(\w\w)/app/', x.get('link', ''))
+              if m: out.append({'id': m.group(1), 'date': x['date'], 'cc': c.group(1) if c else ''}); continue
               r = subprocess.run(['curl', '-s', '-m', '30', 'https://itunes.apple.com/search?country=in&entity=software&limit=3&term=' + urllib.parse.quote(x['app'])], capture_output=True, text=True).stdout
               try:
                   res = json.loads(r)['results']
