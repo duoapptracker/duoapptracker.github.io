@@ -30,6 +30,15 @@ DISCOVER_MARKETS = ['in', 'us', 'gb', 'jp']
 LB = 200          # app ids per lookup request (Apple accepts 200; was 100)
 CHART_THREADS = 8 # chart lists read at the same time (the RSS feeds are not rate-limited like search)
 PAT = re.compile(r'iphone\s*duo|\bduo\b[^.\n]{0,40}(support|display|screen|layout|optimi[sz]|fold)|(support|optimi[sz]\w*|ready|built|designed|compatib\w*)[^.\n]{0,40}\bduo\b|fold(able|ing)\s+(iphone|display|screen)', re.I)
+# Wider rule (20 Nov): the old PAT missed "Added support for the latest iPhone models, including Duo" (Aloha Browser).
+# A note now counts if PAT matches OR it says "iPhone Duo", foldable/unfolded iPhone wording, inner/cover screen,
+# or "Duo" as a capitalised word, after removing other products and the everyday word (NEG).
+DUO_RULE = 2      # bump when the rule changes: apps rejected under an older rule get their history read again
+NEG = re.compile(r'google\s+duo|duo\s*(mobile|security|push|lingo|link|cam)|cisco\s+duo|duolingo|(owl|mascot)[^.\n]{0,40}\bduo\b|'
+                 r'\b(a|the|our|your|dynamic|power|comedy|music|musical|singing|dance|rap|pop)\s+duo\b|'
+                 r'duo\s+(mode|match|queue|battle|team|ranked|partner|quest|challenge|vs)\b|\bin\s+duo\b|\bduos\b', re.I)
+POS_I = re.compile(r'fold(able|ing)\s+(iphone|display|screen|device|phone)|\bunfold(ed|ing)?\b|inner (display|screen)|cover screen', re.I)
+DUO_CAP = re.compile(r'\bDuo\b')
 def duo_hit(text, name=''):
     """True if the notes speak of iPhone Duo. The app's own name never counts: an app called "Remote Duo" or
     "Duo Keyboard" mentions itself, not the phone. "iPhone Duo" is protected before the name is removed."""
@@ -37,7 +46,9 @@ def duo_hit(text, name=''):
     base = re.split(r'\s*[:|–—-]\s+|\s*[:|]', name or '')[0].strip()
     for w in {base, name or ''}:
         if w and re.search(r'duo', w, re.I): t = re.sub(r'(?<![A-Za-z])' + re.escape(w) + r'(?![A-Za-z])', ' ', t, flags=re.I)
-    return bool(PAT.search(t))
+    if PAT.search(t): return True
+    t2 = NEG.sub(' ', t)
+    return 'IPHONEDUO' in t2 or bool(POS_I.search(t2) or DUO_CAP.search(t2))
 # apps checked by hand and found to match only because of their own name; never listed
 EXCLUDE = {'6834531434', '6746059246', '6826541573', '6819230205', '6737245881'}
 SITE = '--site' in sys.argv   # for the public website: no embedded icon images (the page loads icons from Apple), one app per line
@@ -104,7 +115,9 @@ def one_line(text):
     return line if len(line) <= 150 else line[:147].rsplit(' ', 1)[0] + '…'
 
 def snippet(text):
-    m = PAT.search(text)
+    # the part of the notes around the Duo mention (any wording the rule accepts); start of the notes if none is found
+    m = PAT.search(text) or re.search(r'iphone\s*duo', text, re.I) or POS_I.search(text) or DUO_CAP.search(text)
+    if not m: return ' '.join(text.split())[:260]
     return ' '.join(text[max(0, m.start() - 80):m.end() + 120].split())[:260]
 
 def icon(art):
@@ -170,7 +183,7 @@ def main():
         prev = json.load(open(prev_path))
         st = {'stage': 'charts', 'feed': 0, 'ids': [], 'india_ids': 0, 'batch': 0, 'seen': 0,
               'rows': {str(r['id']): r for r in (prev['rows'] if isinstance(prev, dict) else prev)},
-              'checked': prev.get('checked', {}) if isinstance(prev, dict) else {}, 'cand': {}, 'queue': None, 'qpos': 0,
+              'checked': (prev.get('checked', {}) if isinstance(prev, dict) and prev.get('rule') == DUO_RULE else {}), 'cand': {}, 'queue': None, 'qpos': 0,
               'hist_spent': 0, 'new': [], 'changed': 0, 'pages_read': 0, 'mk': {}}
         # reported apps: built-in list, then what earlier runs remembered, then today's additions
         rp = dict(REPORTED); rp.update(prev.get('reported', {}) if isinstance(prev, dict) else {})
@@ -294,7 +307,7 @@ def main():
         have = set(got); todo = {}
         for i in ids:
             if i not in have:
-                cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or rows.get(i, {}).get('home') or ''])[0]
+                cc = (st['mk'].get(i) or [st.get('disc', {}).get(i) or rows.get(i, {}).get('home') or 'us'])[0]   # unknown market: try the US store
                 if cc and cc != 'in': todo.setdefault(cc, []).append(i)
         st['abroad'] = [[cc, v[k:k + LB]] for cc, v in todo.items() for k in range(0, len(v), LB)]
         st['apos'] = 0; st['got'] = []
@@ -317,7 +330,10 @@ def main():
     if st['stage'] == 'history':
         q = st['queue']
         def read(tid):
-            return tid, history((rows.get(tid) or cand[tid])['url'])
+            # US notes first: some apps mention iPhone Duo only in their US (English) notes (e.g. The Weather Channel);
+            # apps not sold in the US fall back to their own store page
+            h = history(f'https://apps.apple.com/us/app/id{tid}')
+            return tid, h or history((rows.get(tid) or cand[tid])['url'])
         def add(tid, c, ver, d, note, ok):
             rows[tid] = {k: c[k] for k in c if k != 'now'}
             rows[tid].update(id=tid, duo_date=d, duo_version=ver, note=note, first_seen=today, hist_ok=ok)
@@ -339,7 +355,9 @@ def main():
                     if tid in rows:
                         r = rows[tid]
                         if h: r['hist_ok'] = True
-                        if first and first[1] <= r['duo_date']: r.update(duo_version=first[0], duo_date=first[1], note=snippet(first[2]))
+                        if first and (r.get('source') == 'reported' or first[1] <= r['duo_date']):
+                            # notes-confirmed: green dot; date = the earlier of the notes date and the date it already had
+                            r.update(duo_version=first[0], duo_date=min(first[1], r['duo_date']), note=snippet(first[2]))
                         continue
                     c = cand[tid]
                     if h: checked[tid] = c['version']
@@ -398,9 +416,9 @@ def main():
         with open(out_path, 'w') as f:   # one app per line keeps daily changes small in version control
             f.write('{"updated": %s,\n"rows": [\n' % json.dumps(datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%MZ')))
             f.write(',\n'.join(json.dumps(r, ensure_ascii=False, sort_keys=True) for r in out))
-            f.write('\n],\n"reported": %s,\n"submitted": %s,\n"checked": %s}\n' % (json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps({i: d for i, d in st.get('submitted', {}).items() if i not in rows}, sort_keys=True), json.dumps(keep, sort_keys=True)))
+            f.write('\n],\n"rule": %d,\n"reported": %s,\n"submitted": %s,\n"checked": %s}\n' % (DUO_RULE, json.dumps(reported, ensure_ascii=False, sort_keys=True, indent=0), json.dumps({i: d for i, d in st.get('submitted', {}).items() if i not in rows}, sort_keys=True), json.dumps(keep, sort_keys=True)))
     else:
-        payload = {'rows': out, 'meta': meta, 'checked': keep, 'reported': reported, 'submitted': {i: d for i, d in st.get('submitted', {}).items() if i not in rows}}
+        payload = {'rows': out, 'meta': meta, 'rule': DUO_RULE, 'checked': keep, 'reported': reported, 'submitted': {i: d for i, d in st.get('submitted', {}).items() if i not in rows}}
         # the board's file store allows 15 MB: if the list is too big, drop the icons of the least rated apps first
         LIMIT = 13_500_000
         while len(json.dumps(payload, ensure_ascii=False).encode()) > LIMIT:
