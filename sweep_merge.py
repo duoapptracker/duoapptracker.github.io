@@ -51,7 +51,8 @@ def main():
                                   'artist': h.get('artist', ''), 'how': h.get('how', 'newest notes')}
                 new += 1
     queued = 0
-    for i, f in sorted(found.items(), key=lambda kv: kv[1]['found']):
+    # new Duo-specific apps (confirmed by their description) first, then the oldest finds
+    for i, f in sorted(found.items(), key=lambda kv: (kv[1].get('how') != 'description', kv[1]['found'])):
         if queued >= CAP: break
         if f['queued'] or i in rows: continue
         mid = 'sweep-' + i
