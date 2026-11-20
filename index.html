@@ -375,6 +375,7 @@ body.duo-lock{overflow:hidden}
 .duo-tagline{display:flex;flex-direction:column;gap:4px;white-space:normal;overflow:visible;margin:8px 0 0;min-height:0}
 .duo-tagline .tg-h{font-size:1.3rem;font-weight:650;letter-spacing:-.01em}
 .duo-tagline .tg-s{font-size:var(--cds-font-size-body);color:var(--color-fg-muted)}
+.duo-tagline .tg-n{display:block;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-top:4px;max-width:70ch;white-space:normal}
 .duo-tagline .tg-s b{color:var(--color-fg);font-weight:700}
 .duo-layout{display:block}
 .duo-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start}
@@ -806,6 +807,7 @@ html,body{max-width:100%;overflow-x:clip}
     <div class="duo-card">
       <h2>Good to know</h2>
       <ul class="duo-notes">
+        <li>Apple said on 6 Nov 2026 that more than 100,000 apps are built for iPhone Duo (made with the iOS 27.1 SDK; they show a "Made for iPhone Duo" badge in the App Store on the device). That badge is not in Apple's public data, so this list can only include apps confirmed by their own update notes, by Apple, or by the site owner's testing. An app missing here may still be optimised.</li>
         <li>Every app shows how it was confirmed. A <b>green dot</b> means its own update notes say so; its date is the release date of the earliest version that mentions iPhone Duo.</li>
         <li>An <b>amber dot</b> means it was reported as optimised (by Apple, the press, the community or the site owner) but its notes do not say so. Its date is the earlier of the report date and the app's last update when it was added, and it does not change later.</li>
         <li>If an app's own notes later mention iPhone Duo, it turns green and takes the real date.</li>
@@ -1252,9 +1254,10 @@ dash.draw('tagline', (el) => {
     const b = (x) => mk('b', '', x);
     facts.append(b(fmtNum(v.length)), ' apps ' + where + ' are ready for iPhone Duo.');
   } else facts.textContent = 'Loading the list…';
+  const note = mk('span', 'tg-n', 'Apple says more than 100,000 apps are built for iPhone Duo. Listed here are the ones confirmed by their own update notes, by Apple, or tested by the site owner.');
   const up = mk('span', 'tg-u');
   { const t = dash.stamp(), dd = t ? new Date(t) : null; if (dd && !isNaN(dd)) up.textContent = 'Updated ' + dd.toLocaleString('en-IN', {day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST'; }
-  el.replaceChildren(head, facts, up);
+  el.replaceChildren(head, facts, note, up);
   for (const n of TILES) dash.draw(n);
   for (const n of ['calendar', 'heatsub', 'heatkpi', 'heatpick', 'growth', 'growsub', 'growkpi', 'catmap', 'catsub']) dash.draw(n);
 });
