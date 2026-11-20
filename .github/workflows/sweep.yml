@@ -47,8 +47,15 @@ jobs:
           path: sweep-results
       - name: Queue new finds for the regular scan
         run: |
-          python3 sweep_merge.py sweep-results
           git config user.name "refresh-bot"
           git config user.email "refresh-bot@users.noreply.github.com"
-          git add sweep_found.json sweep_last.json submissions.json
-          git diff --cached --quiet || { git commit -m "App Store sweep: new finds queued"; git pull --rebase; git push; }
+          # another job may save submissions.json at the same moment: on a failed push, start again from the newest copy
+          for try in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            git clean -fq -- sweep_found.json sweep_last.json   # first run: these files are not in the repository yet
+            python3 sweep_merge.py sweep-results
+            git add sweep_found.json sweep_last.json submissions.json
+            git diff --cached --quiet && break
+            git commit -qm "App Store sweep: new finds queued" && git push -q origin HEAD:main && break
+            echo "push failed (try $try), retrying"; sleep 20
+          done
