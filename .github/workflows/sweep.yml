@@ -87,3 +87,39 @@ jobs:
           )
           echo "another round needed: $more"
           if [ "$more" = "1" ]; then gh workflow run sweep.yml --ref main; fi
+      - name: Record this sweep for the scan dashboard
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          started=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }} --jq .run_started_at || echo "")
+          failed=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=50" --jq '[.jobs[]|select(.name|startswith("slice"))|select(.conclusion!="success")|.name]|join(", ")' || echo "")
+          slices=$(ls sweep-results 2>/dev/null | wc -l | tr -d ' ')
+          for try in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            STARTED="$started" FAILED="$failed" SLICES="$slices" python3 - <<'PY'
+          import json, os, datetime
+          try: last = json.load(open('sweep_last.json'))
+          except (OSError, ValueError): last = {}
+          fresh = last.get('date') == datetime.date.today().isoformat()
+          rec = {'id': int(os.environ['GITHUB_RUN_ID']), 'kind': 'sweep', 'reason': os.environ.get('GITHUB_EVENT_NAME', ''),
+                 'started': os.environ.get('STARTED', ''), 'ended': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'status': 'failed' if os.environ.get('FAILED') else 'ok', 'failed_step': os.environ.get('FAILED', ''),
+                 'url': 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                 'slices_ok': int(os.environ.get('SLICES') or 0), 'slices': 24}
+          if fresh:
+              for k in ('looked_up', 'recent', 'hits', 'hits_newest', 'hits_description', 'hits_history', 'hist_read', 'hist_todo', 'from_search',
+                        'not_on_duo', 'on_site', 'slowed', 'failed_lookups', 'new_finds', 'queued_today', 'waiting_to_queue', 'found_total',
+                        'slices_stopped_early', 'lead_developers', 'apps'):
+                  if k in last: rec[k] = last[k]
+          try: log = json.load(open('scans.json'))
+          except (OSError, ValueError): log = {'runs': []}
+          log['runs'] = [r for r in log['runs'] if r.get('id') != rec['id']] + [rec]
+          log['runs'] = log['runs'][-300:]
+          json.dump(log, open('scans.json', 'w'), ensure_ascii=False, indent=0)
+          PY
+            git add scans.json
+            git diff --cached --quiet && break
+            git commit -qm "Scan dashboard: record sweep ${{ github.run_id }}" && git push -q origin HEAD:main && break
+            sleep 15
+          done

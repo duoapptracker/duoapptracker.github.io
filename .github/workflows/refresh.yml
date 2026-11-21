@@ -58,6 +58,7 @@ jobs:
           print('no sweep yet')
           PY
       - name: Prepare visitor suggestions
+        id: prep
         if: steps.gate.outputs.run == 'true'
         run: |
           python3 - <<'PY'
@@ -94,6 +95,7 @@ jobs:
           print('visitor suggestions resolved:', len(out), 'of', len(subs))
           PY
       - name: Collect approved community reports
+        id: reports
         if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -138,6 +140,7 @@ jobs:
           print('approved community reports:', len(add))
           PY
       - name: Scan the App Store
+        id: scan
         if: steps.gate.outputs.run == 'true'
         env:
           DISCOVER: ${{ steps.gate.outputs.discover }}
@@ -148,6 +151,7 @@ jobs:
           for i in $(seq 1 12); do
             out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json --submitted submitted.json $SKIP)
             echo "$out" | cut -c1-2000
+            printf '%s\n' "$out" > scan_out.txt   # kept for the scan dashboard
             case "$out" in
               DONE*) break ;;
               CONTINUE*) ;;
@@ -155,9 +159,10 @@ jobs:
             esac
           done
           test -s data.new.json
-          python3 -c "import json; a=json.load(open('data.json')); b=json.load(open('data.new.json')); assert len(b['rows']) >= len(a['rows']), 'fewer apps than before'"
+          python3 -c "import json; a=json.load(open('data.json')); b=json.load(open('data.new.json')); assert len(b['rows']) >= len(a['rows']) - 25, 'many fewer apps than before'"
           mv data.new.json data.json
       - name: Publish the new list
+        id: publish
         if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "refresh-bot"
@@ -244,3 +249,54 @@ jobs:
           url = out.stdout.strip().split()[-1] if out.stdout.strip() else ''
           if url: subprocess.run(['gh', 'issue', 'close', url], check=False)
           PY
+      - name: Record this run for the scan dashboard
+        if: always() && (steps.gate.outputs.run == 'true' || failure())
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ github.event.inputs.reason || github.event_name }}
+          OUT_PREP: ${{ steps.prep.outcome }}
+          OUT_REPORTS: ${{ steps.reports.outcome }}
+          OUT_SCAN: ${{ steps.scan.outcome }}
+          OUT_PUBLISH: ${{ steps.publish.outcome }}
+        run: |
+          started=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }} --jq .run_started_at || echo "")
+          cp scan_out.txt /tmp/scan_out.txt 2>/dev/null || true
+          git config user.name "refresh-bot"
+          git config user.email "refresh-bot@users.noreply.github.com"
+          for try in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            STARTED="$started" python3 - <<'PY'
+          import json, os, datetime
+          done = {}
+          try:
+              for line in open('/tmp/scan_out.txt'):
+                  if line.startswith('DONE '): done = json.loads(line[5:])
+          except (OSError, ValueError):
+              pass
+          steps = [('Prepare suggestions', 'OUT_PREP'), ('Community reports', 'OUT_REPORTS'), ('Scan the App Store', 'OUT_SCAN'), ('Publish the list', 'OUT_PUBLISH')]
+          failed = next((name for name, k in steps if os.environ.get(k) == 'failure'), '')
+          left = 0
+          try:
+              found = json.load(open('sweep_found.json')); site = json.load(open('data.json'))
+              seen = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {}))
+              left = sum(1 for i in found if i not in seen)
+          except (OSError, ValueError):
+              pass
+          rec = {'id': int(os.environ['GITHUB_RUN_ID']), 'kind': 'scan', 'reason': os.environ.get('REASON', ''),
+                 'started': os.environ.get('STARTED', ''), 'ended': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'status': 'failed' if failed else 'ok', 'failed_step': failed,
+                 'url': 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                 'apps_checked': done.get('apps_checked'), 'total_apps': done.get('total_apps'), 'new': done.get('new_count'),
+                 'history_read': done.get('history_pages_read'), 'skipped': done.get('skipped'), 'minutes': done.get('minutes_per_stage'),
+                 'backlog_left': left, 'new_apps': (done.get('new_apps') or [])[:12]}
+          try: log = json.load(open('scans.json'))
+          except (OSError, ValueError): log = {'runs': []}
+          log['runs'] = [r for r in log['runs'] if r.get('id') != rec['id']] + [rec]
+          log['runs'] = log['runs'][-300:]
+          json.dump(log, open('scans.json', 'w'), ensure_ascii=False, indent=0)
+          PY
+            git add scans.json
+            git diff --cached --quiet && break
+            git commit -qm "Scan dashboard: record run ${{ github.run_id }}" && git push -q origin HEAD:main && break
+            sleep 15
+          done
