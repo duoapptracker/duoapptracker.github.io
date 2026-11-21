@@ -25,7 +25,7 @@ def site_developers(ids):
         time.sleep(1)
     return out
 
-CAP = 800   # finds queued per day, so the regular scan is not swamped while the backlog is large
+CAP = 1500  # finds queued per day, so the regular scan is not swamped while the backlog is large
 
 def load(path, default):
     try: return json.load(open(path))
