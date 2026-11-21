@@ -165,7 +165,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
   const gh = async (path) => {
     const h = {'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'};
     const r = await fetch(API + path, {headers: h, cache: 'no-store'});
-    if (!r.ok) { const e = new Error('GitHub said ' + r.status); e.status = r.status; throw e; }
+    if (!r.ok) { const e = new Error('the server said ' + r.status); e.status = r.status; throw e; }
     return r.json();
   };
 
@@ -187,7 +187,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
       }
 
       live.error = '';
-    } catch (e) { live.error = e.status === 403 ? 'GitHub limits how often a page can ask without a key; the status refreshes again in a few minutes.' : 'Could not reach GitHub (' + e.message + ').'; }
+    } catch (e) { live.error = e.status === 403 ? 'The live status is busy; it refreshes again in a few minutes.' : 'Live status unavailable (' + e.message + ').'; }
   }
   async function loadLog() {
     try { const r = await fetch('../scans.json', {cache: 'no-store'}); if (r.ok) log = await r.json(); } catch (e) {}
@@ -286,7 +286,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
       const chip = mk('span', 'chip ' + r.status, r.status === 'ok' ? '✓ Done' : r.status === 'failed' ? '✕ Failed' : '● ' + (live.paused ? 'Waiting' : 'Running'));
       const found = r.kind === 'sweep' ? r.new_finds : r.kind === 'check' ? (r.hits != null ? r.hits : r.new) : r.new;
       const sk = r.skipped ? Object.entries(r.skipped).filter(([k]) => k !== 'to_read').reduce((a, [, v]) => a + (v || 0), 0) : null;
-      const trig = {backlog: 'Back-to-back', timer: 'Timer', manual: 'Manual', schedule: 'GitHub timer', workflow_dispatch: 'Timer or manual', push: 'Push'}[r.reason] || r.reason || '';
+      const trig = {backlog: 'Back-to-back', timer: 'Timer', manual: 'Manual', schedule: 'Backup timer', workflow_dispatch: 'Timer or manual', push: 'Push'}[r.reason] || r.reason || '';
       const cells = [ist(r.started), mk('span', 'chip kind', r.kind === 'sweep' ? 'Sweep (old)' : r.kind === 'check' ? (r.mode === 'daily' ? 'Daily check' : 'Full check') : 'Scan (old)'), trig, r.status === 'running' ? dur(r.started) : dur(r.started, r.ended), chip,
         num(r.looked_up != null ? r.looked_up : r.apps_checked), num(found), num(sk)];
       cells.forEach((c, i) => { const td = mk('td', i === 2 || i === 7 ? 'hide-s' : ''); typeof c === 'string' ? td.textContent = c : td.append(c); tr.append(td); });
@@ -305,7 +305,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
         if (r.kind === 'sweep' && r.looked_up) lines.push(['Sweep', 'updated since Sep ' + num(r.recent) + ' · found by newest notes ' + num(r.hits_newest) + ', history ' + num(r.hits_history) + ', description ' + num(r.hits_description) + ' · histories read ' + num(r.hist_read) + ' · slices ' + (r.slices_ok || 0) + '/' + (r.slices || 24) + ' · queued ' + num(r.queued_today)]);
         if (r.new_apps && r.new_apps.length) lines.push(['Some new apps', r.new_apps.join(', ')]);
         for (const [a, b] of lines) { const p = mk('div'); p.append(mk('b', '', a + ': '), b); td.append(p); }
-        if (r.url) { const p = mk('div'); const a = mk('a', '', 'Open the full log on GitHub'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; p.append(a); td.append(p); }
+        if (r.url) { const p = mk('div'); const a = mk('a', '', 'Open the full log'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; p.append(a); td.append(p); }
         if (!lines.length && !r.url) td.textContent = 'No details recorded for this run.';
         d.append(td); tb.append(d);
       }
