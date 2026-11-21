@@ -189,6 +189,7 @@ def main():
     left = lambda: slice_s - (time.time() - t0)
     state_path = os.path.join(os.path.dirname(os.path.abspath(out_path)), 'duo_state.json')
     today = datetime.datetime.utcnow().date().isoformat()
+    tomorrow = (datetime.datetime.utcnow().date() + datetime.timedelta(days=1)).isoformat()   # anything dated later is a pre-order
     if os.path.exists(state_path):
         st = json.load(open(state_path))
     else:
@@ -282,6 +283,8 @@ def main():
                              report_url=k.get('url', ''), source='reported', first_seen=today, hist_ok=False)   # False: its version history is read once, so a Duo mention in its own notes upgrades it to a green dot with the real date
             if not SITE: rows[tid]['icon'] = icon(a.get('artworkUrl100', ''))
             st['new'].append(tid)
+        elif latest['updated'] > tomorrow or latest['released'] > tomorrow:
+            st['skip_future'] = st.get('skip_future', 0) + 1    # pre-order or not out yet: not downloadable
         elif latest['updated'] < EARLIEST:
             st['skip_old'] = st.get('skip_old', 0) + 1        # not updated since iPhone Duo was announced: cannot mention it
         elif 'iPhoneDuo' not in ''.join(a.get('supportedDevices') or ['iPhoneDuo']):
@@ -421,6 +424,8 @@ def main():
     # last update at the time it was first added; that date is kept in 'dated' and never moves (a later App Store update
     # or report does not re-date the app). An app whose own notes mention Duo is not here: it keeps its real date.
     for tid in [t for t in rows if t in EXCLUDE]: rows.pop(tid)   # listed by mistake (see EXCLUDE)
+    for tid in [t for t, r in rows.items() if r.get('source') != 'reported' and (str(r.get('updated', '')) > tomorrow or str(r.get('released', '')) > tomorrow)]:
+        rows.pop(tid)   # pre-order apps (release date in the future) are not downloadable yet
     st['new'] = [t for t in st['new'] if t in rows]
     for r in rows.values():
         if r.get('source') == 'reported' and r.get('duo_version'):

@@ -90,6 +90,7 @@ def main():
     shard, shards, out = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
     minutes = float(sys.argv[sys.argv.index('--minutes') + 1]) if '--minutes' in sys.argv else 150
     t0 = time.time(); left = lambda: minutes * 60 - (time.time() - t0)
+    import datetime; tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).isoformat()
     have = {str(r['id']) for r in json.load(open('data.json'))['rows']}
     leads = json.load(open('leads.json')) if os.path.exists('leads.json') else {}
     done_path = f'hist-done-{shard}.txt'
@@ -138,6 +139,7 @@ def main():
     hits, todo = [], []
     for i, (cc, a) in found.items():
         if (a.get('currentVersionReleaseDate') or '')[:10] < d.EARLIEST: continue
+        if max((a.get('currentVersionReleaseDate') or '')[:10], (a.get('releaseDate') or '')[:10]) > tomorrow: continue   # pre-order
         stats['recent'] += 1
         if 'iPhoneDuo' not in ''.join(a.get('supportedDevices') or ['iPhoneDuo']): stats['not_on_duo'] += 1; continue
         if i in have or i in d.EXCLUDE: stats['on_site'] += 1; continue
