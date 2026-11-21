@@ -158,6 +158,39 @@
 "mstats": 16.1
 },
 "backlog_left": 13543
+},
+{
+"id": 44869294946,
+"kind": "check",
+"mode": "full",
+"reason": "manual",
+"started": "2026-11-21T05:06:33Z",
+"ended": "2026-11-21T13:25:24Z",
+"status": "failed",
+"failed_step": "Update the listed apps",
+"url": "https://github.com/duoapptracker/duoapptracker.github.io/actions/runs/44869294946",
+"slices_ok": 24,
+"slices": 24,
+"looked_up": 1945278,
+"recent": 888763,
+"on_site": 55814,
+"hits": 21325,
+"hits_newest": 5369,
+"hits_history": 10682,
+"hits_description": 5274,
+"hist_read": 352249,
+"hist_left": 243219,
+"hist_read_total": 352249,
+"full_done": false,
+"published_live": 21325,
+"slowed": 0,
+"apps_checked": null,
+"total_apps": null,
+"new": null,
+"history_read": null,
+"skipped": null,
+"minutes": null,
+"new_apps": []
 }
 ]
 }
