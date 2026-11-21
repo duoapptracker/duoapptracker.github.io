@@ -246,6 +246,10 @@ def main():
               'lookup': '%d/%d apps' % (st['batch'] * LB, len(st['ids'])), 'history': '%d/%d pages' % (st['qpos'], len(st['queue'] or []))}.get(st['stage'], '')))
         sys.exit(0)
 
+    if st['stage'] == 'charts' and '--no-charts' in args:
+        # the whole-App-Store check finds new apps; here only the listed apps, reports and suggestions are refreshed
+        st['ids'] = list(dict.fromkeys(list(rows) + list(reported) + list(st.get('submitted', {}))))
+        st['india_ids'] = 0; st['stage'] = 'discover'
     if st['stage'] == 'charts':
         def feed(f):
             c, g, ch = f

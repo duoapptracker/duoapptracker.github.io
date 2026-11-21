@@ -1,13 +1,13 @@
 name: Daily refresh
 on:
   schedule:
-    # GitHub drops or delays scheduled runs, so ask every hour; the "gate" step below starts a real scan
-    # only when the list is more than 5 hours old; an outside timer (cron-job.org) also starts it at fixed times
-    - cron: "23 * * * *"
+    # backup only; the Google timer starts it every 6 hours. The plan job decides whether to run:
+    # Mode 1 (full check) runs back to back until every app's history is read; Mode 2 runs once a day
+    - cron: "23 */6 * * *"
   workflow_dispatch:
     inputs:
       reason:
-        description: "manual = scan now; backlog = next batch of sweep finds; timer = outside timer, scan only if the list is old enough"
+        description: "manual = run now; backlog = next round of the full check; timer = outside timer (runs only when due)"
         required: false
         default: manual
 permissions:
@@ -16,14 +16,17 @@ permissions:
   actions: write
 concurrency: refresh
 jobs:
-  refresh:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 10
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      mode: ${{ steps.gate.outputs.mode }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
         with:
           ref: main
-      - name: Decide whether it is time to scan
+      - name: Decide whether to run, and which mode
         id: gate
         env:
           EVENT: ${{ github.event_name }}
@@ -31,35 +34,104 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, os, datetime
-          d = json.load(open('data.json'))
-          u = datetime.datetime.strptime(d['updated'], '%Y-%m-%dT%H:%MZ')
-          now = datetime.datetime.utcnow()
-          age = (now - u).total_seconds() / 3600
-          ist = lambda t: (t + datetime.timedelta(hours=5, minutes=30)).date()
-          manual = os.environ['EVENT'] == 'workflow_dispatch' and os.environ.get('REASON', 'manual') != 'timer'
-          go = manual or age >= 5   # 5 h: whenever GitHub or the outside timer fires, a scan almost always starts
-          # the first scan of each India day (or a manual one) also searches outside the charts; back-to-back backlog scans skip it
-          discover = os.environ.get('REASON', 'manual') == 'manual' and os.environ['EVENT'] == 'workflow_dispatch' or ist(u) < ist(now)
-          print('list age (hours): %.1f | manual: %s | scan: %s | discover: %s' % (age, manual, go, discover))
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-              f.write('run=%s\ndiscover=%s\n' % (str(go).lower(), str(discover).lower()))
+          try: st = json.load(open('check_state.json'))
+          except (OSError, ValueError): st = {'full_done': False, 'finished': ''}
+          reason = os.environ.get('REASON') or ('schedule' if os.environ['EVENT'] == 'schedule' else 'manual')
+          age = 99.0
+          if st.get('finished'):
+              age = (datetime.datetime.utcnow() - datetime.datetime.strptime(st['finished'], '%Y-%m-%dT%H:%M:%SZ')).total_seconds() / 3600
+          full = not st.get('full_done')
+          # Mode 1 (full check, until every history is read): run every time it is asked; Mode 2: once a day
+          go = reason == 'manual' or full or age >= 20
+          mode = 'full' if full else 'daily'
+          print('mode: %s | reason: %s | hours since last check: %.1f | run: %s' % (mode, reason, age, go))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f: f.write('run=%s\nmode=%s\n' % (str(go).lower(), mode))
           PY
-      - name: Start the daily App Store sweep if it is due
+      - name: Start with an empty 'live' branch (finds of this run only)
+        if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          last=$(gh run list --workflow sweep.yml --limit 1 --json createdAt --jq '.[0].createdAt // ""')
-          python3 - "$last" <<'PY' && gh workflow run sweep.yml --ref main || true
-          import sys, datetime
-          last = sys.argv[1]
-          if last:
-              age = (datetime.datetime.utcnow() - datetime.datetime.strptime(last, '%Y-%m-%dT%H:%M:%SZ')).total_seconds() / 3600
-              print('last sweep started %.1f hours ago' % age); sys.exit(0 if age >= 22 else 1)
-          print('no sweep yet')
-          PY
+          for p in $(gh api "repos/${{ github.repository }}/contents/live?ref=live" --jq '.[].path' 2>/dev/null); do
+            sha=$(gh api "repos/${{ github.repository }}/contents/$p?ref=live" --jq .sha)
+            gh api -X DELETE "repos/${{ github.repository }}/contents/$p" -f message="clear $p" -f sha="$sha" -f branch=live >/dev/null || true
+          done
+  slice:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 190
+    strategy:
+      fail-fast: false
+      max-parallel: 14   # leaves job slots for the publisher, the finish job and the website (GitHub allows 20 at once)
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
+        with:
+          ref: main
+      - name: Remember which version histories this slice has read
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0, pinned
+        with:
+          path: hist-done-${{ matrix.shard }}.txt
+          key: hist-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: hist-${{ matrix.shard }}-
+      - name: Check one slice of the App Store
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 sweep.py ${{ matrix.shard }} 24 hits-${{ matrix.shard }}.json --minutes 165
+      - name: Save which version histories were read
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0, pinned
+        with:
+          path: hist-done-${{ matrix.shard }}.txt
+          key: hist-${{ matrix.shard }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2, pinned
+        if: always()
+        with:
+          name: hits-${{ matrix.shard }}
+          path: hits-${{ matrix.shard }}.json
+          retention-days: 3
+  publisher:
+    needs: plan
+    if: needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
+        with:
+          ref: main
+      - name: Every 30 minutes, add the slices' finds to the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "refresh-bot"
+          git config user.email "refresh-bot@users.noreply.github.com"
+          while true; do
+            sleep 1800
+            left=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=50" --jq '[.jobs[]|select(.name|startswith("slice"))|select(.status!="completed")]|length' || echo 1)
+            for try in 1 2 3 4 5; do
+              git fetch -q origin main && git reset -q --hard origin/main
+              n=$(python3 publish_live.py || echo 0)
+              echo "$(date -u +%H:%M) added $n apps (slices still running: $left)"
+              [ "$n" = "0" ] && break
+              git add data.json && git commit -qm "New apps from the App Store check (live)" && git push -q origin HEAD:main && break
+              sleep 20
+            done
+            [ "$left" = "0" ] && break
+          done
+  finish:
+    needs: [plan, slice, publisher]
+    if: always() && needs.plan.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2, pinned
+        with:
+          ref: main
       - name: Prepare visitor suggestions
         id: prep
-        if: steps.gate.outputs.run == 'true'
         run: |
           python3 - <<'PY'
           import json, re, subprocess, urllib.parse, os
@@ -79,24 +151,11 @@ jobs:
                           out.append({'id': str(a['trackId']), 'date': x['date']}); break
               except Exception:
                   pass
-          # the next batch of sweep finds that have not been checked yet (until the backlog is empty)
-          try:
-              found = json.load(open('sweep_found.json'))
-              site = json.load(open('data.json'))
-              done = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {})) | {x['id'] for x in out}
-              today = __import__('datetime').date.today().isoformat()
-              order = sorted(found.items(), key=lambda kv: (kv[1].get('how') != 'description', kv[1].get('found', '')))
-              batch = [{'id': i, 'date': today, 'cc': f.get('cc', '')} for i, f in order if i not in done][:1500]
-              out += batch
-              print('sweep finds added to this scan:', len(batch))
-          except (OSError, ValueError) as e:
-              print('no sweep finds:', e)
           json.dump(out, open('submitted.json', 'w'))
           print('visitor suggestions resolved:', len(out), 'of', len(subs))
           PY
       - name: Collect approved community reports
         id: reports
-        if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -139,15 +198,16 @@ jobs:
           json.dump(add, open('reported_add.json', 'w')); open('approved_numbers.txt', 'w').write(' '.join(str(n) for n in nums))
           print('approved community reports:', len(add))
           PY
+      - name: Add the last finds of the slices
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(python3 publish_live.py)
+          echo "finds added to the list: $n"
       - name: Scan the App Store
         id: scan
-        if: steps.gate.outputs.run == 'true'
-        env:
-          DISCOVER: ${{ steps.gate.outputs.discover }}
         run: |
-          # only the first scan of each India day does the slow App Store search step
-          SKIP=""
-          if [ "$DISCOVER" != "true" ]; then SKIP="--skip-discover"; fi
+          SKIP="--skip-discover --no-charts"   # the slices check the whole App Store
           for i in $(seq 1 12); do
             out=$(python3 duo_cloud.py data.json data.new.json --site --slice 1500 --hist-minutes 30 --reported reported_add.json --submitted submitted.json $SKIP)
             echo "$out" | cut -c1-2000
@@ -163,7 +223,6 @@ jobs:
           mv data.new.json data.json
       - name: Publish the new list
         id: publish
-        if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "refresh-bot"
           git config user.email "refresh-bot@users.noreply.github.com"
@@ -172,7 +231,6 @@ jobs:
           git pull --rebase
           git push
       - name: Close approved community reports
-        if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -181,7 +239,6 @@ jobs:
             gh issue close "$n" || true
           done
       - name: Email the owner about watched apps
-        if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -202,25 +259,7 @@ jobs:
           PY
           git add watch.json
           git diff --cached --quiet || { git commit -m "Watched app notified"; git pull --rebase; git push; }
-      - name: Keep going while sweep finds are waiting
-        # runs on every check (even skipped ones), so a chain broken by a timer run is picked up again
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          left=$(python3 - <<'PY'
-          import json
-          try:
-              found = json.load(open('sweep_found.json')); site = json.load(open('data.json'))
-              done = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {}))
-              print(sum(1 for i in found if i not in done))
-          except (OSError, ValueError):
-              print(0)
-          PY
-          )
-          echo "sweep finds still waiting: $left"
-          if [ "$left" -gt 0 ]; then gh workflow run refresh.yml --ref main -f reason=backlog; fi
       - name: Email the owner that a scan finished
-        if: steps.gate.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -249,54 +288,98 @@ jobs:
           url = out.stdout.strip().split()[-1] if out.stdout.strip() else ''
           if url: subprocess.run(['gh', 'issue', 'close', url], check=False)
           PY
-      - name: Record this run for the scan dashboard
-        if: always() && (steps.gate.outputs.run == 'true' || failure())
+      - name: Developers of the listed apps (their other apps are checked next time)
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 - <<'PY'
+          import json, glob, subprocess, time
+          ids = [str(r['id']) for r in json.load(open('data.json'))['rows']]
+          devs = set()
+          for k in range(0, len(ids), 200):
+              r = subprocess.run(['curl', '-s', '-m', '90', 'https://itunes.apple.com/lookup?country=us&id=' + ','.join(ids[k:k + 200])], capture_output=True, text=True).stdout
+              try: devs |= {str(a['artistId']) for a in json.loads(r).get('results', []) if a.get('artistId')}
+              except ValueError: pass
+              time.sleep(0.5)
+          json.dump({'developers': sorted(devs), 'apps': []}, open('/tmp/leads.json', 'w'))
+          print('developers:', len(devs))
+          PY
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2, pinned
+        if: always()
+        continue-on-error: true
+        with:
+          pattern: hits-*
+          path: /tmp/slices
+      - name: Record this run, track the full check, and start the next round if needed
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           REASON: ${{ github.event.inputs.reason || github.event_name }}
+          MODE: ${{ needs.plan.outputs.mode }}
           OUT_PREP: ${{ steps.prep.outcome }}
           OUT_REPORTS: ${{ steps.reports.outcome }}
           OUT_SCAN: ${{ steps.scan.outcome }}
           OUT_PUBLISH: ${{ steps.publish.outcome }}
         run: |
           started=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }} --jq .run_started_at || echo "")
+          failed_slices=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=50" --jq '[.jobs[]|select(.name|startswith("slice"))|select(.conclusion!="success")|.name]|join(", ")' || echo "")
           cp scan_out.txt /tmp/scan_out.txt 2>/dev/null || true
           git config user.name "refresh-bot"
           git config user.email "refresh-bot@users.noreply.github.com"
           for try in 1 2 3 4 5; do
             git fetch -q origin main && git reset -q --hard origin/main
-            STARTED="$started" python3 - <<'PY'
-          import json, os, datetime
+            STARTED="$started" FAILED_SLICES="$failed_slices" python3 - <<'PY'
+          import json, os, glob, datetime
+          now = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
           done = {}
           try:
               for line in open('/tmp/scan_out.txt'):
                   if line.startswith('DONE '): done = json.loads(line[5:])
           except (OSError, ValueError):
               pass
-          steps = [('Prepare suggestions', 'OUT_PREP'), ('Community reports', 'OUT_REPORTS'), ('Scan the App Store', 'OUT_SCAN'), ('Publish the list', 'OUT_PUBLISH')]
+          # the slices' totals
+          sl = {}; n = 0
+          for f in glob.glob('/tmp/slices/**/hits-*.json', recursive=True):
+              try: part = json.load(open(f)).get('stats', {})
+              except (OSError, ValueError): continue
+              n += 1
+              for k, v in part.items():
+                  if isinstance(v, (int, float)) and not isinstance(v, bool) and k != 'shard': sl[k] = sl.get(k, 0) + v
+          steps = [('Prepare suggestions', 'OUT_PREP'), ('Community reports', 'OUT_REPORTS'), ('Update the listed apps', 'OUT_SCAN'), ('Publish the list', 'OUT_PUBLISH')]
           failed = next((name for name, k in steps if os.environ.get(k) == 'failure'), '')
-          left = 0
-          try:
-              found = json.load(open('sweep_found.json')); site = json.load(open('data.json'))
-              seen = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {}))
-              left = sum(1 for i in found if i not in seen)
-          except (OSError, ValueError):
-              pass
-          rec = {'id': int(os.environ['GITHUB_RUN_ID']), 'kind': 'scan', 'reason': os.environ.get('REASON', ''),
-                 'started': os.environ.get('STARTED', ''), 'ended': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-                 'status': 'failed' if failed else 'ok', 'failed_step': failed,
+          fs = os.environ.get('FAILED_SLICES', '')
+          # the full check (Mode 1) is complete when every slice finished and no history is left to read
+          try: st = json.load(open('check_state.json'))
+          except (OSError, ValueError): st = {'full_done': False, 'hist_read_total': 0}
+          st['hist_read_total'] = st.get('hist_read_total', 0) + int(sl.get('hist_read', 0))
+          st['hist_left'] = int(sl.get('hist_left', 0)) if n else st.get('hist_left')
+          if os.environ.get('MODE') == 'full' and n == 24 and not fs and sl.get('hist_left', 1) == 0:
+              st['full_done'] = True; st['full_done_at'] = now
+          st['finished'] = now; st['last_mode'] = os.environ.get('MODE', '')
+          json.dump(st, open('check_state.json', 'w'), indent=1)
+          rec = {'id': int(os.environ['GITHUB_RUN_ID']), 'kind': 'check', 'mode': os.environ.get('MODE', ''), 'reason': os.environ.get('REASON', ''),
+                 'started': os.environ.get('STARTED', ''), 'ended': now,
+                 'status': 'failed' if (failed or fs) else 'ok', 'failed_step': failed or (('Slices: ' + fs) if fs else ''),
                  'url': 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + os.environ['GITHUB_RUN_ID'],
+                 'slices_ok': n, 'slices': 24, 'looked_up': sl.get('looked_up'), 'recent': sl.get('recent'), 'on_site': sl.get('on_site'),
+                 'hits': sl.get('hits'), 'hits_newest': sl.get('hits_newest'), 'hits_history': sl.get('hits_history'), 'hits_description': sl.get('hits_description'),
+                 'hist_read': sl.get('hist_read'), 'hist_left': st.get('hist_left'), 'hist_read_total': st['hist_read_total'], 'full_done': st.get('full_done'),
+                 'published_live': sl.get('published_live'), 'slowed': sl.get('slowed'),
                  'apps_checked': done.get('apps_checked'), 'total_apps': done.get('total_apps'), 'new': done.get('new_count'),
                  'history_read': done.get('history_pages_read'), 'skipped': done.get('skipped'), 'minutes': done.get('minutes_per_stage'),
-                 'backlog_left': left, 'new_apps': (done.get('new_apps') or [])[:12]}
+                 'new_apps': (done.get('new_apps') or [])[:12]}
           try: log = json.load(open('scans.json'))
           except (OSError, ValueError): log = {'runs': []}
           log['runs'] = [r for r in log['runs'] if r.get('id') != rec['id']] + [rec]
           log['runs'] = log['runs'][-300:]
           json.dump(log, open('scans.json', 'w'), ensure_ascii=False, indent=0)
+          open('/tmp/next_round', 'w').write('1' if os.environ.get('MODE') == 'full' and not st.get('full_done') and (sl.get('hist_read', 0) > 500 or not n) else '0')
           PY
-            git add scans.json
+            cp /tmp/leads.json leads.json 2>/dev/null || true
+            git add scans.json check_state.json leads.json
             git diff --cached --quiet && break
-            git commit -qm "Scan dashboard: record run ${{ github.run_id }}" && git push -q origin HEAD:main && break
+            git commit -qm "Check: record run ${{ github.run_id }}" && git push -q origin HEAD:main && break
             sleep 15
           done
+          # Mode 1: keep going until every history is read (stops if a round makes no progress, e.g. Apple blocking us)
+          if [ "$(cat /tmp/next_round 2>/dev/null)" = "1" ]; then gh workflow run refresh.yml --ref main -f reason=backlog; echo "next round of the full check started"; fi

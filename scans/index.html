@@ -114,20 +114,20 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
 
   <section class="two">
     <div class="card">
-      <h2>Backlog: finds waiting to be checked</h2>
+      <h2>Full check (Mode 1): reading every app's history once</h2>
       <div class="sub" id="bk-sub"></div>
       <div class="prog" style="max-width:none;height:12px"><i id="bk-bar" style="width:0;background:var(--ok)"></i></div>
       <div class="legend" id="bk-legend"></div>
       <h2 style="margin-top:18px">New apps per run</h2>
       <div class="bars" id="bars" role="img" aria-label="New apps found by each recent run"></div>
-      <div class="legend"><span><i style="background:color-mix(in srgb,var(--accent) 70%,transparent)"></i>Scan (apps added)</span><span><i style="background:color-mix(in srgb,var(--ok) 70%,transparent)"></i>Sweep (finds)</span><span><i style="background:var(--bad)"></i>Failed</span></div>
+      <div class="legend"><span><i style="background:color-mix(in srgb,var(--accent) 70%,transparent)"></i>Apps added</span><span><i style="background:var(--bad)"></i>Failed</span></div>
     </div>
     <div class="card">
-      <h2>Last scan: what happened to every app</h2>
+      <h2>Listed apps: last update</h2>
       <div class="sub" id="sk-sub"></div>
       <div class="split" id="sk-bar"></div>
       <div class="rows" id="sk-rows"></div>
-      <h2 style="margin-top:18px">Last sweep</h2>
+      <h2 style="margin-top:18px">Last check of the whole App Store</h2>
       <div class="rows" id="sw-rows"></div>
     </div>
   </section>
@@ -141,7 +141,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
     </table></div>
   </section>
 
-  <p class="muted small"><b>Sweep</b>: once a day it checks every app on the App Store and finds apps that mention iPhone Duo; it never changes the site. <b>Scan</b>: it checks those finds and the top charts against each app's own notes, adds the confirmed apps with their real dates and publishes the site. While finds are waiting, scans run back to back.</p>
+  <p class="muted small">One job checks the App Store. <b>Mode 1 (full check)</b>: reads the update history of every app updated since September 2026 once, in rounds back to back, and puts new finds on the site every 30 minutes. <b>Mode 2 (daily)</b>: once the full check is complete, checks only apps with a new version or new apps, once a day. Runs before 21 Nov show the old scan and sweep.</p>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -176,21 +176,16 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
       live.paused = ['refresh.yml', 'sweep.yml'].some((p) => byPath[p] && byPath[p].state !== 'active');
       live.runs = (runs.workflow_runs || []).filter((r) => /refresh\.yml|sweep\.yml/.test(r.path || '') || /Daily refresh|App Store sweep/.test(r.name || ''));
       live.sweepJobs = null; live.scanStep = '';
-      const sw = live.runs.find((r) => /sweep/i.test(r.path || r.name) && r.status !== 'completed');
+      const sw = live.runs.find((r) => r.status !== 'completed');
       if (sw) {
         const j = await gh('/actions/runs/' + sw.id + '/jobs?per_page=50');
+        const fin = (j.jobs || []).find((x) => x.name === 'finish' && x.status === 'in_progress');
+        if (fin) { const cur = (fin.steps || []).find((x) => x.status === 'in_progress'); live.scanStep = cur ? cur.name : 'finishing'; }
         const sl = (j.jobs || []).filter((x) => /^slice/.test(x.name));
         live.sweepJobs = {done: sl.filter((x) => x.status === 'completed').length, running: sl.filter((x) => x.status === 'in_progress').length, total: sl.length || 24,
-                          failed: sl.filter((x) => x.conclusion && x.conclusion !== 'success').length, merging: (j.jobs || []).some((x) => x.name === 'merge' && x.status === 'in_progress')};
+                          failed: sl.filter((x) => x.conclusion && x.conclusion !== 'success').length, merging: !!fin};
       }
-      const sc = live.runs.find((r) => /refresh/i.test(r.path || r.name) && r.status === 'in_progress');
-      if (sc) {
-        const j = await gh('/actions/runs/' + sc.id + '/jobs');
-        const st = ((j.jobs || [])[0] || {}).steps || [];
-        const cur = st.find((x) => x.status === 'in_progress');
-        live.scanStep = cur ? cur.name : '';
-        live.scanStarted = sc.run_started_at;
-      }
+
       live.error = '';
     } catch (e) { live.error = e.status === 403 ? 'GitHub limits how often a page can ask without a key; the status refreshes again in a few minutes.' : 'Could not reach GitHub (' + e.message + ').'; }
   }
@@ -201,40 +196,41 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
 
   function drawStatus() {
     const dot = $('s-dot'), title = $('s-title'), sub = $('s-sub'), when = $('s-when'), prog = $('s-prog'), bar = $('s-bar');
-    const sw = live.runs.find((r) => /sweep/i.test(r.path || r.name) && r.status !== 'completed');
-    const sc = live.runs.find((r) => /refresh/i.test(r.path || r.name) && r.status === 'in_progress');
-    const lastScan = log.runs.find((r) => r.kind === 'scan');
+    const sw = live.runs.find((r) => r.status !== 'completed');
+    const sc = null;
+    const lastScan = log.runs.find((r) => r.kind === 'check' || r.kind === 'scan');
+    const st = log.runs.find((r) => r.kind === 'check');
     prog.hidden = true; dot.className = 'dot';
     const parts = [];
     if (live.paused) { dot.classList.add('pause'); title.textContent = 'Paused'; parts.push('No scans or sweeps start until you press Resume.'); }
     else if (sc || sw) {
       dot.classList.add('run');
-      title.textContent = sc && sw ? 'Scan and sweep running' : sc ? 'Scan running' : 'Sweep running';
-      if (sc) parts.push('Scan: ' + (live.scanStep || 'starting') + ' · running for ' + dur(sc.run_started_at));
+      title.textContent = (st && st.full_done ? 'Daily check running' : 'Full check running (Mode 1)') + ' · ' + dur(sw.run_started_at || sw.created_at);
       if (sw && live.sweepJobs) {
-        const j = live.sweepJobs; parts.push('Sweep: ' + j.done + ' of ' + j.total + ' slices done, ' + j.running + ' running' + (j.failed ? ', ' + j.failed + ' failed' : '') + (j.merging ? ' · saving finds' : ''));
+        const j = live.sweepJobs; parts.push(j.done + ' of ' + j.total + ' slices done, ' + j.running + ' running' + (j.failed ? ', ' + j.failed + ' failed' : '') + (j.merging ? ' · finishing: ' + (live.scanStep || '') : ' · new finds go on the site every 30 min'));
         prog.hidden = false; bar.style.width = Math.round(100 * j.done / j.total) + '%';
       }
-    } else { dot.classList.add(lastScan && lastScan.status === 'failed' ? 'bad' : 'ok'); title.textContent = lastScan && lastScan.status === 'failed' ? 'Idle · last scan failed' : 'Idle · up to date'; }
-    if (lastScan) parts.push('Last scan finished ' + ago(lastScan.ended) + (lastScan.status === 'failed' ? ' (failed)' : ''));
-    const left = lastScan && lastScan.backlog_left;
-    if (left) parts.push(num(left) + ' finds waiting · about ' + Math.ceil(left / 1500) + ' more back-to-back scans');
+    } else { dot.classList.add(lastScan && lastScan.status === 'failed' ? 'bad' : 'ok'); title.textContent = lastScan && lastScan.status === 'failed' ? 'Idle · last check failed' : 'Idle · up to date'; }
+    if (lastScan) parts.push('Last check finished ' + ago(lastScan.ended) + (lastScan.status === 'failed' ? ' (failed)' : ''));
+    if (st && !st.full_done && st.hist_left != null) parts.push('Full check: ' + num(st.hist_read_total) + ' histories read, about ' + num(st.hist_left) + ' left');
+    if (st && st.full_done) parts.push('Full check complete · daily updates only');
     sub.textContent = parts.join(' · ');
     when.textContent = (live.error ? live.error + ' ' : '') + 'Status checked ' + new Date().toLocaleTimeString('en-IN', {hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata'}) + ' IST · updates every 3 min';
   }
 
   function drawKpis() {
     const el = $('kpis'); el.replaceChildren();
-    const scan = log.runs.find((r) => r.kind === 'scan' && r.status === 'ok');
-    const sweep = log.runs.find((r) => r.kind === 'sweep' && r.looked_up);
+    const scan = log.runs.find((r) => (r.kind === 'scan' || r.kind === 'check') && r.total_apps);
+    const sweep = log.runs.find((r) => r.looked_up);
+    const ck = log.runs.find((r) => r.kind === 'check');
     const week = Date.now() - 7 * 864e5;
     const failed = log.runs.filter((r) => r.status === 'failed' && new Date(r.ended) > week).length;
     const sk = scan && scan.skipped ? Object.entries(scan.skipped).filter(([k]) => k !== 'to_read').reduce((a, [, v]) => a + (v || 0), 0) : null;
     const items = [
       ['Apps on the site', scan && scan.total_apps, scan ? '+' + num(scan.new) + ' in the last scan' : ''],
-      ['Apps scanned', sweep && sweep.looked_up, 'whole App Store, last sweep'],
-      ['Found by the sweep', sweep && sweep.found_total, 'mention iPhone Duo, all time'],
-      ['Waiting to check', scan && scan.backlog_left, 'finds not verified yet'],
+      ['Apps scanned', sweep && sweep.looked_up, 'whole App Store, last check'],
+      ['Histories read', ck ? ck.hist_read_total : null, 'full check so far'],
+      ['Histories left', ck ? ck.hist_left : null, ck && ck.full_done ? 'full check complete' : 'until the full check is done'],
       ['Skipped last scan', sk, 'old, same version or not on Duo'],
       ['Failed runs', failed, 'last 7 days'],
     ];
@@ -242,11 +238,12 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
   }
 
   function drawBacklog() {
-    const scan = log.runs.find((r) => r.kind === 'scan' && r.backlog_left != null);
-    const sweep = log.runs.find((r) => r.kind === 'sweep' && r.found_total);
-    const total = sweep ? sweep.found_total : 0, left = scan ? scan.backlog_left : 0, done = Math.max(0, total - left);
-    $('bk-sub').textContent = total ? num(done) + ' of ' + num(total) + ' sweep finds checked (' + Math.round(100 * done / total) + '%)' + (left ? ' · ' + num(left) + ' waiting' : ' · all checked; only updates from now on') : 'No sweep finds recorded yet.';
-    $('bk-bar').style.width = total ? Math.round(100 * done / total) + '%' : '0';
+    const ck = log.runs.find((r) => r.kind === 'check');
+    const sweep = log.runs.find((r) => r.hits_newest != null);
+    const doneH = ck ? ck.hist_read_total || 0 : 0, leftH = ck ? ck.hist_left || 0 : 0, tot = doneH + leftH;
+    $('bk-sub').textContent = !ck ? 'The full check has not run yet.' : ck.full_done ? 'Complete: every app updated since Sep 2026 has been checked. Only new updates are checked now.'
+      : num(doneH) + ' of about ' + num(tot) + ' version histories read (' + (tot ? Math.round(100 * doneH / tot) : 0) + '%) · new finds go on the site every 30 minutes';
+    $('bk-bar').style.width = ck && ck.full_done ? '100%' : tot ? Math.round(100 * doneH / tot) + '%' : '0';
     const lg = $('bk-legend'); lg.replaceChildren();
     if (sweep) for (const [l, v] of [['From newest notes', sweep.hits_newest], ['From history', sweep.hits_history], ['New apps (description)', sweep.hits_description]]) if (v != null) lg.append(mk('span', '', l + ': ' + num(v)));
     const bars = $('bars'); bars.replaceChildren();
@@ -259,7 +256,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
   }
 
   function drawSkips() {
-    const scan = log.runs.find((r) => r.kind === 'scan' && r.skipped);
+    const scan = log.runs.find((r) => r.skipped);
     const rows = $('sk-rows'), bar = $('sk-bar'); rows.replaceChildren(); bar.replaceChildren();
     if (!scan) { $('sk-sub').textContent = 'No scan recorded yet.'; } else {
       const s = scan.skipped || {};
@@ -274,7 +271,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
         const r = mk('div', 'row'); const d = mk('span'); d.style.cssText = 'width:10px;height:10px;border-radius:3px;background:' + c; r.append(d, mk('span', '', l), mk('b', '', num(v))); rows.append(r);
       }
     }
-    const sw = log.runs.find((r) => r.kind === 'sweep' && r.looked_up); const sr = $('sw-rows'); sr.replaceChildren();
+    const sw = log.runs.find((r) => r.looked_up); const sr = $('sw-rows'); sr.replaceChildren();
     if (!sw) { sr.append(mk('div', 'muted small', 'No sweep recorded yet.')); return; }
     for (const [l, v] of [['Apps looked up', sw.looked_up], ['Updated since Sep 2026', sw.recent], ['Already on the site', sw.on_site], ['Version histories read', sw.hist_read],
       ['Found (all ways)', sw.hits], ['Slices finished', (sw.slices_ok || 0) + ' of ' + (sw.slices || 24)], ['Apple slowed us down', sw.slowed]])
@@ -283,15 +280,15 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
 
   function drawRuns() {
     const tb = $('runs'); tb.replaceChildren();
-    const running = live.runs.filter((r) => r.status !== 'completed' && !log.runs.some((x) => x.id === r.id)).map((r) => ({id: r.id, kind: /sweep/i.test(r.path || r.name) ? 'sweep' : 'scan', started: r.run_started_at || r.created_at, status: 'running', reason: r.event, url: r.html_url}));
+    const running = live.runs.filter((r) => r.status !== 'completed' && !log.runs.some((x) => x.id === r.id)).map((r) => ({id: r.id, kind: /sweep/i.test(r.path || r.name) ? 'sweep' : 'check', started: r.run_started_at || r.created_at, status: 'running', reason: r.event, url: r.html_url}));
     for (const r of [...running, ...log.runs].slice(0, 60)) {
       const tr = mk('tr', 'run-row'); tr.tabIndex = 0;
       const chip = mk('span', 'chip ' + r.status, r.status === 'ok' ? '✓ Done' : r.status === 'failed' ? '✕ Failed' : '● ' + (live.paused ? 'Waiting' : 'Running'));
-      const found = r.kind === 'sweep' ? r.new_finds : r.new;
+      const found = r.kind === 'sweep' ? r.new_finds : r.kind === 'check' ? (r.hits != null ? r.hits : r.new) : r.new;
       const sk = r.skipped ? Object.entries(r.skipped).filter(([k]) => k !== 'to_read').reduce((a, [, v]) => a + (v || 0), 0) : null;
       const trig = {backlog: 'Back-to-back', timer: 'Timer', manual: 'Manual', schedule: 'GitHub timer', workflow_dispatch: 'Timer or manual', push: 'Push'}[r.reason] || r.reason || '';
-      const cells = [ist(r.started), mk('span', 'chip kind', r.kind === 'sweep' ? 'Sweep' : 'Scan'), trig, r.status === 'running' ? dur(r.started) : dur(r.started, r.ended), chip,
-        num(r.kind === 'sweep' ? r.looked_up : r.apps_checked), num(found), num(sk)];
+      const cells = [ist(r.started), mk('span', 'chip kind', r.kind === 'sweep' ? 'Sweep (old)' : r.kind === 'check' ? (r.mode === 'daily' ? 'Daily check' : 'Full check') : 'Scan (old)'), trig, r.status === 'running' ? dur(r.started) : dur(r.started, r.ended), chip,
+        num(r.looked_up != null ? r.looked_up : r.apps_checked), num(found), num(sk)];
       cells.forEach((c, i) => { const td = mk('td', i === 2 || i === 7 ? 'hide-s' : ''); typeof c === 'string' ? td.textContent = c : td.append(c); tr.append(td); });
       const toggle = () => { open = open === r.id ? null : r.id; drawRuns(); };
       tr.onclick = toggle; tr.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
@@ -304,6 +301,7 @@ dialog ol{padding-left:20px;margin:8px 0;font-size:14px}
         if (r.skipped) lines.push(['Skipped', Object.entries(r.skipped).map(([k, v]) => k.replace(/_/g, ' ') + ' ' + num(v)).join(' · ')]);
         if (r.kind === 'scan' && r.history_read != null) lines.push(['Version histories read', num(r.history_read)]);
         if (r.backlog_left != null) lines.push(['Finds still waiting after this run', num(r.backlog_left)]);
+        if (r.kind === 'check') lines.push(['Check', 'apps looked up ' + num(r.looked_up) + ' · found by newest notes ' + num(r.hits_newest) + ', history ' + num(r.hits_history) + ', description ' + num(r.hits_description) + ' · histories read ' + num(r.hist_read) + ' (left ' + num(r.hist_left) + ') · put on the site during the run ' + num(r.published_live) + ' · slices ' + (r.slices_ok || 0) + '/' + (r.slices || 24)]);
         if (r.kind === 'sweep' && r.looked_up) lines.push(['Sweep', 'updated since Sep ' + num(r.recent) + ' · found by newest notes ' + num(r.hits_newest) + ', history ' + num(r.hits_history) + ', description ' + num(r.hits_description) + ' · histories read ' + num(r.hist_read) + ' · slices ' + (r.slices_ok || 0) + '/' + (r.slices || 24) + ' · queued ' + num(r.queued_today)]);
         if (r.new_apps && r.new_apps.length) lines.push(['Some new apps', r.new_apps.join(', ')]);
         for (const [a, b] of lines) { const p = mk('div'); p.append(mk('b', '', a + ': '), b); td.append(p); }

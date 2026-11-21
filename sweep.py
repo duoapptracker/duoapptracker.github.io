@@ -16,7 +16,7 @@ Finds are only leads: sweep_merge.py queues them in submissions.json and the reg
 
 Usage: python3 sweep.py SHARD SHARDS OUT.json [--minutes 150]
 """
-import gzip, json, os, re, subprocess, sys, time, urllib.parse
+import base64, datetime, gzip, json, os, re, subprocess, sys, time, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 import duo_cloud as d
 
@@ -80,6 +80,44 @@ def search(term, cc, stats):
         time.sleep(20 * (i + 1))
     return []
 
+LIVE_EVERY = 30 * 60   # finds are saved for the website every 30 minutes
+
+def save_live(shard, rows):
+    """Save this slice's finds so far to the 'live' branch (live/<shard>.json); the publisher adds them to the site."""
+    repo, path = os.environ.get('GITHUB_REPOSITORY', ''), f'live/{shard}.json'
+    if not repo: json.dump(rows, open(f'live-{shard}.json', 'w'), ensure_ascii=False); return True   # local test
+    body = base64.b64encode(json.dumps({'rows': rows}, ensure_ascii=False).encode()).decode()
+    for i in range(4):
+        sha = subprocess.run(['gh', 'api', f'repos/{repo}/contents/{path}?ref=live', '--jq', '.sha'], capture_output=True, text=True).stdout.strip()
+        req = {'message': f'live finds, slice {shard}', 'content': body, 'branch': 'live'}
+        if sha and not sha.startswith('{'): req['sha'] = sha
+        r = subprocess.run(['gh', 'api', '-X', 'PUT', f'repos/{repo}/contents/{path}', '--input', '-'], input=json.dumps(req), capture_output=True, text=True)
+        if r.returncode == 0: return True
+        time.sleep(10 * (i + 1))
+    return False
+
+def make_rows(finds, found, stats):
+    """Complete site rows for finds: details from the lookup, ratings and availability in every market."""
+    ids = [h['id'] for h in finds]; mk = {}
+    for cc in d.MARKETS:
+        for k in range(0, len(ids), 200):
+            for a in lookup(cc, ids[k:k + 200], stats) or []:
+                mk.setdefault(str(a['trackId']), {})[cc] = [round(a.get('averageUserRating', 0), 1), a.get('userRatingCount', 0)]
+            time.sleep(0.3)
+    today = datetime.date.today().isoformat(); rows = []
+    for h in finds:
+        cc, a = found[h['id']]
+        up, rel = (a.get('currentVersionReleaseDate') or '')[:10], (a.get('releaseDate') or '')[:10]
+        r = {'app': a.get('trackName', ''), 'art': a.get('artworkUrl100', ''), 'category': a.get('primaryGenreName', ''),
+             'desc': d.one_line(a.get('description', '')), 'developer': a.get('artistName', ''), 'duo_date': min(h['date'], up) if up else h['date'],
+             'duo_version': '' if h['how'] == 'description' else h['version'], 'first_seen': today, 'hist_ok': True, 'home': cc, 'id': h['id'],
+             'markets': '', 'min_ios': a.get('minimumOsVersion', ''), 'mk': mk.get(h['id'], {}), 'note': h['note'],
+             'price': a.get('formattedPrice', ''), 'rating': round(a.get('averageUserRating', 0), 1), 'ratings': a.get('userRatingCount', 0),
+             'released': rel, 'updated': up, 'url': a.get('trackViewUrl', '').split('?')[0], 'version': a.get('version', '')}
+        if h['how'] == 'description': r['how'] = 'description'
+        rows.append(r)
+    return rows
+
 def page(i, cc):
     """(http code, version history) of an app's store page."""
     r = subprocess.run(['curl', '-sL', '--compressed', '-m', '60', '-A', d.UA, '-w', '\n%{http_code}', f'https://apps.apple.com/{cc}/app/id{i}'], capture_output=True)
@@ -97,7 +135,7 @@ def main():
     done = set(open(done_path).read().split()) if os.path.exists(done_path) else set()
     stats = {'shard': shard, 'files': 0, 'apps': 0, 'lead_apps': 0, 'looked_up': 0, 'recent': 0, 'not_on_duo': 0, 'on_site': 0,
              'hits_newest': 0, 'hits_description': 0, 'from_search': 0, 'hist_todo': 0, 'hist_read': 0, 'hits_history': 0, 'hist_blocked': 0, 'slowed': 0, 'failed_lookups': 0,
-             'stopped_early': False}
+             'stopped_early': False, 'published_live': 0, 'hist_left': 0}
     # 1) the app ids of this slice: Apple's lists, then leads (developers' other apps, announced apps)
     store, lead_ids = {}, set()
     files = []
@@ -137,6 +175,14 @@ def main():
         time.sleep(3.5)
     stats['looked_up'] = len(found)
     hits, todo = [], []
+    live, flushed, last = [], [0], [time.time()]
+    def flush(force=False):
+        if not force and time.time() - last[0] < LIVE_EVERY: return
+        new = hits[flushed[0]:]
+        if new:
+            live.extend(make_rows(new, found, stats)); flushed[0] = len(hits)
+            if save_live(shard, live): stats['published_live'] = len(live)
+        last[0] = time.time()
     for i, (cc, a) in found.items():
         if (a.get('currentVersionReleaseDate') or '')[:10] < d.EARLIEST: continue
         if max((a.get('currentVersionReleaseDate') or '')[:10], (a.get('releaseDate') or '')[:10]) > tomorrow: continue   # pre-order
@@ -156,6 +202,7 @@ def main():
             stats['hits_description'] += 1
         elif i not in done:
             todo.append((i not in lead_ids, -(a.get('userRatingCount') or 0), rec))
+    flush(force=True)   # finds from newest notes and descriptions go to the site right away
     # 3) version histories: leads first, then the most-rated apps, until the time is up or Apple pushes back
     todo.sort(key=lambda t: (t[0], t[1])); stats['hist_todo'] = len(todo)
     fails = [0]
@@ -176,8 +223,11 @@ def main():
                 v = min(first, key=lambda v: v[1])
                 hits.append(dict(rec, version=v[0], date=v[1], note=d.snippet(v[2]), how='version history'))
                 stats['hits_history'] += 1
+            flush()
+    flush(force=True)
     if fails[0] >= 25: stats['hist_blocked'] = 1
     stats['stopped_early'] = stats['hist_read'] < len(todo)
+    stats['hist_left'] = len(todo) - stats['hist_read']
     stats['hits'] = len(hits)
     stats['minutes'] = round((time.time() - t0) / 60, 1)
     open(done_path, 'w').write('\n'.join(sorted(done)))
