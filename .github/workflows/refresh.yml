@@ -126,7 +126,7 @@ jobs:
           done
   finish:
     needs: [plan, slice, publisher]
-    if: always() && needs.plan.result == 'success' && needs.plan.outputs.run == 'true'
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.run == 'true' }}   # runs even if a slice failed; stops when cancelled
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
