@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  actions: write
 concurrency: sweep
 env:
   SHARDS: 24
@@ -72,3 +73,17 @@ jobs:
             git commit -qm "App Store sweep: new finds queued" && git push -q origin HEAD:main && break
             echo "push failed (try $try), retrying"; sleep 20
           done
+      - name: Start the next round while version histories are still waiting
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          more=$(python3 - <<'PY'
+          import json
+          try: s = json.load(open('sweep_last.json'))
+          except (OSError, ValueError): s = {}
+          # keep going only while slices ran out of time AND made progress (not when Apple is blocking us)
+          print(1 if s.get('slices_stopped_early', 0) and s.get('hist_read', 0) > 1000 and s.get('hist_blocked', 0) < 6 else 0)
+          PY
+          )
+          echo "another round needed: $more"
+          if [ "$more" = "1" ]; then gh workflow run sweep.yml --ref main; fi

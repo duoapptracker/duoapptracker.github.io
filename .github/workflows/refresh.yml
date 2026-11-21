@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       reason:
-        description: "manual = scan now; timer = outside timer, scan only if the list is old enough"
+        description: "manual = scan now; backlog = next batch of sweep finds; timer = outside timer, scan only if the list is old enough"
         required: false
         default: manual
 permissions:
@@ -38,7 +38,8 @@ jobs:
           ist = lambda t: (t + datetime.timedelta(hours=5, minutes=30)).date()
           manual = os.environ['EVENT'] == 'workflow_dispatch' and os.environ.get('REASON', 'manual') != 'timer'
           go = manual or age >= 5   # 5 h: whenever GitHub or the outside timer fires, a scan almost always starts
-          discover = manual or ist(u) < ist(now)   # the first scan of each India day also searches outside the charts
+          # the first scan of each India day (or a manual one) also searches outside the charts; back-to-back backlog scans skip it
+          discover = os.environ.get('REASON', 'manual') == 'manual' and os.environ['EVENT'] == 'workflow_dispatch' or ist(u) < ist(now)
           print('list age (hours): %.1f | manual: %s | scan: %s | discover: %s' % (age, manual, go, discover))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('run=%s\ndiscover=%s\n' % (str(go).lower(), str(discover).lower()))
@@ -77,6 +78,18 @@ jobs:
                           out.append({'id': str(a['trackId']), 'date': x['date']}); break
               except Exception:
                   pass
+          # the next batch of sweep finds that have not been checked yet (until the backlog is empty)
+          try:
+              found = json.load(open('sweep_found.json'))
+              site = json.load(open('data.json'))
+              done = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {})) | {x['id'] for x in out}
+              today = __import__('datetime').date.today().isoformat()
+              order = sorted(found.items(), key=lambda kv: (kv[1].get('how') != 'description', kv[1].get('found', '')))
+              batch = [{'id': i, 'date': today, 'cc': f.get('cc', '')} for i, f in order if i not in done][:1500]
+              out += batch
+              print('sweep finds added to this scan:', len(batch))
+          except (OSError, ValueError) as e:
+              print('no sweep finds:', e)
           json.dump(out, open('submitted.json', 'w'))
           print('visitor suggestions resolved:', len(out), 'of', len(subs))
           PY
@@ -184,6 +197,23 @@ jobs:
           PY
           git add watch.json
           git diff --cached --quiet || { git commit -m "Watched app notified"; git pull --rebase; git push; }
+      - name: Keep going while sweep finds are waiting
+        # runs on every check (even skipped ones), so a chain broken by a timer run is picked up again
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          left=$(python3 - <<'PY'
+          import json
+          try:
+              found = json.load(open('sweep_found.json')); site = json.load(open('data.json'))
+              done = {str(r['id']) for r in site['rows']} | set(site.get('submitted', {}))
+              print(sum(1 for i in found if i not in done))
+          except (OSError, ValueError):
+              print(0)
+          PY
+          )
+          echo "sweep finds still waiting: $left"
+          if [ "$left" -gt 0 ]; then gh workflow run refresh.yml --ref main -f reason=backlog; fi
       - name: Email the owner that a scan finished
         if: steps.gate.outputs.run == 'true'
         env:
