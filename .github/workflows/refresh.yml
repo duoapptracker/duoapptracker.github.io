@@ -52,10 +52,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for p in $(gh api "repos/${{ github.repository }}/contents/live?ref=live" --jq '.[].path' 2>/dev/null); do
-            sha=$(gh api "repos/${{ github.repository }}/contents/$p?ref=live" --jq .sha)
-            gh api -X DELETE "repos/${{ github.repository }}/contents/$p" -f message="clear $p" -f sha="$sha" -f branch=live >/dev/null || true
+          set +e   # nothing to clear on the first run
+          paths=$(gh api "repos/${{ github.repository }}/contents/live?ref=live" --jq '.[].path' 2>/dev/null)
+          for p in $paths; do
+            sha=$(gh api "repos/${{ github.repository }}/contents/$p?ref=live" --jq .sha 2>/dev/null)
+            [ -n "$sha" ] && gh api -X DELETE "repos/${{ github.repository }}/contents/$p" -f message="clear $p" -f sha="$sha" -f branch=live >/dev/null
           done
+          exit 0
   slice:
     needs: plan
     if: needs.plan.outputs.run == 'true'
@@ -123,7 +126,7 @@ jobs:
           done
   finish:
     needs: [plan, slice, publisher]
-    if: always() && needs.plan.outputs.run == 'true'
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 240
     steps:
