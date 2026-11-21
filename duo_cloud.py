@@ -118,13 +118,22 @@ def get(url):
     return None
 
 def one_line(text):
+    return EMAIL.sub('(email removed)', _one_line(text))
+
+def _one_line(text):
     line = next((l.strip() for l in (text or '').split('\n') if l.strip()), '')
     m = re.search(r'(?<=[.!?。])\s', line)
     if m and m.start() >= 30: line = line[:m.start()]
     return line if len(line) <= 150 else line[:147].rsplit(' ', 1)[0] + '…'
 
+EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
+
 def snippet(text):
-    # the part of the notes around the Duo mention (any wording the rule accepts); start of the notes if none is found
+    # the part of the notes around the Duo mention (any wording the rule accepts); start of the notes if none is found.
+    # e-mail addresses are removed: the site does not republish developers' contact addresses
+    return EMAIL.sub('(email removed)', _snippet(text))
+
+def _snippet(text):
     m = PAT.search(text) or re.search(r'iphone\s*duo', text, re.I) or POS_I.search(text) or DUO_CAP.search(text)
     if not m: return ' '.join(text.split())[:260]
     return ' '.join(text[max(0, m.start() - 80):m.end() + 120].split())[:260]
