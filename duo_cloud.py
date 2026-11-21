@@ -289,6 +289,10 @@ def main():
             r.update(latest)
             if not SITE and not r.get('icon'): r['icon'] = icon(a.get('artworkUrl100', ''))
             if tid in reported: r.update(report=reported[tid]['text'], report_by=reported[tid]['source'], report_url=reported[tid].get('url', ''))
+            if r.get('source') == 'reported' and latest['released'] >= EARLIEST and duo_hit(a.get('description') or '', latest['app']):
+                # a new app (first released since Sep 2026) whose own App Store description mentions iPhone Duo: green, dated by first release
+                r.pop('source', None); r.pop('dated', None)
+                r.update(how='description', duo_version='', duo_date=latest['released'], note=snippet(a.get('description') or ''))
         elif tid in reported:
             # reported as optimised, though its update notes never say so
             k = reported[tid]
