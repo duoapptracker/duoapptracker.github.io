@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://duoapptracker.github.io/sitemap.xml
+Sitemap: https://duoapptracker.com/sitemap.xml

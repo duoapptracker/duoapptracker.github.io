@@ -7,11 +7,11 @@
 **Which apps are ready for iPhone Duo?**
 A free, independent, daily-updated list of apps that support Apple's foldable iPhone, across ten App Store markets.
 
-### [duoapptracker.github.io](https://duoapptracker.github.io/)
+### [duoapptracker.com](https://duoapptracker.com/)
 
-[![Live site](https://img.shields.io/badge/site-live-2f7bff?style=flat-square)](https://duoapptracker.github.io/)
+[![Live site](https://img.shields.io/badge/site-live-2f7bff?style=flat-square)](https://duoapptracker.com/)
 [![Updated 3x a day](https://img.shields.io/badge/updated-3%C3%97%20a%20day-8b5cf6?style=flat-square)](#how-it-works)
-[![No account needed](https://img.shields.io/badge/visitors-no%20account%20needed-1f9d6b?style=flat-square)](https://duoapptracker.github.io/)
+[![No account needed](https://img.shields.io/badge/visitors-no%20account%20needed-1f9d6b?style=flat-square)](https://duoapptracker.com/)
 
 </div>
 
